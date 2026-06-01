@@ -1,0 +1,19 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+  <rect x="0" y="0" width="1280" height="5" fill="#EE0033"/>
+  <image href="../images/viettel-logo.png" x="1088" y="28" width="128" height="42" preserveAspectRatio="xMidYMid meet"/>
+
+  <rect x="64" y="38" width="7" height="38" rx="3.5" fill="#EE0033"/>
+  <text x="88" y="66" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="32" font-weight="800" fill="#000000">{{PAGE_TITLE}}</text>
+  <line x1="64" y1="102" x2="1216" y2="102" stroke="#E6E6E6" stroke-width="1"/>
+
+  <rect x="72" y="132" width="1136" height="486" rx="6" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="6 6"/>
+  <text x="640" y="382" text-anchor="middle" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="20" fill="#999999">{{CONTENT_AREA}}</text>
+
+  <rect x="0" y="674" width="1280" height="46" fill="#F2F2F2"/>
+  <rect x="0" y="674" width="8" height="46" fill="#EE0033"/>
+  <text x="64" y="703" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="13" font-weight="600" fill="#44494D">{{SECTION_NAME}}</text>
+  <text x="640" y="703" text-anchor="middle" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="12" fill="#44494D">{{SOURCE}}</text>
+  <rect x="1174" y="684" width="42" height="26" rx="4" fill="#EE0033"/>
+  <text x="1195" y="703" text-anchor="middle" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="14" font-weight="800" fill="#FFFFFF">{{PAGE_NUM}}</text>
+</svg>

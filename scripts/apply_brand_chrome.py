@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""Apply deck-level brand chrome to PPT Master SVG pages."""
+
+from __future__ import annotations
+
+import argparse
+import re
+import shutil
+from pathlib import Path
+
+
+COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+
+
+def strip_svg_comments(svg: str) -> str:
+    return COMMENT_RE.sub("", svg)
+
+
+def ensure_viettel_logo(project_dir: Path, skill_dir: Path) -> None:
+    images_dir = project_dir / "images"
+    images_dir.mkdir(parents=True, exist_ok=True)
+    target = images_dir / "viettel-logo.png"
+    if target.exists():
+        return
+    source = skill_dir / "templates" / "layouts" / "viettel_default" / "viettel-logo.png"
+    if source.exists():
+        shutil.copy2(source, target)
+
+
+def viettel_chrome_svg(slide_number: int | None = None) -> str:
+    page = "" if slide_number is None else f"{slide_number:02d}"
+    page_text = (
+        f'<text x="1216" y="704" text-anchor="end" '
+        f'font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun, Arial, sans-serif" '
+        f'font-size="11" font-weight="600" fill="#44494D">{page}</text>'
+        if page
+        else ""
+    )
+    return (
+        '\n<g id="viettel-brand-chrome" data-brand="viettel">'
+        '<rect x="0" y="0" width="1280" height="5" fill="#EE0033"/>'
+        '<image href="../images/viettel-logo.png" x="1088" y="28" width="128" height="42" preserveAspectRatio="xMidYMid meet"/>'
+        f"{page_text}"
+        "</g>\n"
+    )
+
+
+def apply_viettel_chrome(svg: str, slide_number: int | None = None) -> str:
+    if 'id="viettel-brand-chrome"' in svg:
+        return svg
+    marker = "</svg>"
+    if marker not in svg:
+        return svg
+    return svg.replace(marker, viettel_chrome_svg(slide_number) + marker, 1)
+
+
+def process_svg_file(
+    svg_file: Path,
+    *,
+    brand_chrome: str | None = None,
+    strip_comments: bool = False,
+    slide_number: int | None = None,
+) -> bool:
+    original = svg_file.read_text(encoding="utf-8")
+    updated = original
+    if strip_comments:
+        updated = strip_svg_comments(updated)
+    if brand_chrome == "viettel":
+        updated = apply_viettel_chrome(updated, slide_number)
+    if updated == original:
+        return False
+    svg_file.write_text(updated, encoding="utf-8")
+    return True
+
+
+def process_project(
+    project_dir: Path,
+    *,
+    brand_chrome: str | None = None,
+    strip_comments: bool = False,
+    skill_dir: Path | None = None,
+) -> int:
+    svg_dirs = [
+        path
+        for path in (project_dir / "svg_output", project_dir / "svg_final")
+        if path.exists()
+    ]
+    if brand_chrome == "viettel" and skill_dir is not None:
+        ensure_viettel_logo(project_dir, skill_dir)
+    count = 0
+    for svg_dir in svg_dirs:
+        for index, svg_file in enumerate(sorted(svg_dir.glob("*.svg")), start=1):
+            if process_svg_file(
+                svg_file,
+                brand_chrome=brand_chrome,
+                strip_comments=strip_comments,
+                slide_number=index,
+            ):
+                count += 1
+    return count
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Apply optional brand chrome to PPT Master SVG pages.")
+    parser.add_argument("project_dir", type=Path)
+    parser.add_argument("--brand-chrome", choices=["viettel"], help="Brand chrome to inject")
+    parser.add_argument("--strip-comments", action="store_true", help="Remove XML comments from SVG files")
+    args = parser.parse_args()
+    skill_dir = Path(__file__).resolve().parent.parent
+    count = process_project(
+        args.project_dir,
+        brand_chrome=args.brand_chrome,
+        strip_comments=args.strip_comments,
+        skill_dir=skill_dir,
+    )
+    print(f"Processed {count} SVG file(s)")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
