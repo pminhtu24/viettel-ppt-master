@@ -55,6 +55,78 @@ RAMP_MIN_RATIO = 0.5
 RAMP_MAX_RATIO = 5.0
 
 
+def _local_name(tag: str) -> str:
+    """Return the XML local-name for a possibly namespaced tag."""
+    return tag.rsplit('}', 1)[-1] if '}' in tag else tag
+
+
+def _float_attr(elem: ET.Element, name: str, default: float = 0.0) -> float:
+    """Parse a numeric SVG attribute, tolerating px suffixes and blanks."""
+    raw = elem.get(name)
+    if raw is None:
+        return default
+    raw = raw.strip()
+    if raw.endswith('px'):
+        raw = raw[:-2]
+    try:
+        return float(raw)
+    except ValueError:
+        return default
+
+
+def _parse_style_attr(elem: ET.Element, prop: str) -> str | None:
+    """Read a simple inline style declaration from an SVG element."""
+    style = elem.get('style') or ''
+    for part in style.split(';'):
+        if ':' not in part:
+            continue
+        key, value = part.split(':', 1)
+        if key.strip() == prop:
+            return value.strip()
+    return None
+
+
+def _get_svg_attr(elem: ET.Element, name: str, default: str = '') -> str:
+    """Read presentation attributes, with inline style fallback."""
+    return elem.get(name) or _parse_style_attr(elem, name) or default
+
+
+def _estimate_svg_text_width(text: str, font_size: float, font_weight: str = '400') -> float:
+    """Estimate text width in SVG pixels for layout-risk checks."""
+    width = 0.0
+    for ch in text:
+        cp = ord(ch)
+        is_cjk = (
+            0x4E00 <= cp <= 0x9FFF or 0x3400 <= cp <= 0x4DBF or
+            0x2E80 <= cp <= 0x2EFF or 0x3000 <= cp <= 0x303F or
+            0xFF00 <= cp <= 0xFFEF or 0xF900 <= cp <= 0xFAFF
+        )
+        if is_cjk:
+            width += font_size
+        elif ch == ' ':
+            width += font_size * 0.3
+        elif ch in 'mMwWOQ':
+            width += font_size * 0.75
+        elif ch in 'iIlj1!|':
+            width += font_size * 0.3
+        else:
+            width += font_size * 0.55
+
+    if font_weight in ('bold', '600', '700', '800', '900'):
+        width *= 1.08
+    return width
+
+
+def _parse_translate(transform: str) -> tuple[float, float]:
+    """Parse translate(x[, y]) from a transform attribute."""
+    if not transform:
+        return 0.0, 0.0
+    match = re.search(r'translate\(\s*([-\d.]+)(?:[\s,]+([-\d.]+))?', transform)
+    if not match:
+        return 0.0, 0.0
+    return float(match.group(1)), float(match.group(2) or 0.0)
+
+
 def _parse_placeholders_fallback(block: str) -> Dict[str, Tuple[str, ...]]:
     """Tiny YAML-free reader for the documented ``placeholders:`` shape.
 
@@ -238,6 +310,7 @@ class SVGQualityChecker:
 
                 # 5. Check text wrapping methods
                 self._check_text_elements(content, result)
+                self._check_text_layout_risk(content, result)
 
                 # 6. Check image references (file existence and resolution)
                 self._check_image_references(content, svg_path, result)
@@ -383,7 +456,7 @@ class SVGQualityChecker:
         # Structure / nesting
         if '<foreignobject' in content_lower:
             result['errors'].append(
-                "Detected forbidden <foreignObject> element (use <tspan> for manual line breaks)")
+                "Detected forbidden <foreignObject> element (use separate <text> lines or data-box/data-wrap)")
         has_symbol = '<symbol' in content_lower
         has_use = re.search(r'<use\b', content_lower) is not None
         if has_symbol and has_use:
@@ -504,8 +577,206 @@ class SVGQualityChecker:
         text_matches = re.findall(r'<text[^>]*>([^<]{100,})</text>', content)
         if text_matches:
             result['warnings'].append(
-                f"Detected {len(text_matches)} potentially overly long single-line text(s) (consider using tspan for wrapping)"
+                f"Detected {len(text_matches)} potentially overly long single-line text(s) (use separate <text> lines or data-box/data-wrap)"
             )
+
+    def _check_text_layout_risk(self, content: str, result: Dict):
+        """Detect text that is likely to render outside its intended layout box.
+
+        This is intentionally conservative and visual-output oriented. SVG text
+        has no intrinsic width, and the native PPTX converter used to emit all
+        text as wrap="none"; a page can pass XML checks while PowerPoint renders
+        labels outside cards. We estimate text bounds, locate the nearest card /
+        panel rectangle that contains the text anchor, and fail when the text
+        exceeds that container by a meaningful amount.
+        """
+        try:
+            root = ET.fromstring(content)
+        except ET.ParseError:
+            return
+
+        containers: List[Dict] = []
+        texts: List[Dict] = []
+        shapes: List[Dict] = []
+
+        def visit(elem: ET.Element, tx: float = 0.0, ty: float = 0.0):
+            dx, dy = _parse_translate(elem.get('transform', ''))
+            tx += dx
+            ty += dy
+
+            tag = _local_name(elem.tag)
+            if tag == 'rect':
+                x = _float_attr(elem, 'x') + tx
+                y = _float_attr(elem, 'y') + ty
+                w = _float_attr(elem, 'width')
+                h = _float_attr(elem, 'height')
+                fill = (_get_svg_attr(elem, 'fill') or '').upper()
+                stroke = (_get_svg_attr(elem, 'stroke') or '').upper()
+                rx = _float_attr(elem, 'rx', _float_attr(elem, 'ry', 0.0))
+                rect = {
+                    'x': x, 'y': y, 'w': w, 'h': h,
+                    'x2': x + w, 'y2': y + h,
+                    'fill': fill, 'stroke': stroke, 'rx': rx,
+                }
+                # Containers are real cards / panels, not bars or decorative
+                # strips. Width threshold avoids mistaking chart bars for cards.
+                if (
+                    w >= 150 and h >= 35 and
+                    not (w >= 1200 and h >= 650) and
+                    (
+                        stroke not in ('', 'NONE') or
+                        fill in ('#F2F2F2', '#FFFFFF', '#12436D', '#EE0033') or
+                        rx >= 6
+                    )
+                ):
+                    containers.append(rect)
+                if w > 0 and h > 0:
+                    shapes.append(rect)
+
+            elif tag in ('circle', 'ellipse'):
+                cx = _float_attr(elem, 'cx') + tx
+                cy = _float_attr(elem, 'cy') + ty
+                rx = _float_attr(elem, 'r', _float_attr(elem, 'rx', 0.0))
+                ry = _float_attr(elem, 'r', _float_attr(elem, 'ry', 0.0))
+                shapes.append({
+                    'x': cx - rx, 'y': cy - ry, 'w': rx * 2, 'h': ry * 2,
+                    'x2': cx + rx, 'y2': cy + ry,
+                    'fill': (_get_svg_attr(elem, 'fill') or '').upper(),
+                    'stroke': (_get_svg_attr(elem, 'stroke') or '').upper(),
+                    'rx': 0,
+                })
+
+            elif tag == 'text':
+                if elem.get('data-allow-overflow') == 'true':
+                    return
+                text = ''.join(elem.itertext()).strip()
+                if text:
+                    x = _float_attr(elem, 'x') + tx
+                    y = _float_attr(elem, 'y') + ty
+                    fs = _float_attr(elem, 'font-size', 16)
+                    fw = _get_svg_attr(elem, 'font-weight', '400')
+                    anchor = _get_svg_attr(elem, 'text-anchor', 'start')
+                    estimated_w = _estimate_svg_text_width(text, fs, fw) * 1.12
+                    tspan_count = sum(
+                        1 for child in elem.iter()
+                        if child is not elem and _local_name(child.tag) == 'tspan'
+                    )
+                    line_count = max(1, tspan_count)
+                    estimated_h = fs * 1.35 * line_count
+
+                    if anchor == 'middle':
+                        box_x = x - estimated_w / 2
+                    elif anchor == 'end':
+                        box_x = x - estimated_w
+                    else:
+                        box_x = x
+                    box_y = y - fs * 0.85
+
+                    data_box = elem.get('data-box')
+                    if data_box:
+                        parts = [p.strip() for p in re.split(r'[\s,]+', data_box) if p.strip()]
+                        if len(parts) == 4:
+                            try:
+                                bx, by, bw, bh = [float(p) for p in parts]
+                                box_x, box_y, estimated_w, estimated_h = bx + tx, by + ty, bw, bh
+                            except ValueError:
+                                pass
+
+                    texts.append({
+                        'text': text,
+                        'x': x, 'y': y,
+                        'x1': box_x, 'y1': box_y,
+                        'x2': box_x + estimated_w,
+                        'y2': box_y + estimated_h,
+                        'font_size': fs,
+                        'has_wrap_contract': bool(
+                            data_box or elem.get('data-wrap') == 'true'
+                        ),
+                    })
+
+            for child in list(elem):
+                visit(child, tx, ty)
+
+        visit(root)
+
+        content_right = 1208
+        content_bottom = 640
+        overflow_count = 0
+        unbounded_long_count = 0
+
+        for text in texts:
+            # Text outside the slide content safe area is usually accidental
+            # unless it is a footer/header label.
+            if 120 < text['y'] < content_bottom and text['x2'] > content_right + 8:
+                overflow_count += 1
+
+            container = self._find_text_container(text, containers)
+            if container:
+                pad = max(6.0, text['font_size'] * 0.35)
+                if (
+                    text['x1'] < container['x'] + pad - 10 or
+                    text['x2'] > container['x2'] - pad + 10 or
+                    text['y1'] < container['y'] + pad - 10 or
+                    text['y2'] > container['y2'] - pad + 10
+                ):
+                    overflow_count += 1
+            else:
+                if len(text['text']) >= 80 and not text['has_wrap_contract'] and text['font_size'] >= 12:
+                    unbounded_long_count += 1
+
+        title_intrusions = self._count_title_zone_intrusions(shapes)
+
+        if overflow_count:
+            result['errors'].append(
+                f"Detected {overflow_count} text layout overflow risk(s): text extends outside its card/panel or safe area. "
+                f"Use separate <text> lines or data-box=\"x,y,w,h\" data-wrap=\"true\"."
+            )
+        if unbounded_long_count:
+            result['warnings'].append(
+                f"Detected {unbounded_long_count} long text line(s) without a wrap contract. "
+                f"Use separate <text> lines or data-box/data-wrap so PPTX export cannot render past the intended block."
+            )
+        if title_intrusions:
+            result['errors'].append(
+                f"Detected {title_intrusions} content shape(s) intruding into the title/header zone. "
+                f"Keep chart marks and content cards below the title divider or reduce chart scale."
+            )
+
+    def _find_text_container(self, text: Dict, containers: List[Dict]) -> Dict | None:
+        """Return the smallest container containing a text anchor point."""
+        matches = []
+        for rect in containers:
+            if rect['x'] <= text['x'] <= rect['x2'] and rect['y'] <= text['y'] <= rect['y2']:
+                area = rect['w'] * rect['h']
+                matches.append((area, rect))
+        if not matches:
+            return None
+        matches.sort(key=lambda item: item[0])
+        return matches[0][1]
+
+    def _count_title_zone_intrusions(self, shapes: List[Dict]) -> int:
+        """Count non-background shapes that enter the reserved title area."""
+        count = 0
+        neutral_fills = {'', 'NONE', '#FFFFFF', '#F2F2F2', '#E6E6E6'}
+        title_zone_bottom = 225.0
+        for shape in shapes:
+            if (
+                shape['w'] >= 600 and shape['h'] <= 6 and
+                180 <= shape['y'] <= 280 and
+                shape.get('fill', '') in neutral_fills
+            ):
+                title_zone_bottom = max(title_zone_bottom, shape['y'])
+        for shape in shapes:
+            fill = shape.get('fill', '')
+            # Ignore rails, full-slide backgrounds, top accent bars, logo pills,
+            # and subtle divider/background surfaces.
+            if shape['x'] < 40 or shape['w'] >= 1100 or shape['h'] <= 12:
+                continue
+            if fill in neutral_fills:
+                continue
+            if shape['y'] < title_zone_bottom and shape['y2'] > 115 and shape['w'] >= 60 and shape['h'] >= 28:
+                count += 1
+        return count
 
     def _check_image_references(self, content: str, svg_path: Path, result: Dict):
         """Check image file existence and resolution vs display size."""
@@ -803,6 +1074,10 @@ class SVGQualityChecker:
             return 'foreignObject'
         elif 'font' in error_msg.lower():
             return 'Font issues'
+        elif 'text layout overflow' in error_msg.lower() or 'wrap contract' in error_msg.lower():
+            return 'Text layout overflow'
+        elif 'title/header zone' in error_msg.lower():
+            return 'Title zone intrusion'
         else:
             return 'Other'
 
@@ -1161,7 +1436,7 @@ class SVGQualityChecker:
             print(f"\n[TIP] Common fixes:")
             print(f"  1. XML well-formedness: write typography as raw Unicode (—, ©, →, NBSP); escape XML reserved chars as &amp; &lt; &gt; &quot; &apos; — never use HTML named entities like &nbsp; &mdash; &copy;")
             print(f"  2. viewBox issues: Ensure consistency with canvas format (see references/canvas-formats.md)")
-            print(f"  3. foreignObject: Use <text> + <tspan> for manual line breaks")
+            print(f"  3. foreignObject: Use separate <text> lines or data-box/data-wrap")
             print(f"  4. Font issues: end every font-family stack with a PPT-safe family (e.g. Microsoft YaHei / Arial / Consolas)")
 
     def _print_animation_summary(self):
