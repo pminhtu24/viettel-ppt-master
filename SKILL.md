@@ -339,8 +339,8 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 ```bash
 python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
 ```
-- Any `error` (banned SVG features, viewBox mismatch, spec_lock drift, etc.) MUST be fixed before proceeding — return to Visual Construction, regenerate that page, re-run check.
-- `warning` entries (low-res image, non-PPT-safe font tail, etc.): fix when straightforward, otherwise acknowledge and release.
+- Any `error` (banned SVG features, viewBox mismatch, spec_lock drift, text overflow, title-zone content intrusion, etc.) MUST be fixed before proceeding — return to Visual Construction, regenerate that page, re-run check.
+- `warning` entries (low-res image, non-PPT-safe font tail, long text without a wrap contract, etc.): fix when straightforward, otherwise acknowledge and release.
 - Run against `svg_output/` (not after `finalize_svg.py` — finalize rewrites SVG and masks violations).
 
 **Logic Construction Phase**: generate speaker notes → `<project_path>/notes/total.md`
@@ -428,6 +428,17 @@ Full effect list, anchor logic, and limits: [`references/animations.md`](referen
 
 > ❌ **NEVER** substitute `cp` for `finalize_svg.py` — finalize performs multiple critical processing steps
 > ❌ **NEVER** force `-s output` for the legacy/preview pptx (PowerPoint's internal SVG parser drops icons and rounded corners). The default auto-split already gives native the high-fidelity source it needs without touching legacy.
+
+**Step 7.4 — Rendered Visual QA (Mandatory)**:
+
+After PPTX export, render the produced PPTX to PDF/images and inspect the rendered slides before declaring completion:
+
+```bash
+python3 /home/tupham/.codex/skills/pptx/scripts/office/soffice.py --headless --convert-to pdf <output.pptx> --outdir <exports_dir>
+pdftoppm -jpeg -r 120 <output.pdf> <exports_dir>/qa_slide
+```
+
+Review the generated slide images for text overflow, clipped labels, chart marks entering title/footer zones, and footer/source collisions. If any issue is found, fix the corresponding SVG in `svg_output/`, rerun `svg_quality_checker.py`, re-export, and rerender affected slides. Do not report success from SVG validation alone.
 > ❌ **NEVER** use `--only` (it suppresses one of the two output files)
 
 > **Post-export annotation window**: the preview service from Step 6 typically remains running after export. If the user submitted annotations in the browser (during Executor or after export) and now asks to apply them — they may quote the browser prompt (`Annotations saved. ... apply my annotations`), say "apply my annotations" / "应用注解" / equivalent — run [`live-preview`](workflows/live-preview.md) Step 2 to apply and re-export. Annotations submitted during generation are also handled here, not earlier.

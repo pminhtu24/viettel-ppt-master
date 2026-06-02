@@ -54,6 +54,17 @@
 >
 > **Stack length discipline.** 3-4 fonts per stack is the sweet spot. Converter only writes the **first** Latin and **first** CJK font into PPTX — everything after is silently dropped. macOS-only families (`Songti SC`, `Menlo`, `Monaco`, `Helvetica`) are auto-mapped to Windows equivalents via `FONT_FALLBACK_WIN` (see `scripts/svg_to_pptx/drawingml_utils.py`); stacking both is redundant. Lead with Windows-preinstalled fonts (`Microsoft YaHei` / `SimSun` / `Arial` / `Georgia` / `Consolas`); keep at most **one** macOS-exclusive family (typically `"PingFang SC"`) as a browser-preview nicety.
 
+## text_fit
+- card_padding: 20
+- chart_label_max_chars: 24
+- card_body_max_lines: 3
+- kpi_caption_max_lines: 2
+- footer_max_chars: 90
+- require_wrap_contract: true
+- title_zone_bottom: 255
+
+> Strategist: fill only the constraints the deck needs. These values guide Executor text budgeting and make `svg_quality_checker.py` overflow checks actionable. New projects should keep `require_wrap_contract: true`; omit this section only for legacy decks.
+
 ## icons
 - library: chunk-filled
 - brand_library: simple-icons

@@ -201,6 +201,24 @@ Two views on the same font decisions — fill both, keep them consistent:
 - **Full-bleed text placement**: inset text away from the image's focal points; legibility over photographic backgrounds typically needs a gradient or opacity overlay.
 - **Content width** is driven by reading comfort and image composition, not a card grid slot — don't back-compute "column width" when there's no column.
 
+### Text Fit Budget
+
+> Strategist MUST define text fit constraints for the deck. Executor uses these as the budget before writing SVG; `svg_quality_checker.py` enforces overflow risks.
+
+| Slot | Max lines | Max chars per line | Min font | Required handling |
+| ---- | --------- | ------------------ | -------- | ----------------- |
+| KPI value | [1] | [e.g., 8-12] | [fill] | Number and unit must both fit the card; move unit below when needed |
+| KPI caption | [1-2] | [fill] | [fill] | Use separate `<text>` lines or `data-box` |
+| Card body | [2-4] | [fill] | [fill] | Use `data-box="x,y,w,h" data-wrap="true"` or manual lines |
+| Chart label | [1-2] | [fill] | [fill] | Shorten label before shrinking below annotation size |
+| Footer/source | [1] | [fill] | [fill] | Must not collide with page badge or content above |
+
+**Overflow policy**:
+
+- Text inside cards, tables, chart panels, callouts, and KPI blocks requires a wrap contract: separate `<text>` lines or `data-box + data-wrap`.
+- If content exceeds the budget, split the slide or shorten lower-priority text. Do not add more cards or shrink body text below the stated minimum.
+- Large chart/data marks must stay outside the title/header zone. If a chart needs vertical space, reduce title density or split the page.
+
 ---
 
 ## VI. Icon Usage Specification
@@ -322,7 +340,7 @@ One speaker note file per page, saved to `notes/`:
 
 1. viewBox: `{canvas_info['viewbox']}`
 2. Background uses `<rect>` elements
-3. Text wrapping uses `<tspan>` (`<foreignObject>` FORBIDDEN)
+3. Text wrapping uses separate `<text>` lines or `data-box + data-wrap` (`<foreignObject>` FORBIDDEN)
 4. Transparency uses `fill-opacity` / `stroke-opacity`; `rgba()` FORBIDDEN
 5. FORBIDDEN: `mask`, `<style>`, `class`, `foreignObject`
 6. FORBIDDEN: `textPath`, `animate*`, `script`

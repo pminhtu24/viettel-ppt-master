@@ -213,6 +213,25 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 | Line-height | 1.4-1.6× body | Vertical rhythm |
 | Full-bleed text inset | 64px | From canvas edge |
 
+### 5.5 Text Fit and Overflow Rules
+
+Viettel decks are chart-heavy and often use compact cards. Every text block inside a card, KPI tile, chart label lane, insight panel, or footer must be budgeted before SVG authoring.
+
+| Slot | Default Budget |
+| --- | --- |
+| KPI value | 1 line; unit below if combined width exceeds tile width |
+| KPI caption | 1-2 lines, 14-16px |
+| Insight/card body | 2-3 lines, 14-16px, line-height 1.4-1.5 |
+| Chart annotation | 1-2 lines, 12-14px |
+| Footer/source | 1 line; must leave 64px clearance from page badge |
+
+Implementation rules:
+
+1. Use manual line breaks or `data-box="x,y,w,h" data-wrap="true"` on all bounded text. A plain one-line `<text>` inside a card is allowed only when the text is short enough to fit with 18px inner padding.
+2. Keep card text at least 18px from the left/right edges and 14px from header bars/dividers.
+3. Do not place chart bars, labels, or callout badges in the large-title zone. On standard Viettel content pages, chart/data marks should stay below y=255 unless the page is intentionally a breathing/hero composition.
+4. If a paragraph or bullet list does not fit within its card at the minimum font size, split the content across pages or remove secondary text. Do not shrink body text into unreadable microtype.
+
 ---
 
 ## VI. Page Types
@@ -555,7 +574,7 @@ The source asset lives in `templates/layouts/viettel_default/viettel-logo.png`. 
 ### SVG Technical Constraints
 
 1. `viewBox` must remain `0 0 1280 720`
-2. Use `<rect>` for backgrounds; use `<tspan>` for text wrapping
+2. Use `<rect>` for backgrounds; use separate `<text>` lines or `data-box + data-wrap` for text wrapping
 3. Transparency must use `fill-opacity` / `stroke-opacity`; **DO NOT use `rgba()`**
 4. **FORBIDDEN**: `mask`, `<style>`, `class`, `foreignObject`, `textPath`, `animate*`, `script`
 5. `clipPath` allowed only on `<image>` elements (in `<defs>`, single shape child)

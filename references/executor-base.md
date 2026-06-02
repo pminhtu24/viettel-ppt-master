@@ -117,6 +117,38 @@ Before drawing each page, look up its entry in `page_rhythm` (key format `P<NN>`
 
 **Tag not found for current page** → fall back to `dense` silently. Do not invent a tag.
 
+### 2.2 Text Fit Contract (Mandatory)
+
+SVG text is not layout text: a `<text>` element has no intrinsic width, and PPTX export cannot infer the card or panel it should stay inside. Every text run inside a card, table cell, chart label lane, callout, KPI card, or footer/source band MUST have an explicit fit strategy.
+
+Use one of these strategies:
+
+1. **Manual line wrapping** — split text into separate `<text>` lines, with measured line lengths that fit the container. Do not rely on `<tspan>` positioning for PPTX line layout.
+2. **PPTX wrap contract** — add `data-box="x,y,w,h" data-wrap="true"` to the `<text>` element. The box is in SVG coordinates and describes the intended text frame. The native PPTX converter exports it as a fixed text box with wrapping enabled.
+3. **Intentional overflow** — only for decorative or clipped hero typography, add `data-allow-overflow="true"` and keep it outside card/table semantics.
+
+Hard constraints:
+
+- Do not place a long sentence in one `<text>` line inside a card. If it exceeds ~55 Latin characters or ~28 Vietnamese/CJK characters at body size, wrap it manually or use `data-box`.
+- Do not attach unit labels to large numbers with fixed x offsets unless the combined number+unit width was budgeted. Prefer separate rows (`220,4` on one line, `nghìn tỷ đồng` below) or a `data-box`.
+- Every card must reserve inner padding: at least 18px for body cards, 14px for dense chart labels, 24px for KPI cards.
+- If content does not fit after wrapping at the role's minimum size, split the slide or remove lower-priority text. Never shrink body text below the declared annotation range to force fit.
+- Keep chart marks, data labels, and cards below the title divider unless the page is a designed hero/breathing page. On Viettel 16:9 shells, content should normally start at y>=128, and large chart bars/labels should not enter y<255 when a large title block is present.
+
+Example:
+
+```xml
+<rect x="96" y="280" width="268" height="200" rx="8" fill="#F2F2F2"/>
+<text x="120" y="360"
+      data-box="120,344,220,48"
+      data-wrap="true"
+      font-family="Arial, sans-serif"
+      font-size="14"
+      fill="#44494D">Mức tăng trưởng hai chữ số liên tục trên quy mô lớn</text>
+```
+
+`svg_quality_checker.py` treats text overflow and title-zone content intrusion as errors. Fix the SVG source before `finalize_svg.py`; post-processing can mask the source of the problem.
+
 **Per-page template lookup — `page_layouts` section**:
 
 Before drawing each page, look up its entry in `page_layouts` to decide which basename to inherit (the SVG itself was loaded in §1.0):
