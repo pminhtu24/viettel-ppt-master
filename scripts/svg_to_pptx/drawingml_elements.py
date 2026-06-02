@@ -1011,6 +1011,31 @@ def _build_run_xml(
 </a:r>'''
 
 
+def _parse_text_data_box(elem: ET.Element, ctx: ConvertContext) -> tuple[float, float, float, float] | None:
+    """Parse SVG text box metadata for fixed-width wrapped PPT text.
+
+    Authoring contract:
+      <text x="..." y="..." data-box="x,y,w,h" data-wrap="true">...</text>
+
+    Coordinates are SVG coordinates and respect inherited group transforms via
+    ctx_x/ctx_y/ctx_w/ctx_h. This lets authors keep the visible SVG baseline
+    for browser preview while giving the PPTX exporter an explicit text frame.
+    """
+    raw = elem.get('data-box')
+    if not raw:
+        return None
+    parts = [p.strip() for p in re.split(r'[\s,]+', raw) if p.strip()]
+    if len(parts) != 4:
+        return None
+    try:
+        x, y, w, h = [float(p) for p in parts]
+    except ValueError:
+        return None
+    if w <= 0 or h <= 0:
+        return None
+    return ctx_x(x, ctx), ctx_y(y, ctx), ctx_w(w, ctx), ctx_h(h, ctx)
+
+
 def convert_text(elem: ET.Element, ctx: ConvertContext) -> ShapeResult | None:
     """Convert SVG <text> to DrawingML text shape with multi-run support."""
     x = ctx_x(_f(elem.get('x')), ctx)
@@ -1056,18 +1081,23 @@ def convert_text(elem: ET.Element, ctx: ConvertContext) -> ShapeResult | None:
     text_width = estimate_text_width(full_text, font_size, font_weight) * 1.15
     text_height = font_size * 1.5
     padding = font_size * 0.1
+    fixed_text_box = _parse_text_data_box(elem, ctx)
 
-    # Adjust position based on text-anchor
-    if text_anchor == 'middle':
-        box_x = x - text_width / 2 - padding
-    elif text_anchor == 'end':
-        box_x = x - text_width - padding
+    if fixed_text_box:
+        box_x, box_y, box_w, box_h = fixed_text_box
+        padding = 0
     else:
-        box_x = x - padding
+        # Adjust position based on text-anchor
+        if text_anchor == 'middle':
+            box_x = x - text_width / 2 - padding
+        elif text_anchor == 'end':
+            box_x = x - text_width - padding
+        else:
+            box_x = x - padding
 
-    box_y = y - font_size * 0.85
-    box_w = text_width + padding * 2
-    box_h = text_height + padding
+        box_y = y - font_size * 0.85
+        box_w = text_width + padding * 2
+        box_h = text_height + padding
 
     # Letter spacing
     spc_attr = ''
@@ -1131,6 +1161,9 @@ def convert_text(elem: ET.Element, ctx: ConvertContext) -> ShapeResult | None:
     off_y = px_to_emu(box_y)
     ext_cx = px_to_emu(box_w)
     ext_cy = px_to_emu(box_h)
+    wrap = elem.get('data-wrap') == 'true' or fixed_text_box is not None
+    wrap_attr = 'square' if wrap else 'none'
+    autofit_xml = '<a:noAutofit/>' if fixed_text_box else '<a:spAutoFit/>'
 
     return ShapeResult(xml=f'''<p:sp>
 <p:nvSpPr>
@@ -1146,8 +1179,8 @@ def convert_text(elem: ET.Element, ctx: ConvertContext) -> ShapeResult | None:
 {shape_effect_xml}
 </p:spPr>
 <p:txBody>
-<a:bodyPr wrap="none" lIns="0" tIns="0" rIns="0" bIns="0" anchor="t" anchorCtr="0">
-<a:spAutoFit/>
+<a:bodyPr wrap="{wrap_attr}" lIns="0" tIns="0" rIns="0" bIns="0" anchor="t" anchorCtr="0">
+{autofit_xml}
 </a:bodyPr>
 <a:lstStyle/>
 <a:p>
