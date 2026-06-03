@@ -451,29 +451,6 @@ html, body {
     flex-shrink: 0;
 }
 
-.btn-lang-toggle {
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    z-index: 2;
-    min-width: 34px;
-    padding: 3px 10px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #c0c0d8;
-    background: transparent;
-    border: 1px solid #3a3a5a;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
-}
-
-.btn-lang-toggle:hover {
-    color: #ffffff;
-    background: #2a2a4a;
-    border-color: #5a5a7a;
-}
-
 #btn-save {
     padding: 11px 0;
     font-size: 14px;

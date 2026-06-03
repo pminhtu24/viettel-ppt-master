@@ -394,6 +394,12 @@ def parse_font_family(font_family_str: str) -> dict[str, str]:
         return {'latin': 'Segoe UI', 'ea': 'Microsoft YaHei'}
 
     fonts = [f.strip().strip("'\"") for f in font_family_str.split(',')]
+    viettel_locked_fonts = {
+        'FS PF BeauSans Pro',
+        'FS Magistral',
+        'Sarabun',
+    }
+    is_viettel_locked = any(font in viettel_locked_fonts for font in fonts)
     latin_font = None
     ea_font = None
 
@@ -419,7 +425,10 @@ def parse_font_family(font_family_str: str) -> dict[str, str]:
 
     # EA must always be a CJK-capable font
     if not ea_font:
-        ea_font = 'SimSun' if final_latin in _SERIF_LATIN else 'Microsoft YaHei'
+        if is_viettel_locked:
+            ea_font = final_latin
+        else:
+            ea_font = 'SimSun' if final_latin in _SERIF_LATIN else 'Microsoft YaHei'
 
     return {'latin': final_latin, 'ea': ea_font}
 

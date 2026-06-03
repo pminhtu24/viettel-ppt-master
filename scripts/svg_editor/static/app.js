@@ -41,66 +41,16 @@
             modal_confirm_exit: "Exit preview and stop the local server?\n\nUnsaved annotations will be discarded.",
             modal_success_exit: "Preview stopped.\n\nYou can close this tab and return to the chat.",
             modal_stopping: "Stopping preview server...",
-            lang_toggle_title: "Switch language",
             nav_first: "First slide (Home)",
             nav_prev: "Previous slide (←)",
             nav_next: "Next slide (→)",
             nav_last: "Last slide (End)",
             nav_counter: "{current} / {total}",
             nav_empty: "— / —"
-        },
-        zh: {
-            page_title: "PPT Master - 实时预览",
-            panel_slides: "幻灯片",
-            panel_annotations: "标注",
-            placeholder_select_slide: "在左侧选择一张幻灯片开始",
-            label_selected_element: "已选元素",
-            empty_selected_element: "点击幻灯片中的元素进行选择",
-            label_edit_instruction: "修改说明",
-            placeholder_annotation: "描述希望 AI 如何修改该元素……",
-            placeholder_annotation_multi: "描述希望如何修改所选 {count} 个元素……",
-            btn_add_annotation: "添加标注",
-            label_annotations_on_slide: "本页标注",
-            btn_submit_annotations: "提交标注",
-            btn_exit_preview: "退出预览",
-            modal_submit: "提交",
-            modal_cancel: "取消",
-            empty_waiting_slides: "正在等待生成幻灯片……",
-            empty_no_slides: "未找到幻灯片",
-            placeholder_live_ready: "实时预览已就绪,生成的幻灯片会在这里出现。",
-            placeholder_slide_writing: "幻灯片仍在写入,等待下次刷新……",
-            empty_annotations: "暂无标注",
-            tooltip_remove_annotation: "删除标注",
-            multi_selected: "已选 {count} 个元素",
-            multi_mixed: "混合",
-            err_load_slides: "加载幻灯片失败:",
-            err_load_slide: "加载幻灯片失败:",
-            err_add_annotation: "添加标注失败:",
-            err_remove_annotation: "删除标注失败:",
-            err_save: "保存失败:",
-            modal_confirm_submit: "确认将标注保存到磁盘?\n\n预览服务会继续运行。需要关闭时请点击退出预览。",
-            modal_success_submit: "标注已保存。\n\n请回到对话窗口并告诉 AI 应用这些标注(例如\"应用我的标注\")。预览服务仍在运行。",
-            modal_confirm_exit: "退出预览并停止本地服务?\n\n未保存的标注将被丢弃。",
-            modal_success_exit: "预览已停止。\n\n可以关闭本标签页并回到对话窗口。",
-            modal_stopping: "正在停止预览服务……",
-            lang_toggle_title: "切换语言",
-            nav_first: "第一页 (Home)",
-            nav_prev: "上一页 (←)",
-            nav_next: "下一页 (→)",
-            nav_last: "末页 (End)",
-            nav_counter: "{current} / {total}",
-            nav_empty: "— / —"
         }
     };
 
-    var LANG = (function () {
-        try {
-            var stored = window.localStorage.getItem("ppt_lang");
-            if (stored === "zh" || stored === "en") return stored;
-        } catch (e) { /* ignore */ }
-        var nav = (navigator.language || navigator.userLanguage || "en").toLowerCase();
-        return nav.indexOf("zh") === 0 ? "zh" : "en";
-    })();
+    var LANG = "en";
 
     function t(key, params) {
         var dict = MESSAGES[LANG] || MESSAGES.en;
@@ -116,7 +66,7 @@
     }
 
     function applyI18n() {
-        document.documentElement.setAttribute("lang", LANG === "zh" ? "zh-CN" : "en");
+        document.documentElement.setAttribute("lang", "en");
         document.title = t("page_title");
         document.querySelectorAll("[data-i18n]").forEach(function (el) {
             el.textContent = t(el.getAttribute("data-i18n"));
@@ -128,22 +78,6 @@
             el.title = t(el.getAttribute("data-i18n-title"));
         });
         updateNavLabel();
-    }
-
-    function setLang(lang) {
-        if (lang !== "zh" && lang !== "en") return;
-        LANG = lang;
-        try { window.localStorage.setItem("ppt_lang", lang); } catch (e) { /* ignore */ }
-        applyI18n();
-        var toggleBtn = document.getElementById("btn-lang-toggle");
-        if (toggleBtn) {
-            toggleBtn.textContent = lang === "zh" ? "EN" : "中";
-            toggleBtn.title = t("lang_toggle_title");
-        }
-        // Re-render dynamic regions so they pick up the new language
-        updateSelectionPanel();
-        updateAnnotationList();
-        loadSlides();
     }
 
     // ---- DOM refs ---------------------------------------------------
@@ -1054,14 +988,6 @@
     //  Boot
     // ================================================================
     applyI18n();
-    var langToggleBtn = document.getElementById("btn-lang-toggle");
-    if (langToggleBtn) {
-        langToggleBtn.textContent = LANG === "zh" ? "EN" : "中";
-        langToggleBtn.title = t("lang_toggle_title");
-        langToggleBtn.addEventListener("click", function () {
-            setLang(LANG === "zh" ? "en" : "zh");
-        });
-    }
 
     loadConfig().then(function () {
         loadSlides();
