@@ -31,7 +31,7 @@ description: >
 > [!IMPORTANT]
 > ## 🌐 Language & Communication Rule
 >
-> - **Response language**: match the user's input and source materials. Explicit user override (e.g., "请用英文回答") takes precedence.
+> - **Response language**: match the user's input and source materials. Explicit user override takes precedence.
 > - **Template format**: `design_spec.md` MUST follow its original English template structure (section headings, field names) regardless of conversation language. Content values may be in the user's language.
 
 > [!IMPORTANT]
@@ -58,6 +58,7 @@ description: >
 | `${SKILL_DIR}/scripts/finalize_svg.py` | SVG post-processing (unified entry) |
 | `${SKILL_DIR}/scripts/svg_to_pptx.py` | Export to PPTX |
 | `${SKILL_DIR}/scripts/update_spec.py` | Propagate a `spec_lock.md` color / font_family change across all generated SVGs |
+| `${SKILL_DIR}/scripts/check_fonts.py` | Preflight host font availability, fallback usage, and local bundle install hints |
 
 For complete tool documentation, see `${SKILL_DIR}/scripts/README.md`.
 
@@ -80,7 +81,7 @@ Viettel corporate decks can use `${SKILL_DIR}/templates/layouts/viettel_default/
 | `resume-execute` | `workflows/resume-execute.md` | Phase B entry — resume execution in a fresh chat after Phase A (Step 1–5) completed in another session (split mode) |
 | `verify-charts` | `workflows/verify-charts.md` | Chart coordinate calibration — run after SVG generation if the deck contains data charts |
 | `customize-animations` | `workflows/customize-animations.md` | Object-level PPTX animation customization — run only when the user explicitly asks to tune animation order/effects/timing |
-| `live-preview` | `workflows/live-preview.md` | Browser-based live preview — auto-started during generation and re-enterable any time the user mentions "live preview", "preview", "看效果", or wants to click/select a slide element |
+| `live-preview` | `workflows/live-preview.md` | Browser-based live preview — auto-started during generation and re-enterable any time the user mentions "live preview", "preview", or wants to click/select a slide element |
 
 ---
 
@@ -161,9 +162,10 @@ The following keywords automatically match to Viettel template:
 
 | User input contains | Template matched |
 |---|---|
-| `viettel`, `style viettel`, `viettel style`, `viettel corporate`, `viettel report`, `viettel template`, `style viettel`, `thương hiệu viettel`, `mẫu viettel`, `corporate viettel` | `templates/layouts/viettel_default/` |
+| `viettel`, `style viettel`, `viettel style`, `viettel corporate`, `viettel report`, `viettel template`, `style viettel`, `viettel style slide`, `viettel style ppt`, `thương hiệu viettel`, `mẫu viettel`, `slide viettel`, `ppt viettel`, `corporate viettel` | `templates/layouts/viettel_default/` |
 
 > When keyword is detected, automatically resolve to the template path and copy files. No path required from user.
+> Viettel keyword matching is a brand lock, not a loose style hint. Once matched, Strategist MUST keep the Viettel font stack, palette, top-right logo slot, footer/page-number treatment, and content safe area from `templates/layouts/viettel_default/design_spec.md`; do not ask the user to choose typography or a competing visual style unless they explicitly request a non-Viettel override.
 
 #### Option B: Explicit Path
 
@@ -185,6 +187,7 @@ cp ${TEMPLATE_DIR}/*.svg <project_path>/templates/
 cp ${TEMPLATE_DIR}/design_spec.md <project_path>/templates/
 cp ${TEMPLATE_DIR}/*.png <project_path>/images/ 2>/dev/null || true
 cp ${TEMPLATE_DIR}/*.jpg <project_path>/images/ 2>/dev/null || true
+cp -R ${TEMPLATE_DIR}/fonts <project_path>/fonts 2>/dev/null || true
 ```
 
 **✅ Checkpoint — If keyword or path detected, template is copied. Otherwise, proceed to Step 4 with free design.**
@@ -215,12 +218,23 @@ Read references/strategist.md
 7. Typography plan
 8. Image usage approach
 
+**Viettel template exception**: if Step 3 matched `viettel_default`, present the Viettel brand choices as locked recommendations, not open-ended choices. The typography plan is `"FS PF BeauSans Pro", "FS Magistral", Sarabun`; the color scheme is Viettel red `#EE0033`, deep blue `#12436D`, white/gray reporting surfaces; and `spec_lock.md` MUST copy these values exactly.
+
+**Font preflight (required for bundled brand fonts)**: after `spec_lock.md` is written, run:
+```bash
+python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>
+```
+- `installed` → proceed normally
+- `fallback in use` / `missing` → continue generation, but tell the user `brand fidelity degraded`
+- local bundle present in `<project_path>/fonts/` → tell the user the font is installable from the local bundle and ask explicit permission before attempting host installation
+- default policy: do **not** auto-install fonts
+
 **Mandatory — split-mode note** (not a ninth confirmation): after listing the eight confirmation details, you MUST append exactly one short line (rendered in the user's language, prefixed with 💡) about generation mode. Pick the variant by qualitative read of Phase A signals — recommended page count, source-material bulk, whether `topic-research` ran with substantial web-fetch accumulation:
 
 | Signal read | Line content |
 |---|---|
-| Heavy (long page count / bulky sources / heavy web-fetch accumulation) | State estimated page count and large source size; recommend switching to [split mode](workflows/resume-execute.md) after Step 5 — stop this chat, open a fresh window and input `继续生成 projects/<project_name>` to enter Phase B (SVG generation + export); no response or "continue" = default continuous mode. |
-| Normal (default) | State scale is moderate, default continuous mode generates in one go; if mid-way window switch is desired, input `继续生成 projects/<project_name>` after Step 5 to switch to [split mode](workflows/resume-execute.md). |
+| Heavy (long page count / bulky sources / heavy web-fetch accumulation) | State estimated page count and large source size; recommend switching to [split mode](workflows/resume-execute.md) after Step 5 — stop this chat, open a fresh window and input `continue generation projects/<project_name>` to enter Phase B (SVG generation + export); no response or "continue" = default continuous mode. |
+| Normal (default) | State scale is moderate, default continuous mode generates in one go; if mid-way window switch is desired, input `continue generation projects/<project_name>` after Step 5 to switch to [split mode](workflows/resume-execute.md). |
 
 This line is required output every run — the user must always see the mode choice exists. Whether to act on it is the user's call.
 
@@ -292,7 +306,7 @@ Workflow:
   ## ✅ Phase A Complete
   - [x] Spec: `design_spec.md`, `spec_lock.md`
   - [x] Resources: `sources/`, `images/`, `templates/`
-  - [ ] **Next**: open a fresh chat window and input `继续生成 projects/<project_name>` to enter Phase B via the [`resume-execute`](workflows/resume-execute.md) workflow.
+  - [ ] **Next**: open a fresh chat window and input `continue generation projects/<project_name>` to enter Phase B via the [`resume-execute`](workflows/resume-execute.md) workflow.
   ```
 
 > On acquisition failure, do NOT halt — follow the Failure Handling rule in [image-base.md](references/image-base.md) §5: retry once, then mark the row `Needs-Manual`, report to user, and continue to the checkpoint above.
@@ -329,6 +343,8 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 **Pre-generation Batch Read (Mandatory)**: before the first SVG, batch-read every distinct layout SVG referenced in `spec_lock.page_layouts` and every distinct chart SVG referenced in `spec_lock.page_charts` (plus any §VII backup charts). One read per file, up front — do not re-read these during page generation. See executor-base.md §1.0.
 
 **Per-page spec_lock re-read (Mandatory)**: before **each** SVG page, `read_file <project_path>/spec_lock.md` and use only its colors / fonts / icons / images, plus the per-page `page_rhythm` / `page_layouts` / `page_charts` lookups (resolves to template SVGs already loaded in the batch read above). Resists context-compression drift on long decks. See executor-base.md §2.1.
+
+**Font-preflight gate (Mandatory for bundled brand fonts)**: before the first SVG page, if `<project_path>/fonts/` exists or `spec_lock.md typography` leads with a non-preinstalled brand font, run `python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>`. If the result is `fallback in use` or `missing`, surface `brand fidelity degraded` and continue only after making that runtime state explicit to the user. Installing from the local bundle is opt-in and requires explicit user approval.
 
 > ⚠️ **Main-agent only**: SVG generation MUST stay in the current main agent — page design depends on full upstream context. Do NOT delegate to sub-agents.
 > ⚠️ **Generation rhythm**: generate pages sequentially, one at a time, in the same continuous context. Do NOT batch (e.g., 5 per group).
@@ -441,9 +457,9 @@ pdftoppm -jpeg -r 120 <output.pdf> <exports_dir>/qa_slide
 Review the generated slide images for text overflow, clipped labels, chart marks entering title/footer zones, and footer/source collisions. If any issue is found, fix the corresponding SVG in `svg_output/`, rerun `svg_quality_checker.py`, re-export, and rerender affected slides. Do not report success from SVG validation alone.
 > ❌ **NEVER** use `--only` (it suppresses one of the two output files)
 
-> **Post-export annotation window**: the preview service from Step 6 typically remains running after export. If the user submitted annotations in the browser (during Executor or after export) and now asks to apply them — they may quote the browser prompt (`Annotations saved. ... apply my annotations`), say "apply my annotations" / "应用注解" / equivalent — run [`live-preview`](workflows/live-preview.md) Step 2 to apply and re-export. Annotations submitted during generation are also handled here, not earlier.
+> **Post-export annotation window**: the preview service from Step 6 typically remains running after export. If the user submitted annotations in the browser (during Executor or after export) and now asks to apply them — they may quote the browser prompt (`Annotations saved. ... apply my annotations`), say "apply my annotations" / "apply annotations" / equivalent — run [`live-preview`](workflows/live-preview.md) Step 2 to apply and re-export. Annotations submitted during generation are also handled here, not earlier.
 
-> **Preview not running?** Any time the user mentions "live preview", "preview", "看效果", or wants to select/click a slide element and the service is not running, run [`live-preview`](workflows/live-preview.md) Step 1 to start it. If the service is already running, just point them at the URL — do not restart.
+> **Preview not running?** Any time the user mentions "live preview", "preview", "view preview", or wants to select/click a slide element and the service is not running, run [`live-preview`](workflows/live-preview.md) Step 1 to start it. If the service is already running, just point them at the URL — do not restart.
 
 ---
 

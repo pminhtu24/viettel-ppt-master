@@ -89,6 +89,8 @@ Before the first SVG page, output a confirmation listing: canvas dimensions, bod
 
 **Hard rule**: Before generating **each** SVG page, `read_file <project_path>/spec_lock.md`. Use only values from this file, not from memory. If context was auto-compacted, also `read_file <project_path>/design_spec.md` for the current page's §IX brief.
 
+**Font preflight rule**: if `<project_path>/fonts/` exists or `spec_lock.md typography` leads with a non-preinstalled brand font, run `python3 scripts/check_fonts.py <project_path>` before the first SVG page. If the report says `fallback in use` or `missing`, state `brand fidelity degraded` once and continue using the declared stack; do not auto-install fonts. Installing from the local bundle is an explicit-user-approval action, not an executor default.
+
 **If `spec_lock.md` is missing**: emit `warning: spec_lock.md missing — generating without execution lock` once, then proceed using `design_spec.md` values. Expected only for legacy projects; new projects MUST have it (see [strategist.md](strategist.md) §6 step 4).
 
 **Forbidden — values outside the lock**:
@@ -175,6 +177,9 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
 - **Spec adherence**: follow color, layout, canvas format, and typography in the spec
 - **Template structure**: if templates exist, inherit the visual framework
 - **Viettel brand chrome**: if the deck uses `viettel_default` or the execution lock specifies a Viettel brand profile, keep the top-right logo visible on every page. Layout-shell pages may already contain the logo; chart/framework pages MUST receive it during post-processing via `finalize_svg.py --brand-chrome viettel --strip-comments`.
+- **Viettel logo clearance**: the fixed logo reserves `x=1060-1224, y=20-82`. Header/title text, subtitles, chart labels, and callouts MUST NOT enter this slot. Content-page titles should use `data-box="88,36,960,58" data-wrap="true"` or manual line breaks so long titles wrap before the logo.
+- **Viettel page number ownership**: each slide has exactly one page-number treatment. If a page inherits a Viettel shell, do not draw an additional bottom-right slide number; post-processing adds page numbers only to pages that do not already contain the shell footer/page-number treatment.
+- **Brand font runtime honesty**: if font preflight reports that the lead brand font is missing, keep the declared stack in the SVG/PPTX source but tell the user `brand fidelity degraded`. Do not rewrite the deck to hide the fallback state.
 - **Main-agent ownership**: SVG generation must run in the main agent (not sub-agents) — pages share upstream context for cross-page visual continuity
 - **Generation rhythm**: lock global design context first, then generate pages sequentially in one continuous context. No batched groups (e.g., 5 at a time).
 - **Phased batch generation** (recommended):

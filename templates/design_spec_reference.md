@@ -119,6 +119,8 @@ Two views on the same font decisions — fill both, keep them consistent:
 > The converter (`drawingml_utils.py parse_font_family`) maps these to PPTX `<a:latin>` / `<a:ea>` regardless of order — but browser preview and SVG native rendering reflect stack order. Pick the order matching your design intent.
 
 > **Why two views**: the breakdown shows role assignment at a glance; stacks carry the ordering info the breakdown can't encode. Keep both consistent — table cells should be exactly the fonts in the stacks (any order).
+>
+> **Bundled brand fonts**: when a template ships a local `fonts/` bundle, keep the intended brand stack in `design_spec.md` / `spec_lock.md` exactly as designed, even if the host may not have those fonts yet. The runtime workflow must then run `scripts/check_fonts.py` after `spec_lock.md` generation. If the leading family is absent on the host, execution continues with fallback rendering but MUST report `brand fidelity degraded`; installation from the local bundle is opt-in and requires explicit user approval.
 
 ### Font Size Hierarchy
 

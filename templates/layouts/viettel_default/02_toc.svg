@@ -3,8 +3,8 @@
   <rect x="0" y="0" width="1280" height="5" fill="#EE0033"/>
   <image href="../images/viettel-logo.png" x="1088" y="28" width="128" height="42" preserveAspectRatio="xMidYMid meet"/>
 
-  <text x="72" y="70" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="34" font-weight="800" fill="#000000">{{PAGE_TITLE}}</text>
-  <text x="72" y="104" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="18" font-weight="500" fill="#44494D">{{TOC_SUMMARY}}</text>
+  <text x="72" y="70" data-box="72,40,960,48" data-wrap="true" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="34" font-weight="800" fill="#000000">{{PAGE_TITLE}}</text>
+  <text x="72" y="104" data-box="72,84,960,28" data-wrap="true" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="18" font-weight="500" fill="#44494D">{{TOC_SUMMARY}}</text>
   <line x1="72" y1="132" x2="1208" y2="132" stroke="#E6E6E6" stroke-width="1"/>
 
   <g id="toc-items" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun">

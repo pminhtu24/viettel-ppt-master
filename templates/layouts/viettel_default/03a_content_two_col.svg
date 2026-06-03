@@ -4,7 +4,7 @@
   <image href="../images/viettel-logo.png" x="1088" y="28" width="128" height="42" preserveAspectRatio="xMidYMid meet"/>
 
   <rect x="64" y="38" width="7" height="38" rx="3.5" fill="#EE0033"/>
-  <text x="88" y="66" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="32" font-weight="800" fill="#000000">{{PAGE_TITLE}}</text>
+  <text x="88" y="66" data-box="88,36,960,58" data-wrap="true" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="32" font-weight="800" fill="#000000">{{PAGE_TITLE}}</text>
   <line x1="64" y1="102" x2="1216" y2="102" stroke="#E6E6E6" stroke-width="1"/>
 
   <!-- Left Column -->

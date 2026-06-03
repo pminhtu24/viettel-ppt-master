@@ -10,6 +10,8 @@ Usage:
     python3 scripts/svg_quality_checker.py --all examples
 """
 
+from __future__ import annotations
+
 import sys
 import re
 import json
@@ -311,6 +313,7 @@ class SVGQualityChecker:
                 # 5. Check text wrapping methods
                 self._check_text_elements(content, result)
                 self._check_text_layout_risk(content, result)
+                self._check_viettel_brand_layout(content, result)
 
                 # 6. Check image references (file existence and resolution)
                 self._check_image_references(content, svg_path, result)
@@ -525,6 +528,11 @@ class SVGQualityChecker:
         }
 
         for font_family in font_matches:
+            font_family = html.unescape(font_family)
+            brand_locked_viettel = any(
+                name in font_family.lower()
+                for name in ('fs pf beausans pro', 'fs magistral', 'sarabun')
+            )
             # Drop the generic CSS fallback (sans-serif / serif / monospace)
             # and inspect the last concrete family.
             parts = [p.strip().strip('"').strip("'").lower()
@@ -536,6 +544,8 @@ class SVGQualityChecker:
                 continue
             tail = parts[-1]
             if tail not in ppt_safe_tail:
+                if brand_locked_viettel and tail in {'fs pf beausans pro', 'fs magistral', 'sarabun'}:
+                    continue
                 result['warnings'].append(
                     f"Font stack does not end on a PPT-safe family "
                     f"(expected e.g. Microsoft YaHei / SimSun / Arial / "
@@ -778,6 +788,127 @@ class SVGQualityChecker:
                 count += 1
         return count
 
+    def _check_viettel_brand_layout(self, content: str, result: Dict):
+        """Enforce Viettel shell invariants that generic layout checks miss."""
+        if not self._looks_like_viettel_svg(content):
+            return
+        try:
+            root = ET.fromstring(content)
+        except ET.ParseError:
+            return
+
+        logo_box = {'x1': 1060.0, 'y1': 20.0, 'x2': 1224.0, 'y2': 82.0}
+        logo_text_overlaps = 0
+        bottom_page_numbers = 0
+
+        for text in self._iter_text_bounds(root):
+            if self._boxes_intersect(text, logo_box):
+                logo_text_overlaps += 1
+            if self._is_bottom_right_page_number(text):
+                bottom_page_numbers += 1
+
+        if logo_text_overlaps:
+            result['errors'].append(
+                f"Viettel logo clearance violation: {logo_text_overlaps} header text box(es) overlap "
+                "the reserved top-right logo slot (x=1060-1224, y=20-82). "
+                "Wrap titles inside data-box=\"88,36,960,58\" data-wrap=\"true\" or shorten/manual-break the title."
+            )
+        if bottom_page_numbers > 1:
+            result['errors'].append(
+                f"Viettel page number duplication: detected {bottom_page_numbers} bottom-right page-number text elements. "
+                "Keep exactly one shell/footer page number; do not add another in brand chrome or page content."
+            )
+
+    def _looks_like_viettel_svg(self, content: str) -> bool:
+        lower = content.lower()
+        return (
+            'viettel-logo.png' in lower or
+            'viettel-brand-chrome' in lower or
+            'fs pf beausans pro' in lower or
+            'fs magistral' in lower
+        )
+
+    def _iter_text_bounds(self, root: ET.Element) -> List[Dict]:
+        texts: List[Dict] = []
+
+        def visit(elem: ET.Element, tx: float = 0.0, ty: float = 0.0):
+            dx, dy = _parse_translate(elem.get('transform', ''))
+            tx += dx
+            ty += dy
+
+            if _local_name(elem.tag) == 'text':
+                if elem.get('data-allow-overflow') == 'true':
+                    return
+                text = ''.join(elem.itertext()).strip()
+                if text:
+                    x = _float_attr(elem, 'x') + tx
+                    y = _float_attr(elem, 'y') + ty
+                    fs = _float_attr(elem, 'font-size', 16)
+                    fw = _get_svg_attr(elem, 'font-weight', '400')
+                    anchor = _get_svg_attr(elem, 'text-anchor', 'start')
+                    estimated_w = _estimate_svg_text_width(text, fs, fw) * 1.12
+                    tspan_count = sum(
+                        1 for child in elem.iter()
+                        if child is not elem and _local_name(child.tag) == 'tspan'
+                    )
+                    line_count = max(1, tspan_count)
+                    estimated_h = fs * 1.35 * line_count
+
+                    if anchor == 'middle':
+                        box_x = x - estimated_w / 2
+                    elif anchor == 'end':
+                        box_x = x - estimated_w
+                    else:
+                        box_x = x
+                    box_y = y - fs * 0.85
+
+                    data_box = elem.get('data-box')
+                    if data_box:
+                        parts = [p.strip() for p in re.split(r'[\s,]+', data_box) if p.strip()]
+                        if len(parts) == 4:
+                            try:
+                                bx, by, bw, bh = [float(p) for p in parts]
+                                box_x, box_y, estimated_w, estimated_h = bx + tx, by + ty, bw, bh
+                            except ValueError:
+                                pass
+
+                    texts.append({
+                        'text': text,
+                        'x': x,
+                        'y': y,
+                        'x1': box_x,
+                        'y1': box_y,
+                        'x2': box_x + estimated_w,
+                        'y2': box_y + estimated_h,
+                    })
+
+            for child in list(elem):
+                visit(child, tx, ty)
+
+        visit(root)
+        return texts
+
+    def _boxes_intersect(self, a: Dict, b: Dict) -> bool:
+        return (
+            a['x1'] < b['x2'] and
+            a['x2'] > b['x1'] and
+            a['y1'] < b['y2'] and
+            a['y2'] > b['y1']
+        )
+
+    def _is_bottom_right_page_number(self, text: Dict) -> bool:
+        raw = text.get('text', '').strip()
+        if not raw:
+            return False
+        token = raw.replace(' ', '')
+        looks_like_page = (
+            token == '{{PAGE_NUM}}' or
+            bool(re.fullmatch(r'\d{1,3}(?:/\d{1,3})?', token))
+        )
+        if not looks_like_page:
+            return False
+        return text['x'] >= 1140 and text['y'] >= 640
+
     def _check_image_references(self, content: str, svg_path: Path, result: Dict):
         """Check image file existence and resolution vs display size."""
         # Find all <image ...> elements (capture the full tag)
@@ -911,13 +1042,13 @@ class SVGQualityChecker:
         # value; an SVG that uses any one of them is not drifting.
         allowed_fonts = set()
         if typo:
-            default_font = typo.get('font_family', '').strip()
+            default_font = html.unescape(typo.get('font_family', '').strip())
             if default_font:
                 allowed_fonts.add(default_font)
             for k, v in typo.items():
                 if k == 'font_family' or not k.endswith('_family'):
                     continue
-                v_clean = v.strip()
+                v_clean = html.unescape(v.strip())
                 # Skip placeholder text like "same as body (omit if identical)"
                 if not v_clean or v_clean.lower().startswith('same as'):
                     continue
@@ -947,7 +1078,7 @@ class SVGQualityChecker:
 
         font_drifts = set()
         for m in re.finditer(r'font-family\s*=\s*["\']([^"\']+)["\']', content):
-            val = m.group(1).strip()
+            val = html.unescape(m.group(1).strip())
             if allowed_fonts and val not in allowed_fonts:
                 font_drifts.add(val)
 

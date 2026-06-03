@@ -53,6 +53,8 @@
 > **⚠️ PPT-safe stack discipline (HARD rule).** PPTX stores one `typeface` per run with no runtime fallback. Every stack MUST end with a cross-platform pre-installed font: `"Microsoft YaHei", sans-serif` / `SimSun, serif` / `Arial, sans-serif` / `"Times New Roman", serif` / `Consolas, "Courier New", monospace`. Non-preinstalled fonts (Inter / Google Fonts / brand typefaces) may lead the stack only when the Design Spec notes the font-install or embedding requirement.
 >
 > **Stack length discipline.** 3-4 fonts per stack is the sweet spot. Converter only writes the **first** Latin and **first** CJK font into PPTX — everything after is silently dropped. macOS-only families (`Songti SC`, `Menlo`, `Monaco`, `Helvetica`) are auto-mapped to Windows equivalents via `FONT_FALLBACK_WIN` (see `scripts/svg_to_pptx/drawingml_utils.py`); stacking both is redundant. Lead with Windows-preinstalled fonts (`Microsoft YaHei` / `SimSun` / `Arial` / `Georgia` / `Consolas`); keep at most **one** macOS-exclusive family (typically `"PingFang SC"`) as a browser-preview nicety.
+>
+> **Bundled-font exception**: a template may intentionally lock `font_family` to non-preinstalled brand fonts when it also ships a local `fonts/` bundle and the workflow runs `scripts/check_fonts.py` before SVG generation. In that case, keep the exact brand stack in `spec_lock.md`; if the host falls through to a later family, the run must report `brand fidelity degraded` instead of silently pretending the brand font is available.
 
 ## text_fit
 - card_padding: 20

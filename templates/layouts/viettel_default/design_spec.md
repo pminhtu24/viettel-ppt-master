@@ -114,7 +114,7 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 
 **Primary Font**: `"FS PF BeauSans Pro", "FS Magistral", Sarabun`
 
-> Priority order: FS PF BeauSans Pro → FS Magistral → Sarabun. Do not introduce other fonts.
+> Priority order: FS PF BeauSans Pro → FS Magistral → Sarabun. Do not introduce other design fonts. The local `fonts/` bundle carries the brand families; run font preflight before generation and treat fallback rendering as a brand-fidelity warning, not as a silent substitute.
 
 ### Role Breakdown
 
@@ -123,7 +123,7 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 | **Title**    | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | Page titles, cover headline |
 | **Body**     | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | Body content, descriptions  |
 | **Emphasis** | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | Key metrics, callouts       |
-| **Caption**  | `"FS PF BeauSans Pro", "FS Magistral", Sarabun`                        | Footnotes, page numbers     |
+| **Caption**  | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | Footnotes, page numbers     |
 
 ### Font Size Hierarchy
 
@@ -138,6 +138,8 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 | Page number   | 0.6-0.75x     | 11-14px            | 12-15px               | 600     |
 
 > Keep the font stack exactly as declared in `spec_lock.md`. Do not introduce ad-hoc fonts in page SVGs.
+> For Viettel decks, Strategist MUST write this exact stack into `spec_lock.md ## typography` as `font_family`. Do not ask the user to choose typography unless they explicitly request a non-Viettel brand override.
+> Viettel template projects ship a local `fonts/` bundle. After project setup, run `scripts/check_fonts.py <project_path>`; if the result is `fallback in use` or `missing`, continue with the same stack but report `brand fidelity degraded`. Installation from the local bundle is opt-in and requires explicit user approval.
 
 ---
 
@@ -154,6 +156,7 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 | **Content Area** | x: 72-1208, y: 132-618 | Main body with optional dashed frame |
 | **Footer** | y: 674-720 | Gray bar with section name, source, page number |
 | **Page Number Badge** | x=1174, y=684 | Red rounded rect (42×26) with white number |
+| **Header Title Safe Slot** | x=88-1048, y=36-92 | Page title text; must leave the fixed logo slot clear |
 
 ### 5.2 Structural Rules
 
@@ -164,6 +167,8 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 5. **Chart-First Compatibility**: charts and diagrams from `templates/charts/` should be composed inside the content safe area or receive brand chrome during post-processing.
 6. **Brand Rail Consistency**: cover and ending pages use full-height red+blue rails; content pages use top accent bar only.
 7. **Open Canvas Content**: content pages should not reserve large fixed sidebars; keep the canvas flexible for charts and layouts.
+8. **Logo Clearance**: no title, subtitle, header text, chart label, or callout may enter the logo reserved slot (`x=1060-1224`, `y=20-82`). Long content-page titles must wrap inside `data-box="88,36,960,58" data-wrap="true"` or be manually split before the logo slot.
+9. **Single Page Number Source**: shell pages already own the footer/page number. Post-processing may add Viettel brand chrome only to pages that do not already contain the shell logo/page-number treatment.
 
 ### 5.3 Layout Patterns
 
@@ -391,7 +396,7 @@ Implementation rules:
 | Top Bar | y: 0-5, full width | Red accent bar |
 | Logo | top-right corner | Viettel logo image |
 | Title Bar | x=64-88, y=38-76 | Red vertical bar + title text |
-| Title | x=88, y=66 | Page title ({{PAGE_TITLE}}) |
+| Title | x=88-1048, y=36-92 | Page title ({{PAGE_TITLE}}), wrapped before logo slot |
 | Divider | y=102 | Gray horizontal line |
 | Content Area | x=72-1208, y=132-618 | Dashed border frame |
 | Footer | y=674-720 | Gray bar with section info |
@@ -411,7 +416,7 @@ Implementation rules:
 ```xml
 <!-- Title vertical bar -->
 <rect x="64" y="38" width="7" height="38" rx="3.5" fill="#EE0033"/>
-<text x="88" y="66" font-size="32" font-weight="800" fill="#000000">{{PAGE_TITLE}}</text>
+<text x="88" y="66" data-box="88,36,960,58" data-wrap="true" font-size="32" font-weight="800" fill="#000000">{{PAGE_TITLE}}</text>
 
 <!-- Dashed content frame -->
 <rect x="72" y="132" width="1136" height="486" rx="6" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="6 6"/>
@@ -524,10 +529,12 @@ Selected chart templates must be mirrored into project `spec_lock.md ## page_cha
 | Asset | Purpose | Runtime Path |
 | --- | --- | --- |
 | `viettel-logo.png` | Required Viettel logo fixed at top-right on shell pages | `../images/viettel-logo.png` |
+| `fonts/` bundle | Local install source for FS PF BeauSans Pro and FS Magistral families | `<project_path>/fonts/` |
 
 ### Asset Path Rule
 
 The source asset lives in `templates/layouts/viettel_default/viettel-logo.png`. During project setup, copy it to `<project_path>/images/viettel-logo.png`; generated SVG pages reference it through the runtime path `../images/viettel-logo.png`.
+The font bundle lives in `templates/layouts/viettel_default/fonts/`. During project setup, copy it to `<project_path>/fonts/` unchanged. The deck still declares the intended brand stack in `spec_lock.md`; runtime availability is validated by `scripts/check_fonts.py`.
 
 ### Optional Official Assets
 
