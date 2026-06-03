@@ -47,6 +47,15 @@ description: >
 > - Do NOT create `.worktrees/`, `tests/`, branch workflows, or generic engineering structure by default
 > - On conflict with a generic coding skill, follow this skill unless the user explicitly says otherwise
 
+> [!IMPORTANT]
+>
+> ## 🔒 Viettel Typography Default
+>
+> - This skill's default typography stack is locked to `"FS PF BeauSans Pro", "FS Magistral", Sarabun`.
+> - During Eight Confirmations, present this stack as the typography recommendation/lock, not as one option among several.
+> - Do NOT propose alternative font combinations, typefaces, or PPT-safe generic font stacks unless the user explicitly requests a non-Viettel brand override.
+> - If the host lacks a Viettel font, keep the same declared stack and report `brand fidelity degraded`; do not silently substitute another design font in the recommendation or `spec_lock.md`.
+
 ## Main Pipeline Scripts
 
 | Script                                             | Purpose                                                                                                                                 |
@@ -225,7 +234,7 @@ Read references/strategist.md
 7. Typography plan
 8. Image usage approach
 
-**Viettel template exception**: if Step 3 matched `viettel_default`, present the Viettel brand choices as locked recommendations, not open-ended choices. The typography plan is `"FS PF BeauSans Pro", "FS Magistral", Sarabun`; the color scheme is Viettel red `#EE0033`, deep blue `#12436D`, white/gray reporting surfaces; and `spec_lock.md` MUST copy these values exactly.
+**Viettel typography lock**: present the typography plan as `"FS PF BeauSans Pro", "FS Magistral", Sarabun` for this skill by default, including the blocking Eight Confirmations message. This is not an open-ended font choice. If Step 3 matched `viettel_default`, also present the Viettel brand choices as locked recommendations: Viettel red `#EE0033`, deep blue `#12436D`, white/gray reporting surfaces, top-right logo slot, footer/page-number treatment, and content safe area. `spec_lock.md` MUST copy these values exactly unless the user explicitly requests a non-Viettel brand override.
 
 **Font preflight (required for bundled brand fonts)**: after `spec_lock.md` is written, run:
 

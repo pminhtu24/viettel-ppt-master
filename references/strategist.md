@@ -142,16 +142,18 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 
 #### Font Combinations
 
-> Same-deck fonts must form **contrast** (different family, weight, or proportion) or **concord** (one family throughout). "Similar but not identical" pairings *across roles* are forbidden — see blacklist below. *Within one stack*, pairing a Windows font with a macOS counterpart (e.g. `Microsoft YaHei` + `PingFang SC`) is encouraged as a browser-preview nicety; converter writes only the first into PPTX.
+> **Viettel typography default (HARD rule for this skill).** Unless the user explicitly requests a non-Viettel brand override, the typography stack is locked to `"FS PF BeauSans Pro", "FS Magistral", Sarabun`. During Eight Confirmations, present this as the Typography Plan recommendation/lock. Do NOT propose alternative font combinations, do NOT ask the user to choose another typeface, and do NOT substitute generic PPT-safe stacks in the recommendation. If the host lacks one of these fonts, the runtime preflight handles it as `brand fidelity degraded`; the design decision remains the Viettel stack.
 
-> **⚠️ PPT-safe font discipline (HARD rule).** PPTX has no runtime fallback — missing fonts substitute to Calibri. Every stack MUST end with a pre-installed font:
+> Same-deck fonts must form **contrast** (different family, weight, or proportion) or **concord** (one family throughout). For the default Viettel flow, contrast comes from weight / size / spacing inside the locked Viettel stack. The generic pairing guidance below applies only after an explicit non-Viettel override.
+
+> **⚠️ PPT-safe font discipline (HARD rule).** PPTX has no runtime fallback — missing fonts substitute to Calibri. For explicit non-Viettel overrides, every stack MUST end with a pre-installed font:
 > - CJK → `"Microsoft YaHei"` / `SimHei` / `SimSun` / `FangSong` / `KaiTi`
 > - Latin sans → `Arial` / `Calibri` / `Segoe UI` / `Verdana` / `Trebuchet MS`
 > - Latin serif → `"Times New Roman"` / `Georgia` / `Cambria` / `Palatino` / `Garamond`
 > - Mono → `Consolas` / `"Courier New"`
 > - Display → `Impact` / `"Arial Black"`
 >
-> Stacks led by non-pre-installed fonts (Inter / HarmonyOS Sans / Source Han / brand typefaces like McKinsey Bower) are only acceptable when the Design Spec notes "requires install or PPTX embed".
+> The locked Viettel stack is the default bundled-brand exception for this skill. Keep `"FS PF BeauSans Pro", "FS Magistral", Sarabun` even though those fonts may not be pre-installed; `scripts/check_fonts.py` reports runtime availability before generation. Other non-pre-installed stacks are acceptable only when the Design Spec notes "requires install or PPTX embed".
 
 **Forbidden — similar-but-not-identical pairings across roles** (do not split title vs body across these; within one stack as cross-platform fallback they remain encouraged):
 
@@ -161,9 +163,9 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 - `"Times New Roman"` ↔ `Times`
 - `Georgia` ↔ `Cambria`
 
-**Mandatory**: propose **two** combinations to the user — one concord (safe), one contrast (with tension). Do not default to "title = body, same font" without explicit user request.
+**Mandatory for non-Viettel overrides only**: when the user explicitly requests a non-Viettel brand or custom font direction, propose **two** combinations to the user — one concord (safe), one contrast (with tension). For the normal Viettel flow, skip this choice table and use the locked Viettel stack.
 
-**Cross-platform pre-installed reference**:
+**Cross-platform pre-installed reference** (for explicit non-Viettel overrides only):
 
 | Category | Safe families |
 |----------|--------------|
@@ -174,7 +176,7 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 | Mono | Consolas, Courier New |
 | Display | Impact, Arial Black |
 
-**Seed combinations** (all PPT-safe; first column names the contrast axis, not a scenario):
+**Seed combinations** (for explicit non-Viettel overrides only; first column names the contrast axis, not a scenario):
 
 | Contrast axis | Title stack | Body stack | Code stack |
 |---|---|---|---|
@@ -189,7 +191,7 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 | Tech / developer | `Arial, "Microsoft YaHei", sans-serif` | same | `Consolas, "Courier New", monospace` |
 | Concord (default fallback) | `"Microsoft YaHei", "PingFang SC", sans-serif` | same | — |
 
-> **Stack length discipline (soft rule).** ≤4 fonts per stack. Lead with Windows-preinstalled fonts (Microsoft YaHei / SimSun / Arial / Georgia / Consolas); keep at most **one** macOS-exclusive family (typically `"PingFang SC"`). Converter only picks the first Latin and first CJK font ([`drawingml_utils.py parse_font_family`](../scripts/svg_to_pptx/drawingml_utils.py)); macOS→Windows fallback is auto-mapped via `FONT_FALLBACK_WIN`.
+> **Stack length discipline (soft rule).** For the default Viettel flow, keep the exact 3-family stack. For explicit non-Viettel overrides, use ≤4 fonts per stack, lead with Windows-preinstalled fonts when possible, and keep at most **one** macOS-exclusive family. Converter only picks the first Latin and first CJK font ([`drawingml_utils.py parse_font_family`](../scripts/svg_to_pptx/drawingml_utils.py)); macOS→Windows fallback is auto-mapped via `FONT_FALLBACK_WIN`.
 
 > **Non-pre-installed directions** (require install or PPTX embed; note the constraint in Design Spec):
 > - **Retro / pixel** — Press Start 2P / VT323 / Silkscreen

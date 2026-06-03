@@ -87,11 +87,13 @@
 
 ### Font Plan
 
-> **Per-role families are expected, not optional.** Title / Body / Emphasis / Code may each use a different family (e.g., display serif title + geometric sans body). One family throughout is not required. See [strategist.md §g — Font Combinations](../references/strategist.md) for starting directions; you may propose a combination not listed.
+> **Viettel default for this skill.** Unless the user explicitly requests a non-Viettel brand override, all roles MUST use the locked stack `"FS PF BeauSans Pro", "FS Magistral", Sarabun`. Do not propose or record alternative font combinations. Create hierarchy through size, weight, spacing, and color within the Viettel stack.
 >
-> **⚠️ PPT-safe stack discipline (HARD rule).** PPTX stores a single `typeface` per run — no runtime fallback. Every stack MUST end with a cross-platform pre-installed font: `"Microsoft YaHei", sans-serif` / `SimSun, serif` / `Arial, sans-serif` / `"Times New Roman", serif` / `Consolas, "Courier New", monospace`. Stacks led by a non-preinstalled font (Inter / Google Fonts / brand typefaces) are allowed only when this spec notes the font-install or embedding requirement.
+> **Per-role families are expected, not optional.** For the default Viettel flow, Title / Body / Emphasis / Code all use the same locked Viettel stack. Only when the user explicitly requests a non-Viettel brand override may roles use different families; see [strategist.md §g — Font Combinations](../references/strategist.md) for that override path.
+>
+> **⚠️ PPT-safe stack discipline (HARD rule).** PPTX stores a single `typeface` per run — no runtime fallback. For explicit non-Viettel overrides, every stack MUST end with a cross-platform pre-installed font: `"Microsoft YaHei", sans-serif` / `SimSun, serif` / `Arial, sans-serif` / `"Times New Roman", serif` / `Consolas, "Courier New", monospace`. The locked Viettel stack is this skill's bundled-brand exception and is validated by `scripts/check_fonts.py`.
 
-**Typography direction**: [Fill in one phrase, e.g., "modern CJK sans" / "academic serif" / "brand-specific: McKinsey Bower (requires font install)"]
+**Typography direction**: [Default: "Viettel brand sans — locked stack: FS PF BeauSans Pro / FS Magistral / Sarabun"; use another direction only for an explicit non-Viettel override]
 
 Two views on the same font decisions — fill both, keep them consistent:
 
@@ -100,19 +102,19 @@ Two views on the same font decisions — fill both, keep them consistent:
 
 | Role | Chinese | English | Fallback tail |
 | ---- | ------- | ------- | ------------- |
-| **Title** | [e.g., `"Microsoft YaHei"`, or `"Microsoft YaHei", "PingFang SC"` for macOS preview nicety] | [e.g., `Georgia`] | [e.g., `serif`] |
-| **Body** | [e.g., `"Microsoft YaHei", "PingFang SC"`] | [e.g., `Arial`] | [e.g., `sans-serif`] |
-| **Emphasis** | [e.g., `SimSun`, or `—` for Latin-only] | [e.g., `Georgia`] | [e.g., `serif`] |
-| **Code** | — | [e.g., `Consolas, "Courier New"`] | [e.g., `monospace`] |
+| **Title** | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | — |
+| **Body** | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | — |
+| **Emphasis** | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | — |
+| **Code** | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | — |
 
 **Per-role font stacks** (CSS `font-family` strings, one per role — arrange the table's pieces in the order your design intends):
 
-- Title: `[Fill in stack, e.g. Georgia, "Microsoft YaHei", serif for Latin-led; or "Microsoft YaHei", "PingFang SC", Georgia, serif for CJK-led]`
-- Body: `[Fill in stack — may be same as Title]`
-- Emphasis: `[Fill in stack, or write "same as Body" to omit the override]`
-- Code: `[Fill in monospace stack, e.g. Consolas, "Courier New", monospace]`
+- Title: `"FS PF BeauSans Pro", "FS Magistral", Sarabun`
+- Body: `"FS PF BeauSans Pro", "FS Magistral", Sarabun`
+- Emphasis: `"FS PF BeauSans Pro", "FS Magistral", Sarabun`
+- Code: `"FS PF BeauSans Pro", "FS Magistral", Sarabun`
 
-> **Stack ordering — why it matters**: CSS `font-family` falls back font-by-font (not char-by-char) — the browser uses the **first installed** font for everything it can render, skipping to the next only when a glyph is missing. So:
+> **Stack ordering — why it matters**: CSS `font-family` falls back font-by-font (not char-by-char) — the browser uses the **first installed** font for everything it can render, skipping to the next only when a glyph is missing. The default Viettel stack order is already locked; the examples below are only for explicit non-Viettel overrides. So:
 > - `Georgia, "Microsoft YaHei", serif` → Latin in Georgia (elegant serif), CJK falls through to Microsoft YaHei. **Use when Latin typography is the primary design statement** (academic / editorial / Latin-heavy covers).
 > - `"Microsoft YaHei", Georgia, serif` → Everything in Microsoft YaHei (Latin uses YaHei's Latin glyphs — a different design tone). **Use when the deck is CJK-primary and Latin is incidental**.
 >

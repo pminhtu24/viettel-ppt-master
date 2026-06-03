@@ -28,11 +28,11 @@
 > **`image_rendering` and `image_palette`** — required only when `images` section below contains `ai`-sourced files. Values MUST be valid names from `references/image-renderings/_index.md` and `references/image-palettes/_index.md`. Image_Generator reads these and applies them deck-wide. Omit both rows when the deck has no AI-generated images.
 
 ## typography
-- font_family: "Microsoft YaHei", Arial, sans-serif
-- title_family: Georgia, SimSun, serif
-- body_family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif
-- emphasis_family: Georgia, SimSun, serif
-- code_family: Consolas, "Courier New", monospace
+- font_family: "FS PF BeauSans Pro", "FS Magistral", Sarabun
+- title_family: "FS PF BeauSans Pro", "FS Magistral", Sarabun
+- body_family: "FS PF BeauSans Pro", "FS Magistral", Sarabun
+- emphasis_family: "FS PF BeauSans Pro", "FS Magistral", Sarabun
+- code_family: "FS PF BeauSans Pro", "FS Magistral", Sarabun
 - body: 22
 - title: 32
 - subtitle: 24
@@ -44,15 +44,17 @@
 >
 > `font_family` is the default fallback. Every declared family is a CSS font-stack string.
 >
+> **Viettel default for this skill**: unless the user explicitly requests a non-Viettel brand override, keep every declared family on the locked stack `"FS PF BeauSans Pro", "FS Magistral", Sarabun`. Do not introduce Microsoft YaHei / Arial / Georgia / Consolas or other generic design fonts as default choices. Runtime missing-font handling belongs to `scripts/check_fonts.py` and must be reported as `brand fidelity degraded`.
+>
 > **Source**: copy verbatim from the *Per-role font stacks* list in `design_spec.md §IV Font Plan`. Stack **order** encodes browser-rendering intent (Latin-led vs. CJK-led) that the breakdown table cannot — strings here must match character-for-character. See `design_spec.md §IV` for the explainer.
 >
 > Sizes (`body` / `title` / etc.) are in px, matching SVG units. `body` is the **required baseline anchor** — all other sizes derive as ratios of it (ramp table: `design_spec_reference.md §IV`).
 >
 > **Size slots are anchors, not a closed menu.** Common slots (`title` / `subtitle` / `annotation`) cover frequent cases. Add role-specific slots (e.g. `cover_title: 72`, `hero_number: 48`, `chart_annotation: 13`) when needed — common for cover-heavy decks, consulting-style hero numbers, dense pages. Executor may use intermediate sizes as long as the ratio to `body` sits in the role's ramp band.
 >
-> **⚠️ PPT-safe stack discipline (HARD rule).** PPTX stores one `typeface` per run with no runtime fallback. Every stack MUST end with a cross-platform pre-installed font: `"Microsoft YaHei", sans-serif` / `SimSun, serif` / `Arial, sans-serif` / `"Times New Roman", serif` / `Consolas, "Courier New", monospace`. Non-preinstalled fonts (Inter / Google Fonts / brand typefaces) may lead the stack only when the Design Spec notes the font-install or embedding requirement.
+> **⚠️ PPT-safe stack discipline (HARD rule).** PPTX stores one `typeface` per run with no runtime fallback. For explicit non-Viettel overrides, every stack MUST end with a cross-platform pre-installed font: `"Microsoft YaHei", sans-serif` / `SimSun, serif` / `Arial, sans-serif` / `"Times New Roman", serif` / `Consolas, "Courier New", monospace`. The locked Viettel stack is this skill's bundled-brand exception and is validated by font preflight instead.
 >
-> **Stack length discipline.** 3-4 fonts per stack is the sweet spot. Converter only writes the **first** Latin and **first** CJK font into PPTX — everything after is silently dropped. macOS-only families (`Songti SC`, `Menlo`, `Monaco`, `Helvetica`) are auto-mapped to Windows equivalents via `FONT_FALLBACK_WIN` (see `scripts/svg_to_pptx/drawingml_utils.py`); stacking both is redundant. Lead with Windows-preinstalled fonts (`Microsoft YaHei` / `SimSun` / `Arial` / `Georgia` / `Consolas`); keep at most **one** macOS-exclusive family (typically `"PingFang SC"`) as a browser-preview nicety.
+> **Stack length discipline.** Keep the default Viettel stack exactly at 3 families. For explicit non-Viettel overrides, 3-4 fonts per stack is the sweet spot. Converter only writes the **first** Latin and **first** CJK font into PPTX — everything after is silently dropped. macOS-only families (`Songti SC`, `Menlo`, `Monaco`, `Helvetica`) are auto-mapped to Windows equivalents via `FONT_FALLBACK_WIN` (see `scripts/svg_to_pptx/drawingml_utils.py`); stacking both is redundant.
 >
 > **Bundled-font exception**: a template may intentionally lock `font_family` to non-preinstalled brand fonts when it also ships a local `fonts/` bundle and the workflow runs `scripts/check_fonts.py` before SVG generation. In that case, keep the exact brand stack in `spec_lock.md`; if the host falls through to a later family, the run must report `brand fidelity degraded` instead of silently pretending the brand font is available.
 
