@@ -273,11 +273,11 @@ Strategist chooses the library and inventory; Executor only implements. Library 
 
 **Searching for icons** — use terminal, zero token cost:
 ```bash
-ls skills/ppt-master/templates/icons/chunk-filled/ | grep home
-ls skills/ppt-master/templates/icons/tabler-filled/ | grep home
-ls skills/ppt-master/templates/icons/tabler-outline/ | grep chart
-ls skills/ppt-master/templates/icons/phosphor-duotone/ | grep house
-ls skills/ppt-master/templates/icons/simple-icons/ | grep github
+ls skills/viettel-ppt-master/templates/icons/chunk-filled/ | grep home
+ls skills/viettel-ppt-master/templates/icons/tabler-filled/ | grep home
+ls skills/viettel-ppt-master/templates/icons/tabler-outline/ | grep chart
+ls skills/viettel-ppt-master/templates/icons/phosphor-duotone/ | grep house
+ls skills/viettel-ppt-master/templates/icons/simple-icons/ | grep github
 ```
 
 **Abstract concept → icon name** (names for `chunk-filled`; tabler libraries use their own equivalents — verify with `ls | grep`):

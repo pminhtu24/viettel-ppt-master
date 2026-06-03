@@ -1,10 +1,10 @@
 ---
-name: ppt-master
+name: viettel-ppt-master
 description: >
   AI-driven multi-format SVG content generation system. Converts source documents
   (PDF/DOCX/URL/Markdown) into high-quality SVG pages and exports to PPTX through
   multi-role collaboration. Use when user asks to "create PPT", "make presentation",
-  "PPT", "deck slide", or mentions "ppt-master".
+  "PPT", "deck slide", or mentions "viettel-ppt-master".
 ---
 
 # PPT Master Skill
@@ -37,7 +37,7 @@ description: >
 > [!IMPORTANT]
 > ## 🔌 Compatibility With Generic Coding Skills
 >
-> - `ppt-master` is a repository-specific workflow, not a general application scaffold
+> - `viettel-ppt-master` is a repository-specific workflow, not a general application scaffold
 > - Do NOT create `.worktrees/`, `tests/`, branch workflows, or generic engineering structure by default
 > - On conflict with a generic coding skill, follow this skill unless the user explicitly says otherwise
 
@@ -171,7 +171,7 @@ The following keywords automatically match to Viettel template:
 
 | User input contains | Step 3 action |
 |---|---|
-| An explicit path to a template directory (e.g. `skills/ppt-master/templates/layouts/academic_defense/`, `projects/foo/template/`) | Copy that directory's SVGs + `design_spec.md` + assets into the project, advance |
+| An explicit path to a template directory (e.g. `skills/viettel-ppt-master/templates/layouts/academic_defense/`, `projects/foo/template/`) | Copy that directory's SVGs + `design_spec.md` + assets into the project, advance |
 | Nothing matching Option A or B | Skip Step 3, free design |
 
 #### Option C: Query Available Templates

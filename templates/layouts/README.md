@@ -5,7 +5,7 @@ Pre-built PPT page layout templates supporting multiple styles and use cases.
 - **Full Index**: [README.md](./README.md) (human browsing — includes categories, primary colors, detailed tone)
 - **Slim Index**: [layouts_index.json](./layouts_index.json) (lightweight lookup — `summary` / `keywords` per template id)
 
-> **Template selection is opt-in by explicit path.** The main workflow defaults to free design. A template is only used when the user gives an explicit directory path (e.g. `skills/ppt-master/templates/layouts/academic_defense/` or any other path) in their initial message. Bare names like "academic_defense" do not trigger — `layouts_index.json` and this README are discovery aids for finding the path, not triggers in themselves. See `SKILL.md` Step 3.
+> **Template selection is opt-in by explicit path.** The main workflow defaults to free design. A template is only used when the user gives an explicit directory path (e.g. `skills/viettel-ppt-master/templates/layouts/academic_defense/` or any other path) in their initial message. Bare names like "academic_defense" do not trigger — `layouts_index.json` and this README are discovery aids for finding the path, not triggers in themselves. See `SKILL.md` Step 3.
 
 ---
 
@@ -182,7 +182,7 @@ Templates use `{{PLACEHOLDER}}` format to mark replaceable content:
 
 ## Usage
 
-To use a template, give the AI an explicit directory path in your initial message — e.g. "用 `skills/ppt-master/templates/layouts/academic_defense/` 这个模板做……". The Step 3 logic copies that directory's SVGs + `design_spec.md` + assets into your project before Strategist starts.
+To use a template, give the AI an explicit directory path in your initial message — e.g. "用 `skills/viettel-ppt-master/templates/layouts/academic_defense/` 这个模板做……". The Step 3 logic copies that directory's SVGs + `design_spec.md` + assets into your project before Strategist starts.
 
 The directory does not have to live under `templates/layouts/`. A template kept in `projects/<other_project>/template/` or any other location works the same way as long as you give the path.
 
