@@ -68,7 +68,11 @@ pip install mammoth markdownify ebooklib nbconvert beautifulsoup4
 # Windows: https://pandoc.org/installing.html
 ```
 
-All paths produce the same output convention: `<input>.md` plus a sibling `<input>_files/` directory containing extracted images with relative references.
+All paths produce the same output convention: `<input>.md` plus a sibling
+`<input>_files/` directory containing extracted images with relative references.
+Image-capable converters write `<input>_files/image_manifest.json` with source
+provenance when supported. During project import, missing or unreadable manifests are
+replaced with fallback metadata so discovered image assets still reach `project/images/`.
 
 ## `source_to_md/excel_to_md.py`
 

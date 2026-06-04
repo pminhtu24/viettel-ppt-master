@@ -5,8 +5,11 @@ Uses PyMuPDF to extract PDF text content and convert to Markdown format.
 Supports heading levels, bold, italic, and list detection.
 """
 
+from __future__ import annotations
+
 import argparse
 import hashlib
+import json
 import os
 import re
 import sys
@@ -494,6 +497,7 @@ def extract_pdf_to_markdown(pdf_path: str, output_path: str = None, images: str 
 
     markdown_content = f"# {title}\n\n"
     seen_image_hashes = set()  # Track seen image hashes for deduplication
+    image_manifest: list[dict[str, object]] = []
 
     img_dir = None
     rel_img_dir = None
@@ -730,6 +734,53 @@ def extract_pdf_to_markdown(pdf_path: str, output_path: str = None, images: str 
                         with open(image_path, "wb") as f:
                             f.write(image_data)
 
+                        pixel_width = block.get("width")
+                        pixel_height = block.get("height")
+                        pixel_ratio = (
+                            pixel_width / pixel_height
+                            if isinstance(pixel_width, (int, float))
+                            and isinstance(pixel_height, (int, float))
+                            and pixel_width > 0
+                            and pixel_height > 0
+                            else None
+                        )
+                        bbox = block.get("bbox", (0, 0, 0, 0))
+                        display_width_pt = bbox[2] - bbox[0]
+                        display_height_pt = bbox[3] - bbox[1]
+                        display_ratio = (
+                            display_width_pt / display_height_pt
+                            if display_width_pt > 0 and display_height_pt > 0
+                            else pixel_ratio
+                        )
+                        occurrence = {
+                            "page_index": page_num,
+                            "display_left_pt": round(float(bbox[0]), 4),
+                            "display_top_pt": round(float(bbox[1]), 4),
+                            "display_width_pt": round(float(display_width_pt), 4),
+                            "display_height_pt": round(float(display_height_pt), 4),
+                            "display_ratio": round(display_ratio, 6) if display_ratio else None,
+                        }
+                        image_manifest.append(
+                            {
+                                "index": img_count + 1,
+                                "filename": image_name,
+                                "original_filename": image_name,
+                                "asset_kind": "bitmap",
+                                "svg_renderable": True,
+                                "pptx_native_supported": True,
+                                "source_kind": "pdf_image",
+                                "source_ext": f".{ext.lower().lstrip('.')}",
+                                "source_page": page_num,
+                                "source_sha256": hashlib.sha256(image_data).hexdigest(),
+                                "pixel_width": pixel_width,
+                                "pixel_height": pixel_height,
+                                "pixel_ratio": round(pixel_ratio, 6) if pixel_ratio else None,
+                                "display_ratio": round(display_ratio, 6) if display_ratio else None,
+                                "occurrences": [occurrence],
+                                "usage_count": 1,
+                            }
+                        )
+
                         if prev_was_list:
                             markdown_content += "\n"
                         markdown_content += f"![{image_name}]({rel_img_dir}/{image_name})\n\n"
@@ -744,6 +795,12 @@ def extract_pdf_to_markdown(pdf_path: str, output_path: str = None, images: str 
             flush_code_block()
 
     doc.close()
+
+    if img_dir and image_manifest:
+        (img_dir / "image_manifest.json").write_text(
+            json.dumps(image_manifest, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
 
     markdown_content = re.sub(r'\n{3,}', '\n\n', markdown_content)
     markdown_content = markdown_content.strip() + "\n"

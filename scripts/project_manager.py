@@ -470,6 +470,34 @@ class ProjectManager:
         )
 
     @staticmethod
+    def _build_minimal_image_manifest(asset_dir: Path) -> list[dict[str, object]]:
+        """Build fallback metadata so extracted images never depend on a manifest."""
+        manifest: list[dict[str, object]] = []
+        for index, source_file in enumerate(
+            (
+                path
+                for path in sorted(asset_dir.iterdir())
+                if path.is_file() and path.suffix.lower() in IMAGE_ASSET_SUFFIXES
+            ),
+            start=1,
+        ):
+            suffix = source_file.suffix.lower()
+            asset_kind = "office_vector" if suffix in {".emf", ".wmf"} else "bitmap"
+            manifest.append(
+                {
+                    "index": index,
+                    "filename": source_file.name,
+                    "original_filename": source_file.name,
+                    "asset_kind": asset_kind,
+                    "svg_renderable": asset_kind != "office_vector",
+                    "pptx_native_supported": True,
+                    "source_kind": "extracted_source_asset",
+                    "source_ext": suffix,
+                }
+            )
+        return manifest
+
+    @staticmethod
     def _namespace_from_asset_dir(asset_dir: Path) -> str:
         """Derive a per-source namespace from a `<stem>_files` companion directory name."""
         name = asset_dir.name
@@ -483,16 +511,23 @@ class ProjectManager:
         DOCX/PPTX sources contain identically-named internal media (image1.png, ...).
         """
         manifest_path = asset_dir / "image_manifest.json"
-        if not manifest_path.is_file():
-            return
+        manifest_mode = "source manifest"
+        if manifest_path.is_file():
+            try:
+                source_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as exc:
+                print(f"[WARN] Cannot read image manifest {manifest_path}: {exc}")
+                source_data = self._build_minimal_image_manifest(asset_dir)
+                manifest_mode = "fallback manifest"
+            if not isinstance(source_data, list):
+                print(f"[WARN] Replacing non-list image manifest: {manifest_path}")
+                source_data = self._build_minimal_image_manifest(asset_dir)
+                manifest_mode = "fallback manifest"
+        else:
+            source_data = self._build_minimal_image_manifest(asset_dir)
+            manifest_mode = "fallback manifest"
 
-        try:
-            source_data = json.loads(manifest_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            print(f"[WARN] Cannot read image manifest {manifest_path}: {exc}")
-            return
-        if not isinstance(source_data, list):
-            print(f"[WARN] Ignoring non-list image manifest: {manifest_path}")
+        if not source_data:
             return
 
         images_dir = project_dir / "images"
@@ -526,7 +561,7 @@ class ProjectManager:
 
         self._merge_image_manifest(rebased_items, images_dir / "image_manifest.json")
         print(
-            f"Propagated {copied_count} image asset(s) + manifest "
+            f"Propagated {copied_count} image asset(s) + {manifest_mode} "
             f"from {asset_dir} → images/ (namespace: {namespace})"
         )
 

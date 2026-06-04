@@ -122,6 +122,15 @@ When the user provides non-Markdown content, convert immediately:
 | WeChat / high-security site       | `python3 ${SKILL_DIR}/scripts/source_to_md/web_to_md.py <URL>` (requires `curl_cffi`, included in `requirements.txt`) |
 | Markdown                          | Read directly                                                                                                         |
 
+> **Extracted source images are first-class slide assets**:
+> converters save embedded/downloaded images beside the generated Markdown in
+> `<source>_files/`. During `import-sources`, `project_manager.py` propagates those
+> assets into `<project_path>/images/`, namespaces filenames by source, and merges
+> metadata into `images/image_manifest.json`. A missing converter manifest MUST NOT
+> prevent propagation; `project_manager.py` creates fallback metadata for discovered
+> image files. Strategist treats propagated assets as `Acquire Via: user`,
+> `Status: Existing`, analyzes them, and selects only report-relevant images.
+>
 > **Office vector assets (EMF/WMF) from DOCX/PPTX sources**:
 > `doc_to_md.py` / `ppt_to_md.py` extract embedded Office vector images (.emf/.wmf)
 > alongside bitmap images. After `import-sources`, these land in `images/`
@@ -256,13 +265,18 @@ python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>
 
 This line is required output every run — the user must always see the mode choice exists. Whether to act on it is the user's call.
 
-If the user provided images, run analysis **before outputting the design spec**:
+If `<project_path>/images` contains any existing images, including assets extracted
+from source documents, run analysis **before outputting the design spec**, unless the
+user explicitly confirmed `No images`:
 
 ```bash
 python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
 ```
 
-> ⚠️ **Image handling**: NEVER directly read / open / view image files (`.jpg`, `.png`, etc.). All image info comes from `analyze_images.py` output or the Design Spec's Image Resource List.
+> ⚠️ **Image handling**: NEVER directly read / open / view image files (`.jpg`, `.png`, etc.).
+> Use `analyze_images.py` output, `images/image_manifest.json`, source Markdown image
+> references, or the Design Spec's Image Resource List. When a manifest exists, read it
+> alongside the analysis to map extracted assets back to source pages / slides / URLs.
 
 **Output**:
 

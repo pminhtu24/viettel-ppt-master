@@ -387,7 +387,19 @@ Image_Generator reads these two fields and applies them deck-wide. If both are a
 
 After the user picks a candidate, scan the outline and surface any pages where the image makes more sense as the page's main voice than as a local block. Present them as a short list and let the user confirm, edit, or skip. Result is recorded as `page_role: hero_page` on the matching `ai` rows. Density is judgment-based — no fixed quota.
 
-**When selection includes B**, you must run `python3 scripts/analyze_images.py <project_path>/images` before outputting the spec, and integrate scan results into the image resource list.
+**Existing source asset rule**: images propagated into `<project_path>/images/` from
+PDF / DOCX / PPTX / HTML / EPUB / URL sources are treated as existing source-provided
+assets. Record selected assets with `Acquire Via: user` and `Status: Existing`.
+Use `images/image_manifest.json` and the source Markdown references to preserve source
+context when available. Prefer images relevant to the corresponding report section;
+do not automatically select repeated logos, decorative backgrounds, separators,
+low-information images, or unsuitable screenshots.
+
+**When selection includes B, or `<project_path>/images` already contains extracted
+source assets and the user did not explicitly confirm A "No images"**, you must run
+`python3 scripts/analyze_images.py <project_path>/images` before outputting the spec,
+and integrate useful scan results into the image resource list. Existing assets do not
+trigger Step 5 acquisition.
 
 **When B / C / D / E is selected**, add an image resource list to the spec:
 

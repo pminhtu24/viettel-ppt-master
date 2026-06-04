@@ -26,9 +26,12 @@ TLS fingerprint handling:
     (scripts/source_to_md/web_to_md.cjs) remains available as a fallback.
 """
 
+from __future__ import annotations
+
 import argparse
 import datetime
 import io
+import json
 import os
 import re
 import sys
@@ -209,16 +212,17 @@ def download_and_rewrite_images(
     page_url: str,
     image_dir: str,
     rel_prefix: str,
-) -> int:
+) -> tuple[int, list[dict[str, object]]]:
     """Download images under the main content node and rewrite `src` paths."""
     if content_element is None:
-        return 0
+        return 0, []
     images = list(content_element.find_all("img"))
     if not images:
-        return 0
+        return 0, []
 
     os.makedirs(image_dir, exist_ok=True)
-    downloaded = {}
+    downloaded: dict[str, str] = {}
+    manifest_by_url: dict[str, dict[str, object]] = {}
     saved = 0
 
     for idx, img in enumerate(images):
@@ -243,8 +247,18 @@ def download_and_rewrite_images(
         img["src"] = src
 
         abs_url = urljoin(page_url, src)
+        occurrence = {
+            "element_index": idx + 1,
+            "alt_text": str(img.get("alt") or "").strip(),
+            "title": str(img.get("title") or "").strip(),
+        }
         if abs_url in downloaded:
             saved_name = downloaded[abs_url]
+            manifest_entry = manifest_by_url[abs_url]
+            occurrences = manifest_entry.setdefault("occurrences", [])
+            if isinstance(occurrences, list):
+                occurrences.append(occurrence)
+                manifest_entry["usage_count"] = len(occurrences)
         else:
             try:
                 resp = _http_get(
@@ -314,6 +328,40 @@ def download_and_rewrite_images(
                 downloaded[abs_url] = filename
                 saved_name = filename
                 saved += 1
+
+                pixel_width = None
+                pixel_height = None
+                if PILLOW_AVAILABLE:
+                    try:
+                        with Image.open(local_path) as saved_image:
+                            pixel_width, pixel_height = saved_image.size
+                    except Exception:
+                        pass
+                pixel_ratio = (
+                    pixel_width / pixel_height
+                    if pixel_width and pixel_height
+                    else None
+                )
+                manifest_by_url[abs_url] = {
+                    "index": saved,
+                    "filename": filename,
+                    "original_filename": filename,
+                    "asset_kind": "bitmap",
+                    "svg_renderable": True,
+                    "pptx_native_supported": True,
+                    "source_kind": "web_content_image",
+                    "source_ext": os.path.splitext(filename)[1].lower(),
+                    "source_page_url": page_url,
+                    "source_image_url": abs_url,
+                    "content_type": resp.headers.get("Content-Type", "").split(";")[0],
+                    "alt_text": occurrence["alt_text"],
+                    "pixel_width": pixel_width,
+                    "pixel_height": pixel_height,
+                    "pixel_ratio": round(pixel_ratio, 6) if pixel_ratio else None,
+                    "display_ratio": round(pixel_ratio, 6) if pixel_ratio else None,
+                    "occurrences": [occurrence],
+                    "usage_count": 1,
+                }
             except Exception as e:
                 print(f"   [WARN] Skip image {abs_url}: {e}")
                 continue
@@ -322,7 +370,7 @@ def download_and_rewrite_images(
             rel_prefix, saved_name) if rel_prefix else saved_name
         img["src"] = rel_path
 
-    return saved
+    return saved, list(manifest_by_url.values())
 
 
 def extract_metadata(soup: BeautifulSoup, url: str) -> dict[str, str]:
@@ -702,10 +750,15 @@ def process_url(url: str, output_file: str | None = None) -> tuple[bool, str, st
         content_div = find_main_content(soup)
 
         # Download images and rewrite src before markdown conversion
-        image_count = download_and_rewrite_images(
+        image_count, image_manifest = download_and_rewrite_images(
             content_div, url, image_dir, rel_image_prefix)
         if image_count:
+            manifest_path = os.path.join(image_dir, "image_manifest.json")
+            with open(manifest_path, "w", encoding="utf-8") as f:
+                json.dump(image_manifest, f, ensure_ascii=False, indent=2)
+                f.write("\n")
             print(f"   [OK] Images: {image_count} saved to {image_dir}")
+            print(f"   [OK] Image manifest: {manifest_path}")
 
         # Convert to MD
         # Note: We pass the element to our traversal function
