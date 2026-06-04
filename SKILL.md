@@ -49,11 +49,15 @@ description: >
 
 > [!IMPORTANT]
 >
-> ## 🔒 Viettel Typography Default
+> ## 🔒 Viettel Brand Default
 >
-> - This skill's default typography stack is locked to `"FS PF BeauSans Pro", "FS Magistral", Sarabun`.
-> - During Eight Confirmations, present this stack as the typography recommendation/lock, not as one option among several.
-> - Do NOT propose alternative font combinations, typefaces, or PPT-safe generic font stacks unless the user explicitly requests a non-Viettel brand override.
+> - Every normal run of this skill is a Viettel-branded PPT 16:9 run. Initialize with `--brand-profile viettel_default`; do not wait for a Viettel keyword.
+> - Use `--brand-profile custom_override` only when the user explicitly says not to use Viettel, names another brand, or supplies an explicit non-Viettel template path. A color/font request alone is not an override.
+> - This skill's typography is locked to the single family `"FS Magistral"` for every normal run.
+> - During Eight Confirmations, state the typography lock for visibility; do not ask the user to choose or approve a typeface.
+> - Use FS Magistral Bold (`font-weight="700"`) for cover/chapter/page titles, section and card headers, KPI/hero numbers, callouts, and highlighted text. Use Book/Regular (`400`) for body, descriptions, captions, sources, and footers; Medium (`500`) is reserved for secondary subtitles/labels.
+> - Viettel red `#EE0033` is the brand accent. Deep blue `#12436D` is restricted to chart, diagram/infographic, and icon marks; never use it for text, backgrounds, cards, rails, footer, dividers, or decoration.
+> - Do NOT propose alternative brand colors, font combinations, typefaces, or competing templates unless the run is an explicit `custom_override`.
 > - If the host lacks a Viettel font, keep the same declared stack and report `brand fidelity degraded`; do not silently substitute another design font in the recommendation or `spec_lock.md`.
 
 ## Main Pipeline Scripts
@@ -85,7 +89,7 @@ For complete tool documentation, see `${SKILL_DIR}/scripts/README.md`.
 | Visualization templates | `${SKILL_DIR}/templates/charts/charts_index.json`   | Query available visualization SVG templates (charts, infographics, diagrams, frameworks)                                    |
 | Icon library            | `${SKILL_DIR}/templates/icons/`                     | See `${SKILL_DIR}/templates/icons/README.md`; search icons on demand with `ls templates/icons/<library>/ \| grep <keyword>` |
 
-Viettel corporate decks can use `${SKILL_DIR}/templates/layouts/viettel_default/` as the layout template path. This is a native SVG shell, not an HTML renderer, and keeps the Viettel logo fixed at the top-right of shell pages.
+Normal runs automatically install `${SKILL_DIR}/templates/layouts/viettel_default/`. This is a native SVG shell, not an HTML renderer, and keeps the Viettel logo fixed at the top-right of shell pages.
 
 ## Standalone Workflows
 
@@ -154,10 +158,10 @@ When the user provides non-Markdown content, convert immediately:
 🚧 **GATE**: Step 1 complete; source content is ready (Markdown file, user-provided text, or requirements described in conversation are all valid).
 
 ```bash
-python3 ${SKILL_DIR}/scripts/project_manager.py init <project_name> --format <format>
+python3 ${SKILL_DIR}/scripts/project_manager.py init <project_name> --format ppt169 --brand-profile viettel_default
 ```
 
-Format options: `ppt169` (default), `ppt43`, `xhs`, `story`, etc. For the full format list, see `references/canvas-formats.md`.
+This skill is locked to `ppt169`. Use `--brand-profile custom_override` only for an explicit hard non-Viettel request; custom override still uses PPT 16:9.
 
 Import source content (choose based on the situation):
 
@@ -172,55 +176,25 @@ Import source content (choose based on the situation):
 
 ---
 
-### Step 3: Template Option
+### Step 3: Viettel Template Gate
 
-🚧 **GATE**: Step 2 complete; project directory structure is ready.
+🚧 **GATE**: Step 2 complete; project directory structure is ready and brand profile is known.
 
-**Default — free design.** Proceed directly to Step 4. Do NOT query `layouts_index.json` unless triggered.
+**Default — Viettel lock.** `project_manager.py init` MUST have installed `viettel_default` SVGs, `design_spec.md`, logo, and bundled fonts. Verify these assets exist before Step 4. Do NOT wait for Viettel keywords and do NOT query `layouts_index.json`.
 
-**Template triggering rules:**
+**Hard override rule**:
 
-#### Option A: Keyword Matching (Viettel Brand)
+- Explicit statements such as "do not use Viettel", a named different brand, or an explicit non-Viettel template path → re-initialize with `--brand-profile custom_override` and follow that explicit request.
+- Requests for a different color, font, mood, or visual descriptor alone do NOT unlock the brand. Interpret compatible parts inside the Viettel design language and keep the lock.
+- Normal Viettel pages may use adaptive/free composition inside the content safe area, but they are never brand-free: logo, typography, approved colors, and brand chrome remain mandatory.
 
-The following keywords automatically match to Viettel template:
-
-| User input contains                                                                                                                                                                                                                                            | Template matched                     |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| `viettel`, `style viettel`, `viettel style`, `viettel corporate`, `viettel report`, `viettel template`, `style viettel`, `viettel style slide`, `viettel style ppt`, `thương hiệu viettel`, `mẫu viettel`, `slide viettel`, `ppt viettel`, `corporate viettel` | `templates/layouts/viettel_default/` |
-
-> When keyword is detected, automatically resolve to the template path and copy files. No path required from user.
-> Viettel keyword matching is a brand lock, not a loose style hint. Once matched, Strategist MUST keep the Viettel font stack, palette, top-right logo slot, footer/page-number treatment, and content safe area from `templates/layouts/viettel_default/design_spec.md`; do not ask the user to choose typography or a competing visual style unless they explicitly request a non-Viettel override.
-
-#### Option B: Explicit Path
-
-| User input contains                                                                                                                       | Step 3 action                                                                    |
-| ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| An explicit path to a template directory (e.g. `skills/viettel-ppt-master/templates/layouts/academic_defense/`, `projects/foo/template/`) | Copy that directory's SVGs + `design_spec.md` + assets into the project, advance |
-| Nothing matching Option A or B                                                                                                            | Skip Step 3, free design                                                         |
-
-#### Option C: Query Available Templates
-
-> "What templates exist?" / "có những template nào?" — answer by listing from `layouts_index.json`. This is informational only; user still needs to trigger via Option A or B.
-
-```bash
-# Option A: Keyword resolved path
-TEMPLATE_DIR="templates/layouts/viettel_default/"
-
-# Copy template files
-cp ${TEMPLATE_DIR}/*.svg <project_path>/templates/
-cp ${TEMPLATE_DIR}/design_spec.md <project_path>/templates/
-cp ${TEMPLATE_DIR}/*.png <project_path>/images/ 2>/dev/null || true
-cp ${TEMPLATE_DIR}/*.jpg <project_path>/images/ 2>/dev/null || true
-cp -R ${TEMPLATE_DIR}/fonts <project_path>/fonts 2>/dev/null || true
-```
-
-**✅ Checkpoint — If keyword or path detected, template is copied. Otherwise, proceed to Step 4 with free design.**
+**✅ Checkpoint — Confirm brand profile and required template assets are ready. Proceed to Step 4.**
 
 ---
 
 ### Step 4: Strategist Phase (MANDATORY — cannot be skipped)
 
-🚧 **GATE**: Step 3 complete; default free-design path taken, or (if triggered) template files copied into the project.
+🚧 **GATE**: Step 3 complete; Viettel template assets are installed, or an explicit `custom_override` is recorded.
 
 First, read the role definition:
 
@@ -240,10 +214,10 @@ Read references/strategist.md
 4. Style objective
 5. Color scheme
 6. Icon usage approach
-7. Typography plan
+7. Typography plan (fixed FS Magistral family and weight rules; informational, not a font choice)
 8. Image usage approach
 
-**Viettel typography lock**: present the typography plan as `"FS PF BeauSans Pro", "FS Magistral", Sarabun` for this skill by default, including the blocking Eight Confirmations message. This is not an open-ended font choice. If Step 3 matched `viettel_default`, also present the Viettel brand choices as locked recommendations: Viettel red `#EE0033`, deep blue `#12436D`, white/gray reporting surfaces, top-right logo slot, footer/page-number treatment, and content safe area. `spec_lock.md` MUST copy these values exactly unless the user explicitly requests a non-Viettel brand override.
+**Viettel brand lock**: for every normal run, present PPT 16:9, Viettel red `#EE0033`, white/approved-gray reporting surfaces, dark-neutral text, the locked family `"FS Magistral"` and its fixed weight roles, top-right logo slot, footer/page-number treatment, and content safe area as fixed decisions. Typography is informational in the confirmation set, not a user choice. Deep blue `#12436D` is chart/diagram/icon-only. `spec_lock.md` MUST record `brand.profile: viettel_default` and these values exactly. Only an explicit hard non-Viettel request may record `brand.profile: custom_override`.
 
 **Font preflight (required for bundled brand fonts)**: after `spec_lock.md` is written, run:
 
@@ -442,13 +416,13 @@ python3 ${SKILL_DIR}/scripts/total_md_split.py <project_path>
 **Step 7.2** — SVG post-processing (icon embedding / image crop & embed / text flattening / rounded rect to path):
 
 ```bash
-python3 ${SKILL_DIR}/scripts/finalize_svg.py <project_path>
+python3 ${SKILL_DIR}/scripts/finalize_svg.py <project_path> --brand-chrome viettel --strip-comments
 ```
 
-For Viettel-branded decks that need the logo fixed on every page, including chart/framework pages that do not inherit a layout shell, run:
+For an explicit `custom_override` run only, omit Viettel brand chrome:
 
 ```bash
-python3 ${SKILL_DIR}/scripts/finalize_svg.py <project_path> --brand-chrome viettel --strip-comments
+python3 ${SKILL_DIR}/scripts/finalize_svg.py <project_path>
 ```
 
 `--brand-chrome viettel` applies the logo layer to both `svg_output/` and `svg_final/`, so native PPTX export and SVG snapshot stay consistent. `--strip-comments` removes template XML comments, including non-visible Chinese notes from imported templates.

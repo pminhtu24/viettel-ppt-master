@@ -14,7 +14,7 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 
 # viettel_default - Viettel Corporate Template
 
-> Native SVG template shell for Viettel-style PPT Master decks. This template keeps the brand layer stable while leaving the content body available for PPT Master charts, diagrams, and free-design pages.
+> Native SVG template shell for Viettel-style PPT Master decks. This template keeps the brand layer stable while leaving the content body available for adaptive Viettel charts, diagrams, and content compositions.
 
 ---
 
@@ -50,7 +50,7 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 | Role             | Value     | Usage                                                            |
 | ---------------- | --------- | ---------------------------------------------------------------- |
 | **Viettel Red**  | `#EE0033` | Brand accent, active rules, page number block, primary CTA      |
-| **Deep Blue**    | `#12436D` | Secondary accent, chart contrast, executive labels               |
+| **Deep Blue**    | `#12436D` | Chart, diagram/infographic, and icon marks only                   |
 
 ### Functional Colors
 
@@ -68,7 +68,7 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 | **Primary Text**  | `#000000` | Main titles, body copy                                  |
 | **Secondary Text**| `#44494D` | Subtitles, captions, descriptions                       |
 | **Tertiary Text** | `#999999` | Footnotes, page numbers, source citations                |
-| **White Text**    | `#FFFFFF` | Text on dark color blocks (red, blue backgrounds)        |
+| **White Text**    | `#FFFFFF` | Text on Viettel-red emphasis blocks                      |
 
 ### Chart Colors (Series Order)
 
@@ -81,6 +81,10 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 | 5     | `#6B7280` | Neutral/background series                 |
 
 > Use chart colors in rotation order for data visualizations (bar charts, line charts, pie charts).
+
+> **Deep-blue hard rule**: `#12436D` is never a text, background, card, rail,
+> footer, divider, or decorative color. Every SVG element using it must live
+> inside `<g data-viettel-blue-scope="chart|diagram|icon">`.
 
 ### Optional Gradient Scheme
 
@@ -97,11 +101,6 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
   <stop offset="100%" stop-color="#C00028"/>
 </linearGradient>
 
-<!-- Optional blue accent gradient -->
-<linearGradient id="viettelBlue" x1="0%" y1="0%" x2="100%" y2="0%">
-  <stop offset="0%" stop-color="#12436D"/>
-  <stop offset="100%" stop-color="#1A5A8A"/>
-</linearGradient>
 ```
 
 > **Usage**: Gradients are optional accents for generated content. The base shell pages use flat colors for maximum PPTX stability.
@@ -112,33 +111,36 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 
 ### Font Stack
 
-**Primary Font**: `"FS PF BeauSans Pro", "FS Magistral", Sarabun`
+**Locked Font Family**: `"FS Magistral"`
 
-> Priority order: FS PF BeauSans Pro → FS Magistral → Sarabun. Do not introduce other design fonts. The local `fonts/` bundle carries the brand families; run font preflight before generation and treat fallback rendering as a brand-fidelity warning, not as a silent substitute.
+> FS Magistral is mandatory and is not presented as a user-selectable option. Project setup copies only the required Book, Medium, and Bold faces from the local `fonts/` bundle; run font preflight before generation and treat fallback rendering as a brand-fidelity warning, not as a silent substitute.
 
 ### Role Breakdown
 
 | Role         | Font Stack                                                         | Usage                       |
 | ------------ | ------------------------------------------------------------------ | --------------------------- |
-| **Title**    | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | Page titles, cover headline |
-| **Body**     | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | Body content, descriptions  |
-| **Emphasis** | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | Key metrics, callouts       |
-| **Caption**  | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | Footnotes, page numbers     |
+| **Title / Header** | `"FS Magistral"` Bold (`700`) | Cover, chapter/page titles, section/card headers |
+| **Emphasis** | `"FS Magistral"` Bold (`700`) | KPI/hero numbers, key metrics, callouts, highlighted text |
+| **Body** | `"FS Magistral"` Book/Regular (`400`) | Body content, descriptions, ordinary chart labels |
+| **Secondary** | `"FS Magistral"` Medium (`500`) | Secondary subtitles and labels only |
+| **Caption** | `"FS Magistral"` Book/Regular (`400`) | Footnotes, sources, page numbers |
 
 ### Font Size Hierarchy
 
 | Purpose       | Ratio to body | @body=18px (dense) | @body=20px (standard) | Weight  |
 | ------------- | ------------- | ------------------ | --------------------- | ------- |
-| Cover title   | 2.5-3x        | 45-54px            | 50-60px               | 700-800 |
-| Chapter title | 2-2.5x        | 36-45px            | 40-50px               | 700-800 |
+| Cover title   | 2.5-3x        | 45-54px            | 50-60px               | 700     |
+| Chapter title | 2-2.5x        | 36-45px            | 40-50px               | 700     |
 | Page title    | 1.5-2x        | 27-36px            | 30-40px               | 700     |
+| Section/card header | 1-1.3x  | 18-24px            | 20-26px               | 700     |
+| KPI/hero number | 1.5-2.5x    | 27-45px            | 30-50px               | 700     |
 | Subtitle      | 1.2-1.5x      | 22-27px            | 24-30px               | 500     |
 | **Body**      | **1x**        | **18px**           | **20px**              | 400     |
 | Caption       | 0.7-0.85x     | 13-15px            | 14-17px               | 400     |
-| Page number   | 0.6-0.75x     | 11-14px            | 12-15px               | 600     |
+| Page number   | 0.6-0.75x     | 11-14px            | 12-15px               | 400     |
 
-> Keep the font stack exactly as declared in `spec_lock.md`. Do not introduce ad-hoc fonts in page SVGs.
-> For Viettel decks, Strategist MUST write this exact stack into `spec_lock.md ## typography` as `font_family`. Do not ask the user to choose typography unless they explicitly request a non-Viettel brand override.
+> Keep the single font family exactly as declared in `spec_lock.md`. Do not introduce ad-hoc fonts in page SVGs.
+> For Viettel decks, Strategist MUST write `"FS Magistral"` into `spec_lock.md ## typography` as `font_family`. Do not ask the user to choose typography. Use only weights `400`, `500`, and `700`; prominent text uses `700`, never `800`/ExtraBold.
 > Viettel template projects ship a local `fonts/` bundle. After project setup, run `scripts/check_fonts.py <project_path>`; if the result is `fallback in use` or `missing`, continue with the same stack but report `brand fidelity degraded`. Installation from the local bundle is opt-in and requires explicit user approval.
 
 ---
@@ -151,7 +153,7 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 | --- | --- | --- |
 | **Logo Area** | top-right, x=1088, y=28 | Fixed Viettel logo (128×42) on every page |
 | **Top Accent Bar** | y: 0-5, full width | Red accent bar (5px) |
-| **Brand Rail** | x: 0-24, full height | Red (18px) + blue (6px) vertical rails on cover/ending |
+| **Brand Rail** | x: 0-24, full height | Red (18px) + neutral gray (6px) vertical rails on cover/ending |
 | **Title Bar** | y: 38-102 | Red vertical bar (7×38) + title text |
 | **Content Area** | x: 72-1208, y: 132-618 | Main body with optional dashed frame |
 | **Footer** | y: 674-720 | Gray bar with section name, source, page number |
@@ -165,7 +167,7 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 3. **Red as Signal, Not Decoration**: red marks hierarchy, section state, page number, or key emphasis.
 4. **PPT Master Compatibility**: no CSS, no foreignObject, no embedded web font, no HTML layout dependency.
 5. **Chart-First Compatibility**: charts and diagrams from `templates/charts/` should be composed inside the content safe area or receive brand chrome during post-processing.
-6. **Brand Rail Consistency**: cover and ending pages use full-height red+blue rails; content pages use top accent bar only.
+6. **Brand Rail Consistency**: cover and ending pages use full-height red+neutral rails; content pages use top accent bar only.
 7. **Open Canvas Content**: content pages should not reserve large fixed sidebars; keep the canvas flexible for charts and layouts.
 8. **Logo Clearance**: no title, subtitle, header text, chart label, or callout may enter the logo reserved slot (`x=1060-1224`, `y=20-82`). Long content-page titles must wrap inside `data-box="88,36,960,58" data-wrap="true"` or be manually split before the logo slot.
 9. **Single Page Number Source**: shell pages already own the footer/page number. Post-processing may add Viettel brand chrome only to pages that do not already contain the shell logo/page-number treatment.
@@ -246,14 +248,14 @@ Implementation rules:
 **Layout Structure**:
 
 - White background with left-side brand rails
-- Red vertical rail (18px) + Blue accent rail (6px) on left edge
+- Red vertical rail (18px) + neutral-gray rail (6px) on left edge
 - Viettel logo fixed at top-right (x=1088, y=28, 128×42)
 - Title area centered-left with red underline
 
 **Areas**:
 | Area | Position | Content |
 |------|----------|---------|
-| Brand Rails | x: 0-24, full height | Red + blue vertical bars |
+| Brand Rails | x: 0-24, full height | Red + neutral-gray vertical bars |
 | Logo | top-right corner | Viettel logo image |
 | Label | x=96, y=168 | "VIETTEL REPORT" tag |
 | Title | x=96, y=242 | Main report title ({{TITLE}}) |
@@ -261,7 +263,7 @@ Implementation rules:
 | Subtitle | x=96, y=330 | Subtitle ({{SUBTITLE}}) |
 | Author Box | x=96, y=492 | Gray card with prepared-by info |
 | Date | bottom-right | Report date ({{DATE}}) |
-| Bottom Decoration | x=96, y=642 | Red + blue pill shapes |
+| Bottom Decoration | x=96, y=642 | Red + neutral-gray pill shapes |
 
 **Placeholders**:
 | Placeholder | Description | Example |
@@ -276,7 +278,7 @@ Implementation rules:
 ```xml
 <!-- Brand rails -->
 <rect x="0" y="0" width="18" height="720" fill="#EE0033"/>
-<rect x="18" y="0" width="6" height="720" fill="#12436D"/>
+<rect x="18" y="0" width="6" height="720" fill="#E6E6E6"/>
 
 <!-- Red underline -->
 <rect x="96" y="282" width="760" height="2" fill="#EE0033"/>
@@ -326,7 +328,7 @@ Implementation rules:
 <!-- TOC item with number badge -->
 <g transform="translate(88,172)">
   <circle cx="18" cy="18" r="18" fill="#EE0033"/>
-  <text x="18" y="25" text-anchor="middle" font-size="16" font-weight="800" fill="#FFFFFF">01</text>
+  <text x="18" y="25" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">01</text>
   <text x="64" y="26" font-size="24" font-weight="700" fill="#000000">{{TOC_ITEM_1_TITLE}}</text>
 </g>
 ```
@@ -368,14 +370,14 @@ Implementation rules:
 
 ```xml
 <!-- Watermark number (light gray) -->
-<text x="110" y="206" font-size="96" font-weight="800" fill="#F2F2F2">{{CHAPTER_NUM}}</text>
+<text x="110" y="206" font-size="96" font-weight="700" fill="#F2F2F2">{{CHAPTER_NUM}}</text>
 
 <!-- Red accent bar -->
 <rect x="110" y="238" width="90" height="10" rx="5" fill="#EE0033"/>
 
 <!-- Chapter badge -->
-<rect x="952" y="208" width="144" height="144" rx="10" fill="#EE0033"/>
-<text x="1024" y="300" text-anchor="middle" font-size="56" font-weight="800" fill="#FFFFFF">{{CHAPTER_NUM}}</text>
+<rect x="952" y="208" width="144" height="144" rx="10" fill="#EE0033" data-allow-title-zone="true"/>
+<text x="1024" y="300" text-anchor="middle" data-box="970,238,108,76" data-wrap="true" font-size="56" font-weight="700" fill="#FFFFFF">{{CHAPTER_NUM}}</text>
 ```
 
 ---
@@ -416,7 +418,7 @@ Implementation rules:
 ```xml
 <!-- Title vertical bar -->
 <rect x="64" y="38" width="7" height="38" rx="3.5" fill="#EE0033"/>
-<text x="88" y="66" data-box="88,36,960,58" data-wrap="true" font-size="32" font-weight="800" fill="#000000">{{PAGE_TITLE}}</text>
+<text x="88" y="66" data-box="88,36,960,58" data-wrap="true" font-size="32" font-weight="700" fill="#000000">{{PAGE_TITLE}}</text>
 
 <!-- Dashed content frame -->
 <rect x="72" y="132" width="1136" height="486" rx="6" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="6 6"/>
@@ -427,7 +429,7 @@ Implementation rules:
 
 <!-- Page number badge -->
 <rect x="1174" y="684" width="42" height="26" rx="4" fill="#EE0033"/>
-<text x="1195" y="703" text-anchor="middle" font-size="14" font-weight="800" fill="#FFFFFF">{{PAGE_NUM}}</text>
+<text x="1195" y="703" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">{{PAGE_NUM}}</text>
 ```
 
 ---
@@ -436,7 +438,7 @@ Implementation rules:
 
 **Layout Structure**:
 
-- White background with left brand rails (red + blue)
+- White background with left brand rails (red + neutral gray)
 - Logo fixed at top-right
 - Gray card with thank you message
 - Decorative accent bars
@@ -445,13 +447,13 @@ Implementation rules:
 **Areas**:
 | Area | Position | Content |
 |------|----------|---------|
-| Brand Rails | x: 0-24, full height | Red + blue vertical bars |
+| Brand Rails | x: 0-24, full height | Red + neutral-gray vertical bars |
 | Logo | top-right corner | Viettel logo image |
 | Thank You Card | x=116, y=170-460 | Gray card with message |
 | Thank You Text | x=164, y=280 | Large red {{THANK_YOU}} |
-| Subtitle | x=168, y=330 | Blue {{ENDING_SUBTITLE}} |
+| Subtitle | x=168, y=330 | Dark-neutral {{ENDING_SUBTITLE}} |
 | Contact | x=168, y=392 | Contact info ({{CONTACT_INFO}}) |
-| Accent Bars | y=526 | Red + blue pill shapes |
+| Accent Bars | y=526 | Red + neutral-gray pill shapes |
 | Copyright | x=116, y=650 | {{COPYRIGHT}} |
 | Page Number | x=1208, y=660 | {{PAGE_NUM}} |
 
@@ -469,15 +471,15 @@ Implementation rules:
 ```xml
 <!-- Brand rails (echoing cover) -->
 <rect x="0" y="0" width="18" height="720" fill="#EE0033"/>
-<rect x="18" y="0" width="6" height="720" fill="#12436D"/>
+<rect x="18" y="0" width="6" height="720" fill="#E6E6E6"/>
 
 <!-- Thank you card -->
 <rect x="116" y="170" width="840" height="290" rx="10" fill="#F2F2F2" stroke="#E6E6E6" stroke-width="1"/>
-<text x="164" y="280" font-size="64" font-weight="800" fill="#EE0033">{{THANK_YOU}}</text>
+<text x="164" y="280" font-size="64" font-weight="700" fill="#EE0033">{{THANK_YOU}}</text>
 
 <!-- Decorative accent bars -->
 <rect x="116" y="526" width="96" height="6" rx="3" fill="#EE0033"/>
-<rect x="226" y="526" width="58" height="6" rx="3" fill="#12436D"/>
+<rect x="226" y="526" width="58" height="6" rx="3" fill="#E6E6E6"/>
 ```
 
 ---
@@ -529,7 +531,7 @@ Selected chart templates must be mirrored into project `spec_lock.md ## page_cha
 | Asset | Purpose | Runtime Path |
 | --- | --- | --- |
 | `viettel-logo.png` | Required Viettel logo fixed at top-right on shell pages | `../images/viettel-logo.png` |
-| `fonts/` bundle | Local install source for FS PF BeauSans Pro and FS Magistral families | `<project_path>/fonts/` |
+| `fonts/` bundle | Local install source for FS Magistral family | `<project_path>/fonts/` |
 
 ### Asset Path Rule
 
@@ -568,7 +570,7 @@ The font bundle lives in `templates/layouts/viettel_default/fonts/`. During proj
 ### Chart Usage Rules
 
 1. Use `#EE0033` only for the primary series, key metric, or threshold signal.
-2. Use `#12436D`, `#28A197`, and `#F46A25` for secondary series, positive trends, and warnings.
+2. Use `#12436D`, `#28A197`, and `#F46A25` for secondary series, positive trends, and warnings. Place every `#12436D` mark inside a `data-viettel-blue-scope="chart|diagram|icon"` group.
 3. Long labels such as CVE IDs, malware names, agency names, and sector names stay outside bars; values sit at the bar end.
 4. KPI cards use a two-line structure: large number on line 1, unit/context on line 2.
 5. Tables and ranked lists with more than 8 rows should use `basic_table`, `consulting_table`, or split slides; do not shrink body text below 11px to fit.

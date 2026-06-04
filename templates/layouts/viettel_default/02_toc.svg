@@ -3,38 +3,38 @@
   <rect x="0" y="0" width="1280" height="5" fill="#EE0033"/>
   <image href="../images/viettel-logo.png" x="1088" y="28" width="128" height="42" preserveAspectRatio="xMidYMid meet"/>
 
-  <text x="72" y="70" data-box="72,40,960,48" data-wrap="true" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="34" font-weight="800" fill="#000000">{{PAGE_TITLE}}</text>
-  <text x="72" y="104" data-box="72,84,960,28" data-wrap="true" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="18" font-weight="500" fill="#44494D">{{TOC_SUMMARY}}</text>
+  <text x="72" y="70" data-box="72,40,960,48" data-wrap="true" font-family="&quot;FS Magistral&quot;" font-size="34" font-weight="700" fill="#000000">{{PAGE_TITLE}}</text>
+  <text x="72" y="104" data-box="72,84,960,28" data-wrap="true" font-family="&quot;FS Magistral&quot;" font-size="18" font-weight="500" fill="#44494D">{{TOC_SUMMARY}}</text>
   <line x1="72" y1="132" x2="1208" y2="132" stroke="#E6E6E6" stroke-width="1"/>
 
-  <g id="toc-items" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun">
+  <g id="toc-items" font-family="&quot;FS Magistral&quot;">
     <g transform="translate(88,172)">
       <circle cx="18" cy="18" r="18" fill="#EE0033"/>
-      <text x="18" y="25" text-anchor="middle" font-size="16" font-weight="800" fill="#FFFFFF">01</text>
+      <text x="18" y="25" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">01</text>
       <text x="64" y="26" font-size="24" font-weight="700" fill="#000000">{{TOC_ITEM_1_TITLE}}</text>
     </g>
     <g transform="translate(88,252)">
       <circle cx="18" cy="18" r="18" fill="#EE0033"/>
-      <text x="18" y="25" text-anchor="middle" font-size="16" font-weight="800" fill="#FFFFFF">02</text>
+      <text x="18" y="25" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">02</text>
       <text x="64" y="26" font-size="24" font-weight="700" fill="#000000">{{TOC_ITEM_2_TITLE}}</text>
     </g>
     <g transform="translate(88,332)">
       <circle cx="18" cy="18" r="18" fill="#EE0033"/>
-      <text x="18" y="25" text-anchor="middle" font-size="16" font-weight="800" fill="#FFFFFF">03</text>
+      <text x="18" y="25" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">03</text>
       <text x="64" y="26" font-size="24" font-weight="700" fill="#000000">{{TOC_ITEM_3_TITLE}}</text>
     </g>
     <g transform="translate(88,412)">
       <circle cx="18" cy="18" r="18" fill="#EE0033"/>
-      <text x="18" y="25" text-anchor="middle" font-size="16" font-weight="800" fill="#FFFFFF">04</text>
+      <text x="18" y="25" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">04</text>
       <text x="64" y="26" font-size="24" font-weight="700" fill="#000000">{{TOC_ITEM_4_TITLE}}</text>
     </g>
     <g transform="translate(88,492)">
       <circle cx="18" cy="18" r="18" fill="#EE0033"/>
-      <text x="18" y="25" text-anchor="middle" font-size="16" font-weight="800" fill="#FFFFFF">05</text>
+      <text x="18" y="25" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">05</text>
       <text x="64" y="26" font-size="24" font-weight="700" fill="#000000">{{TOC_ITEM_5_TITLE}}</text>
     </g>
   </g>
 
   <rect x="72" y="650" width="72" height="5" rx="2.5" fill="#EE0033"/>
-  <text x="1208" y="660" text-anchor="end" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="13" fill="#44494D">{{PAGE_NUM}}</text>
+  <text x="1208" y="660" text-anchor="end" font-family="&quot;FS Magistral&quot;" font-size="13" fill="#44494D">{{PAGE_NUM}}</text>
 </svg>

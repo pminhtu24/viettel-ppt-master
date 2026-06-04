@@ -205,6 +205,16 @@ def remove_page_footer(text: str) -> str:
     return text.rstrip()
 
 
+def rect_area(rect: fitz.Rect) -> float:
+    """Return a PyMuPDF-agnostic rectangle area.
+
+    Some PyMuPDF builds expose ``Rect.get_area()``, while others only expose
+    geometry attributes. The table-overlap filter only needs the scalar area,
+    so compute it from width/height for compatibility.
+    """
+    return max(0.0, float(rect.width)) * max(0.0, float(rect.height))
+
+
 def detect_headers_footers(doc: fitz.Document, threshold_ratio: float = 0.6) -> set[str]:
     """
     Detect headers and footers statistically.
@@ -539,7 +549,7 @@ def extract_pdf_to_markdown(pdf_path: str, output_path: str = None, images: str 
             is_in_table = False
             for tab_rect in tab_rects:
                 intersect = block_rect & tab_rect
-                if intersect.get_area() > 0.6 * block_rect.get_area():
+                if rect_area(intersect) > 0.6 * rect_area(block_rect):
                     is_in_table = True
                     break
 

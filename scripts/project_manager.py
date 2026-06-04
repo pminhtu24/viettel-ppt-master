@@ -2,7 +2,7 @@
 """PPT Master project management helpers.
 
 Usage:
-    python3 scripts/project_manager.py init <project_name> [--format ppt169] [--dir projects]
+    python3 scripts/project_manager.py init <project_name> [--format ppt169] [--brand-profile viettel_default|custom_override] [--dir projects]
     python3 scripts/project_manager.py import-sources <project_path> <source1> [<source2> ...] [--move | --copy]
     python3 scripts/project_manager.py validate <project_path>
     python3 scripts/project_manager.py info <project_path>
@@ -60,6 +60,14 @@ WECHAT_HOST_KEYWORDS = ("mp.weixin.qq.com", "weixin.qq.com")
 IMAGE_ASSET_SUFFIXES = {
     ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tiff", ".tif",
     ".emf", ".wmf", ".svg",
+}
+DEFAULT_BRAND_PROFILE = "viettel_default"
+BRAND_PROFILES = {DEFAULT_BRAND_PROFILE, "custom_override"}
+VIETTEL_CANVAS_FORMAT = "ppt169"
+VIETTEL_FONT_FILES = {
+    "FS Magistral-Book.ttf",
+    "FS Magistral-Medium.ttf",
+    "FS Magistral-Bold.ttf",
 }
 
 
@@ -120,6 +128,7 @@ class ProjectManager:
         project_name: str,
         canvas_format: str = "ppt169",
         base_dir: str | None = None,
+        brand_profile: str = DEFAULT_BRAND_PROFILE,
     ) -> str:
         base_path = Path(base_dir) if base_dir else self.base_dir
 
@@ -129,6 +138,16 @@ class ProjectManager:
             raise ValueError(
                 f"Unsupported canvas format: {canvas_format} "
                 f"(available: {available}; common alias: xhs -> xiaohongshu)"
+            )
+        if normalized_format != VIETTEL_CANVAS_FORMAT:
+            raise ValueError(
+                "viettel-ppt-master project creation is locked to PPT 16:9 "
+                f"(--format {VIETTEL_CANVAS_FORMAT}); received {canvas_format!r}"
+            )
+        if brand_profile not in BRAND_PROFILES:
+            raise ValueError(
+                f"Unsupported brand profile: {brand_profile} "
+                f"(available: {', '.join(sorted(BRAND_PROFILES))})"
             )
 
         date_str = datetime.now().strftime("%Y%m%d")
@@ -149,12 +168,16 @@ class ProjectManager:
         ):
             (project_path / rel_path).mkdir(parents=True, exist_ok=True)
 
+        if brand_profile == DEFAULT_BRAND_PROFILE:
+            self._install_viettel_default_template(project_path)
+
         canvas_info = self.CANVAS_FORMATS[normalized_format]
         readme_path = project_path / "README.md"
         readme_path.write_text(
             (
                 f"# {project_name}\n\n"
                 f"- Canvas format: {normalized_format}\n"
+                f"- Brand profile: {brand_profile}\n"
                 f"- Created: {date_str}\n\n"
                 "## Directories\n\n"
                 "- `svg_output/`: raw SVG output\n"
@@ -171,7 +194,29 @@ class ProjectManager:
 
         print(f"Project created: {project_path}")
         print(f"Canvas: {canvas_info['name']} ({canvas_info['dimensions']})")
+        print(f"Brand profile: {brand_profile}")
         return str(project_path)
+
+    @staticmethod
+    def _install_viettel_default_template(project_path: Path) -> None:
+        """Install the mandatory Viettel shell, logo, and locked FS Magistral faces."""
+        source = SKILL_DIR / "templates" / "layouts" / DEFAULT_BRAND_PROFILE
+        if not source.is_dir():
+            raise FileNotFoundError(f"Viettel default template not found: {source}")
+
+        templates_dir = project_path / "templates"
+        images_dir = project_path / "images"
+        fonts_dir = project_path / "fonts"
+        for asset in sorted(source.iterdir()):
+            if asset.suffix.lower() == ".svg" or asset.name == "design_spec.md":
+                shutil.copy2(asset, templates_dir / asset.name)
+            elif asset.suffix.lower() in IMAGE_ASSET_SUFFIXES:
+                shutil.copy2(asset, images_dir / asset.name)
+            elif asset.name == "fonts" and asset.is_dir():
+                fonts_dir.mkdir(parents=True, exist_ok=True)
+                for font_file in sorted(asset.iterdir()):
+                    if font_file.is_file() and font_file.name in VIETTEL_FONT_FILES:
+                        shutil.copy2(font_file, fonts_dir / font_file.name)
 
     def _source_dir(self, project_path: Path) -> Path:
         sources_dir = project_path / SOURCE_DIRNAME
@@ -849,7 +894,7 @@ def print_usage() -> None:
     print(__doc__)
 
 
-def parse_init_args(argv: list[str]) -> tuple[str, str, str]:
+def parse_init_args(argv: list[str]) -> tuple[str, str, str, str]:
     """Parse arguments for the `init` subcommand."""
     if len(argv) < 3:
         raise ValueError("Project name is required")
@@ -857,6 +902,7 @@ def parse_init_args(argv: list[str]) -> tuple[str, str, str]:
     project_name = argv[2]
     canvas_format = "ppt169"
     base_dir = "projects"
+    brand_profile = DEFAULT_BRAND_PROFILE
 
     i = 3
     while i < len(argv):
@@ -866,10 +912,13 @@ def parse_init_args(argv: list[str]) -> tuple[str, str, str]:
         elif argv[i] == "--dir" and i + 1 < len(argv):
             base_dir = argv[i + 1]
             i += 2
+        elif argv[i] == "--brand-profile" and i + 1 < len(argv):
+            brand_profile = argv[i + 1]
+            i += 2
         else:
             i += 1
 
-    return project_name, canvas_format, base_dir
+    return project_name, canvas_format, base_dir, brand_profile
 
 
 def parse_import_args(argv: list[str]) -> tuple[str, list[str], bool, bool]:
@@ -911,8 +960,13 @@ def main() -> None:
 
     try:
         if command == "init":
-            project_name, canvas_format, base_dir = parse_init_args(sys.argv)
-            project_path = manager.init_project(project_name, canvas_format, base_dir=base_dir)
+            project_name, canvas_format, base_dir, brand_profile = parse_init_args(sys.argv)
+            project_path = manager.init_project(
+                project_name,
+                canvas_format,
+                base_dir=base_dir,
+                brand_profile=brand_profile,
+            )
             print(f"[OK] Project initialized: {project_path}")
             print("Next:")
             print("1. Put source files into sources/ (or use import-sources)")
