@@ -9,13 +9,16 @@ Project tools create, validate, and inspect the standard PPT Master workspace.
 Main entry point for project setup and validation.
 
 ```bash
-python3 scripts/project_manager.py init <project_name> --format ppt169
+python3 scripts/project_manager.py init <project_name> --format ppt169 --brand-profile viettel_default
 python3 scripts/project_manager.py import-sources <project_path> <source1> [<source2> ...]
 python3 scripts/project_manager.py validate <project_path>
 python3 scripts/project_manager.py info <project_path>
 ```
 
 Notes:
+- Project creation is locked to PPT 16:9.
+- `viettel_default` is the default brand profile and automatically installs the Viettel SVG shell, logo, and bundled fonts.
+- Use `--brand-profile custom_override` only for an explicit hard non-Viettel request.
 - Files outside the repo are copied into `sources/` by default
 - With `--move`, files outside the repo are moved into `sources/`
 - Files already inside the repo are moved into `sources/` by default (with a stderr
@@ -23,19 +26,13 @@ Notes:
   Pass `--copy` to force a copy for in-repo sources instead.
 - `--move` and `--copy` are mutually exclusive.
 
-Common formats:
+Supported format for this skill:
 - `ppt169`
-- `ppt43`
-- `xiaohongshu`
-- `moments`
-- `story`
-- `banner`
-- `a4`
 
 Examples:
 
 ```bash
-python3 scripts/project_manager.py init my_presentation --format ppt169
+python3 scripts/project_manager.py init my_presentation --format ppt169 --brand-profile viettel_default
 python3 scripts/project_manager.py validate projects/my_presentation_ppt169_20251116
 python3 scripts/project_manager.py info projects/my_presentation_ppt169_20251116
 ```

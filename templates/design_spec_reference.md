@@ -3,6 +3,8 @@
 > Human-readable design narrative — rationale, audience, style, color choices, content outline. Read once by downstream roles for context.
 >
 > Machine-readable execution contract: `spec_lock.md` (color / typography / icon / image short form). Executor re-reads `spec_lock.md` before every SVG page to resist context-compression drift. Keep both in sync; on divergence, `spec_lock.md` wins.
+>
+> **Viettel default brand contract**: every normal run uses PPT 16:9 and `brand.profile: viettel_default`. Keep the Viettel logo/chrome, locked font stack, Viettel red, white/approved-gray surfaces, and dark-neutral text on every page. Deep blue `#12436D` is chart/diagram/icon-only and every such mark must be inside `<g data-viettel-blue-scope="chart|diagram|icon">`. Use `brand.profile: custom_override` only for an explicit hard non-Viettel request; color/font/style requests alone do not unlock the brand.
 
 ## I. Project Information
 
@@ -35,28 +37,28 @@
 ### Theme Style
 
 - **Style**: {design_style}
-- **Theme**: [Light theme / Dark theme]
+- **Theme**: Light reporting theme (locked for `viettel_default`; change only for explicit `custom_override`)
 - **Tone**: [Filled by Strategist, e.g., tech, professional, modern, innovative]
 
 ### Color Scheme
 
-> Strategist: determine values from project content, industry, brand colors.
+> For `viettel_default`, use the palette below and delete unused rows rather than inventing replacements. Map compatible user color requests to the nearest approved data/illustration role; they do not add colors or replace Viettel red, white/gray surfaces, or dark-neutral text. Replace this palette only for explicit `custom_override`.
 
 | Role | HEX | Purpose |
 | ---- | --- | ------- |
-| **Background** | `#......` | Page background (light theme typically white; dark theme dark gray/navy) |
-| **Secondary bg** | `#......` | Card background, section background |
-| **Primary** | `#......` | Title decorations, key sections, icons |
-| **Accent** | `#......` | Data highlights, key information, links |
-| **Secondary accent** | `#......` | Secondary emphasis, gradient transitions |
-| **Body text** | `#......` | Main body text (dark theme uses light text) |
-| **Secondary text** | `#......` | Captions, annotations |
-| **Tertiary text** | `#......` | Supplementary info, footers |
-| **Border/divider** | `#......` | Card borders, divider lines |
-| **Success** | `#......` | Positive indicators (green family) |
-| **Warning** | `#......` | Issue markers (red family) |
+| **Background** | `#FFFFFF` | Page background |
+| **Secondary bg** | `#F2F2F2` | Card and section surfaces |
+| **Primary** | `#EE0033` | Viettel brand accents and primary data |
+| **Deep blue** | `#12436D` | Chart, diagram/infographic, and icon marks only |
+| **Body text** | `#000000` | Main titles and body text |
+| **Secondary text** | `#44494D` | Captions and annotations |
+| **Tertiary text** | `#999999` | Supplementary info and footers |
+| **Border/divider** | `#E6E6E6` | Card borders and divider lines |
+| **Success** | `#28A197` | Positive indicators and data series |
+| **Warning** | `#F46A25` | Warning indicators and data series |
+| **Neutral data** | `#6B7280` | Neutral chart series |
 
-> **Reference**: Industry colors in `references/strategist.md` or `scripts/config.py` under `INDUSTRY_COLORS`
+> `#12436D` is never a text, background, card, rail, footer, divider, or decorative color. Put each deep-blue mark inside `<g data-viettel-blue-scope="chart|diagram|icon">`.
 
 ### AI Image Strategy (fill only when §VIII has `ai` rows)
 
@@ -65,7 +67,9 @@
 
 > Strategist: lock these once per deck in h.5; every AI image inherits them. Cross-check the rendering × palette compatibility matrix in `image-palettes/_index.md` — avoid `✗` combinations. Leave the section out entirely if §VIII has no `ai` rows.
 
-### Gradient Scheme (if needed, using SVG syntax)
+### Gradient Scheme (explicit `custom_override` only, using SVG syntax)
+
+> Omit this section for `viettel_default`; normal Viettel pages use flat white/gray reporting surfaces and flat brand/data colors.
 
 ```xml
 <!-- Title gradient -->
@@ -87,41 +91,30 @@
 
 ### Font Plan
 
-> **Viettel default for this skill.** Unless the user explicitly requests a non-Viettel brand override, all roles MUST use the locked stack `"FS PF BeauSans Pro", "FS Magistral", Sarabun`. Do not propose or record alternative font combinations. Create hierarchy through size, weight, spacing, and color within the Viettel stack.
+> **Viettel default for this skill.** All normal Viettel roles MUST use the single locked family `"FS Magistral"`. This is informational, not a user-selectable typography option. Do not propose or record alternative font combinations. Create hierarchy through size, the locked weights, spacing, and color.
 >
-> **Per-role families are expected, not optional.** For the default Viettel flow, Title / Body / Emphasis / Code all use the same locked Viettel stack. Only when the user explicitly requests a non-Viettel brand override may roles use different families; see [strategist.md §g — Font Combinations](../references/strategist.md) for that override path.
+> **Viettel weight lock.** Title / Header / Emphasis use FS Magistral Bold (`700`): cover/chapter/page titles, section/card headers, KPI/hero numbers, callouts, and highlighted text. Body / Caption use Book/Regular (`400`). Secondary subtitles/labels may use Medium (`500`). Do not use `600`, `800`, or `900`.
 >
 > **⚠️ PPT-safe stack discipline (HARD rule).** PPTX stores a single `typeface` per run — no runtime fallback. For explicit non-Viettel overrides, every stack MUST end with a cross-platform pre-installed font: `"Microsoft YaHei", sans-serif` / `SimSun, serif` / `Arial, sans-serif` / `"Times New Roman", serif` / `Consolas, "Courier New", monospace`. The locked Viettel stack is this skill's bundled-brand exception and is validated by `scripts/check_fonts.py`.
 
-**Typography direction**: [Default: "Viettel brand sans — locked stack: FS PF BeauSans Pro / FS Magistral / Sarabun"; use another direction only for an explicit non-Viettel override]
+**Typography direction**: Viettel brand sans — locked family: FS Magistral; locked weights: `400` / `500` / `700`
 
-Two views on the same font decisions — fill both, keep them consistent:
+| Role | Family | Weight | Usage |
+| ---- | ------ | ------ | ----- |
+| **Title / Header** | `"FS Magistral"` | Bold (`700`) | Cover/chapter/page titles, section/card headers |
+| **Emphasis** | `"FS Magistral"` | Bold (`700`) | KPI/hero numbers, callouts, highlighted text |
+| **Body** | `"FS Magistral"` | Book/Regular (`400`) | Body copy, descriptions, ordinary chart labels |
+| **Secondary** | `"FS Magistral"` | Medium (`500`) | Secondary subtitles/labels only |
+| **Caption** | `"FS Magistral"` | Book/Regular (`400`) | Sources, footers, page numbers |
 
-- **Role breakdown** (table below) — lists the *pieces* per role: CJK font, Latin font, CSS generic fallback. Human-readable design language.
-- **Per-role font stacks** (after the table) — the *ordered* CSS `font-family` strings that actually go into SVG `font-family=""` and `spec_lock.md`'s `*_family` lines. Order controls browser rendering (Latin-led vs. CJK-led), so this is the **actual data** — not derivable from the table alone.
+**SVG / spec lock family value**: `"FS Magistral"` for every role. In normal Viettel `spec_lock.md`, emit only `font_family`; do not emit redundant per-role family overrides.
 
-| Role | Chinese | English | Fallback tail |
-| ---- | ------- | ------- | ------------- |
-| **Title** | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | — |
-| **Body** | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | — |
-| **Emphasis** | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | — |
-| **Code** | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | `"FS PF BeauSans Pro", "FS Magistral", Sarabun` | — |
-
-**Per-role font stacks** (CSS `font-family` strings, one per role — arrange the table's pieces in the order your design intends):
-
-- Title: `"FS PF BeauSans Pro", "FS Magistral", Sarabun`
-- Body: `"FS PF BeauSans Pro", "FS Magistral", Sarabun`
-- Emphasis: `"FS PF BeauSans Pro", "FS Magistral", Sarabun`
-- Code: `"FS PF BeauSans Pro", "FS Magistral", Sarabun`
-
-> **Stack ordering — why it matters**: CSS `font-family` falls back font-by-font (not char-by-char) — the browser uses the **first installed** font for everything it can render, skipping to the next only when a glyph is missing. The default Viettel stack order is already locked; the examples below are only for explicit non-Viettel overrides. So:
+> **Stack ordering for explicit non-Viettel overrides only**: CSS `font-family` falls back font-by-font (not char-by-char). The normal Viettel flow has one family and no ordering choice. For custom overrides:
 > - `Georgia, "Microsoft YaHei", serif` → Latin in Georgia (elegant serif), CJK falls through to Microsoft YaHei. **Use when Latin typography is the primary design statement** (academic / editorial / Latin-heavy covers).
 > - `"Microsoft YaHei", Georgia, serif` → Everything in Microsoft YaHei (Latin uses YaHei's Latin glyphs — a different design tone). **Use when the deck is CJK-primary and Latin is incidental**.
 >
 > The converter (`drawingml_utils.py parse_font_family`) maps these to PPTX `<a:latin>` / `<a:ea>` regardless of order — but browser preview and SVG native rendering reflect stack order. Pick the order matching your design intent.
 
-> **Why two views**: the breakdown shows role assignment at a glance; stacks carry the ordering info the breakdown can't encode. Keep both consistent — table cells should be exactly the fonts in the stacks (any order).
->
 > **Bundled brand fonts**: when a template ships a local `fonts/` bundle, keep the intended brand stack in `design_spec.md` / `spec_lock.md` exactly as designed, even if the host may not have those fonts yet. The runtime workflow must then run `scripts/check_fonts.py` after `spec_lock.md` generation. If the leading family is absent on the host, execution continues with fallback rendering but MUST report `brand fidelity degraded`; installation from the local bundle is opt-in and requires explicit user approval.
 
 ### Font Size Hierarchy
@@ -134,14 +127,15 @@ Two views on the same font decisions — fill both, keep them consistent:
 
 | Purpose | Ratio to body | Example @ body=24 (relaxed) | Example @ body=18 (dense) | Weight |
 | ------- | ------------- | --------------------------- | ------------------------- | ------ |
-| Cover title (hero headline) | 2.5-5x | 60-120px | 45-90px | Bold / Heavy |
-| Chapter / section opener | 2-2.5x | 48-60px | 36-45px | Bold |
-| Page title | 1.5-2x | 36-48px | 27-36px | Bold |
-| Hero number (consulting KPIs) | 1.5-2x | 36-48px | 27-36px | Bold |
-| Subtitle | 1.2-1.5x | 29-36px | 22-27px | SemiBold |
-| **Body content** | **1x** | **24px** | **18px** | Regular |
-| Annotation / caption | 0.7-0.85x | 17-20px | 13-15px | Regular |
-| Page number / footnote | 0.5-0.65x | 12-16px | 9-12px | Regular |
+| Cover title (hero headline) | 2.5-5x | 60-120px | 45-90px | Bold (`700`) |
+| Chapter / section opener | 2-2.5x | 48-60px | 36-45px | Bold (`700`) |
+| Page title | 1.5-2x | 36-48px | 27-36px | Bold (`700`) |
+| Hero number (consulting KPIs) | 1.5-2x | 36-48px | 27-36px | Bold (`700`) |
+| Section/card header | 1-1.3x | 24-31px | 18-23px | Bold (`700`) |
+| Subtitle | 1.2-1.5x | 29-36px | 22-27px | Medium (`500`) |
+| **Body content** | **1x** | **24px** | **18px** | Book/Regular (`400`) |
+| Annotation / caption | 0.7-0.85x | 17-20px | 13-15px | Book/Regular (`400`) |
+| Page number / footnote | 0.5-0.65x | 12-16px | 9-12px | Book/Regular (`400`) |
 
 > The two px columns are illustrations for common baselines. For any other `body` value, multiply by each row's ratio — the checker (`svg_quality_checker._check_spec_lock_drift`) reads the live `body` from `spec_lock.md` and applies the bands, so no code change is needed for a different baseline.
 

@@ -8,7 +8,9 @@ As a top-tier AI presentation strategist, receive source documents, perform cont
 
 | Previous Step | Current | Next Step |
 |--------------|---------|-----------|
-| Project creation + Template option confirmed | **Strategist**: Eight Confirmations + Design Spec | Image_Generator or Executor |
+| Project creation + brand profile confirmed | **Strategist**: Eight Confirmations + Design Spec | Image_Generator or Executor |
+
+> **Viettel default brand gate (HARD rule)**: every normal run uses `brand.profile: viettel_default` on PPT 16:9. Keep Viettel logo/chrome, the locked Viettel font stack, Viettel red, white/approved-gray surfaces, and dark-neutral text. Deep blue `#12436D` is restricted to chart, diagram/infographic, and icon marks. Use `brand.profile: custom_override` only when the user explicitly says not to use Viettel, names another brand, or supplies an explicit non-Viettel template path. A color, font, mood, or visual-style request alone does not override Viettel.
 
 ---
 
@@ -28,7 +30,7 @@ As a top-tier AI presentation strategist, receive source documents, perform cont
 
 ### a. Canvas Format Confirmation
 
-Recommend format based on scenario (see [`canvas-formats.md`](canvas-formats.md)).
+Confirm the locked PPT 16:9 canvas (`1280x720`, viewBox `0 0 1280 720`). Do not recommend another canvas for this skill, including for `custom_override`.
 
 ### b. Page Count Confirmation
 
@@ -69,7 +71,7 @@ Audience?
 Anchors the downstream confirmations e (Color), f (Icon), g (Typography), h (Image).
 
 **Source**:
-- User named a style → record verbatim as a short descriptor (normalize multilingual phrasings to a single canonical form)
+- User named a style → record verbatim as a short descriptor and realize compatible aspects inside the Viettel brand contract
 - No user description → propose a default that fits the content (e.g., warm cultural tones for heritage content; clean minimalism for tech briefings; high-contrast editorial for magazine essays). Present as a recommendation; the user may override
 
 **Common descriptors** (free-form, combinable, not enums):
@@ -82,17 +84,17 @@ Anchors the downstream confirmations e (Color), f (Icon), g (Typography), h (Ima
 
 Accept user combinations and one-off coinages ("Scandinavian + slight industrial"). The list is for recall, not constraint.
 
-> **Template vs descriptor**: a style mention may sound like a template name ("Google style" vs the `google_style/` template directory). Step 3 only triggers on an explicit template directory path supplied by the user — bare names and style words never copy templates. If a template was triggered upstream, its files are already in `<project_path>/templates/`. Layer 2 only handles descriptors that did NOT come with a template path.
+> **Template vs descriptor**: an explicit non-Viettel template directory path is a hard override and must be recorded as `custom_override`. Bare style names and descriptors are not template paths and do not unlock Viettel; apply compatible aspects inside the Viettel brand contract.
 
 **Downstream effect**: e / f / g / h values realize the Layer 2 descriptor on top of the Layer 1 mode. Example: "A) Versatile + neo-Chinese" → e leans cinnabar / ink / rice-paper; g pairs serif (KaiTi-class) with sans body; f minimal line icons; h restrained traditional imagery with negative space.
 
 ### e. Color Scheme Recommendation
 
-**Hard rule**: User / template colors are truth. If the user has specified colors (HEX, brand colors, or natural-language directives like "use blue as primary"), or a template was loaded with its own theme colors, lock those directly and skip the recommendation table. Do not adjust them to fit any palette or industry default. Only when no color signal exists from user or template do you proactively propose a scheme below.
+**Hard rule**: For `viettel_default`, the Viettel palette is truth. Keep Viettel red `#EE0033`, white/approved-gray surfaces, and dark-neutral text. Deep blue `#12436D` may appear only in chart, diagram/infographic, and icon marks; it is forbidden for text, backgrounds, cards, rails, footers, dividers, and decoration. A requested color is interpreted as a compatible data/illustration accent when possible and does not unlock Viettel. Only an explicit `custom_override` may make user/template colors the primary brand palette.
 
-Proactively provide a color scheme (HEX values) based on content characteristics and industry.
+For `viettel_default`, present the locked palette from `templates/layouts/viettel_default/design_spec.md`; map information roles to that palette instead of proposing an industry palette.
 
-**Industry color quick reference** (full 14-industry list in `scripts/config.py` under `INDUSTRY_COLORS`):
+**Industry color quick reference (`custom_override` only)** (full 14-industry list in `scripts/config.py` under `INDUSTRY_COLORS`):
 
 | Industry | Primary Color | Characteristics |
 |----------|--------------|-----------------|
@@ -142,7 +144,9 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 
 #### Font Combinations
 
-> **Viettel typography default (HARD rule for this skill).** Unless the user explicitly requests a non-Viettel brand override, the typography stack is locked to `"FS PF BeauSans Pro", "FS Magistral", Sarabun`. During Eight Confirmations, present this as the Typography Plan recommendation/lock. Do NOT propose alternative font combinations, do NOT ask the user to choose another typeface, and do NOT substitute generic PPT-safe stacks in the recommendation. If the host lacks one of these fonts, the runtime preflight handles it as `brand fidelity degraded`; the design decision remains the Viettel stack.
+> **Viettel typography default (HARD rule for this skill).** Unless the user explicitly requests a non-Viettel brand override, typography is locked to the single family `"FS Magistral"`. During Eight Confirmations, state this fixed rule for visibility but do NOT ask the user to choose or approve a typeface. Do NOT propose alternative font combinations or substitute generic PPT-safe stacks. If the host lacks FS Magistral, runtime preflight handles it as `brand fidelity degraded`; the design decision remains unchanged.
+>
+> **Viettel weight lock (HARD rule).** Use FS Magistral Bold (`700`) for cover/chapter/page titles, section headers, card headers, KPI/hero numbers, callouts, highlighted labels, and any text intended to stand out. Use Book/Regular (`400`) for body copy, descriptions, captions, sources, footers, and ordinary chart labels. Use Medium (`500`) only for secondary subtitles or labels. Do not use `600`, `800`, or `900` in normal Viettel runs; the target display face is Bold, not ExtraBold.
 
 > Same-deck fonts must form **contrast** (different family, weight, or proportion) or **concord** (one family throughout). For the default Viettel flow, contrast comes from weight / size / spacing inside the locked Viettel stack. The generic pairing guidance below applies only after an explicit non-Viettel override.
 
@@ -153,7 +157,7 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 > - Mono → `Consolas` / `"Courier New"`
 > - Display → `Impact` / `"Arial Black"`
 >
-> The locked Viettel stack is the default bundled-brand exception for this skill. Keep `"FS PF BeauSans Pro", "FS Magistral", Sarabun` even though those fonts may not be pre-installed; `scripts/check_fonts.py` reports runtime availability before generation. Other non-pre-installed stacks are acceptable only when the Design Spec notes "requires install or PPTX embed".
+> The locked Viettel family is the default bundled-brand exception for this skill. Keep `"FS Magistral"` even when it is not pre-installed; `scripts/check_fonts.py` reports runtime availability before generation. Other non-pre-installed stacks are acceptable only when the Design Spec notes "requires install or PPTX embed".
 
 **Forbidden — similar-but-not-identical pairings across roles** (do not split title vs body across these; within one stack as cross-platform fallback they remain encouraged):
 
@@ -191,7 +195,7 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 | Tech / developer | `Arial, "Microsoft YaHei", sans-serif` | same | `Consolas, "Courier New", monospace` |
 | Concord (default fallback) | `"Microsoft YaHei", "PingFang SC", sans-serif` | same | — |
 
-> **Stack length discipline (soft rule).** For the default Viettel flow, keep the exact 3-family stack. For explicit non-Viettel overrides, use ≤4 fonts per stack, lead with Windows-preinstalled fonts when possible, and keep at most **one** macOS-exclusive family. Converter only picks the first Latin and first CJK font ([`drawingml_utils.py parse_font_family`](../scripts/svg_to_pptx/drawingml_utils.py)); macOS→Windows fallback is auto-mapped via `FONT_FALLBACK_WIN`.
+> **Stack length discipline (soft rule).** For the default Viettel flow, keep exactly one family: `"FS Magistral"`. For explicit non-Viettel overrides, use ≤4 fonts per stack, lead with Windows-preinstalled fonts when possible, and keep at most **one** macOS-exclusive family. Converter only picks the first Latin and first CJK font ([`drawingml_utils.py parse_font_family`](../scripts/svg_to_pptx/drawingml_utils.py)); macOS→Windows fallback is auto-mapped via `FONT_FALLBACK_WIN`.
 
 > **Non-pre-installed directions** (require install or PPTX embed; note the constraint in Design Spec):
 > - **Retro / pixel** — Press Start 2P / VT323 / Silkscreen
@@ -538,7 +542,7 @@ The most common Strategist failure mode is missing the structural half — treat
 > ```
 > The `summary-quote` must be copy-pasted from `charts_index.json` — paraphrasing or summarizing breaks the audit. Every template name listed (selected or rejected) must `grep` cleanly inside `charts_index.json` (so misspelled or invented keys fail). If fewer than 3 visualization pages exist, list what exists and note "fewer than 3 viz pages"; runners-up still required for each page that does exist.
 >
-> **Lock handoff audit**: every Section VII row whose `Path` starts with `templates/charts/` MUST appear in `spec_lock.md ## page_charts` with the same page number and template basename. Missing `page_charts` entries are a Strategist defect, because the Executor will otherwise interpret the page as free-design and ignore the chart library.
+> **Lock handoff audit**: every Section VII row whose `Path` starts with `templates/charts/` MUST appear in `spec_lock.md ## page_charts` with the same page number and template basename. Missing `page_charts` entries are a Strategist defect, because the Executor will otherwise ignore the chart-library reference.
 >
 > **Fallback when no template fits**:
 > 1. Re-read the full summary list with the page's intent re-stated in plain language — "non-obvious" matches often surface on the second pass (e.g. "causal chain" → `process_flow` or `sankey_chart`).
@@ -637,13 +641,15 @@ The most common Strategist failure mode is missing the structural half — treat
 
 ## 5. Template Flexibility Principle
 
-Templates are starting points. The Strategist may adjust based on content and audience:
+Viettel templates are brand shells. The Strategist may adapt content composition based on content and audience while preserving the Viettel brand contract:
 
 1. Font size ratios — reference values, adjustable
-2. Color schemes — customize per brand/content
+2. Approved palette roles — adapt emphasis by content; do not replace Viettel brand colors
 3. Layout patterns — combine, nest, or break (§4 lists 11 patterns as reference, not exhaustive)
 4. 12-chapter framework — expand or reduce
 5. Spacing / border radius — Executor adjusts per content density and `page_rhythm`
+
+> Adaptive composition is not brand-free. Pages without a `page_layouts` entry still require Viettel logo/chrome, locked colors, typography, and deep-blue scope.
 
 ---
 
@@ -663,8 +669,8 @@ Templates are starting points. The Strategist may adjust based on content and au
 |---------|---------------------|
 | I. Project Information | Project name, canvas format, page count, style, audience, scenario, date |
 | II. Canvas Specification | Format, dimensions, viewBox, margins, content area |
-| III. Visual Theme | Style description, light/dark theme, tone, color scheme (with HEX table), gradient scheme |
-| IV. Typography System | Font plan (per-role families — title / body / emphasis / code), font size hierarchy |
+| III. Visual Theme | Style description, locked Viettel light theme (or explicit override theme), tone, color scheme (with HEX table), gradient scheme only for `custom_override` |
+| IV. Typography System | Locked FS Magistral family, role-based weight plan, font size hierarchy |
 | V. Layout Principles | Page structure (header/content/footer zones), layout pattern library (combine/break as content demands), spacing spec |
 | VI. Icon Usage Spec | Source description, placeholder syntax, recommended icon list |
 | VII. Visualization Reference List | Visualization type, reference template path, used-in pages, purpose |
@@ -677,10 +683,11 @@ Templates are starting points. The Strategist may adjust based on content and au
 1. Read reference template: `templates/design_spec_reference.md`
 2. Generate complete spec from scratch based on analysis
 3. Save to: `projects/<project_name>.../design_spec.md`
-4. **Generate execution lock**: read `templates/spec_lock_reference.md` and produce `projects/<project_name>.../spec_lock.md` — a distilled, machine-readable short form of the color / typography / icon / image / **page_rhythm** / **page_layouts** / **page_charts** decisions above. This file is what the Executor re-reads before every page (see [executor-base.md](executor-base.md) §2.1). The values in `spec_lock.md` MUST exactly match the decisions recorded in `design_spec.md`; if they ever diverge, `spec_lock.md` wins and `design_spec.md` should be treated as historical narrative.
+4. **Generate execution lock**: read `templates/spec_lock_reference.md` and produce `projects/<project_name>.../spec_lock.md` — a distilled, machine-readable short form of the brand / color / typography / icon / image / **page_rhythm** / **page_layouts** / **page_charts** decisions above. This file is what the Executor re-reads before every page (see [executor-base.md](executor-base.md) §2.1). The values in `spec_lock.md` MUST exactly match the decisions recorded in `design_spec.md`; if they ever diverge, `spec_lock.md` wins and `design_spec.md` should be treated as historical narrative.
+   - **brand is mandatory**: normal runs write `profile: viettel_default` and `deep_blue_scope: chart_diagram_icon_only`. Write `profile: custom_override` only after an explicit hard non-Viettel request and record the reason in `design_spec.md`.
    - **page_rhythm is mandatory**: Based on the page list in §IX Content Outline, assign each page one of `anchor` / `dense` / `breathing` (see `spec_lock_reference.md` for the full vocabulary). This is what breaks the uniform "every page is a card grid" feel — without it the Executor defaults all pages to `dense`.
    - **Rhythm follows narrative, not quota**: `breathing` pages mark natural pauses — chapter transitions, standalone emphasis (hero quote / big number), SCQA bridges. Dense decks may legitimately be all `dense`. **Do NOT invent filler pages** ("Thank you", empty dividers) to pad rhythm — every `breathing` page must say something independent.
-   - **page_layouts (write only when a template is in use)**: For each page that inherits a template SVG, add `P<NN>: <svg_basename>` (e.g., `P04: 03a_content_image_text`). Pages designed freely get **no entry** — Executor reads the absence as "free design, no inheritance". If zero pages use a template, omit the section entirely.
+   - **page_layouts (write only when a layout SVG is inherited)**: For each page that inherits a template SVG, add `P<NN>: <svg_basename>` (e.g., `P04: 03a_content_image_text`). Pages using adaptive Viettel composition get **no entry**; absence means "no layout inheritance", not "no Viettel brand". If zero pages inherit a layout SVG, omit the section entirely.
    - **page_charts (write only for chart pages that match a catalog template)**: For each page in `design_spec.md §VII` whose `reference template path` points to `templates/charts/<name>.svg`, add `P<NN>: <chart_name>`. Pages with `no-template-match` in §VII MUST NOT appear here (Executor would look for a non-existent reference). If the deck has no data-visualization or structural-pattern pages, omit the section only after §VII explicitly states that no catalog template fit.
    - **page_charts audit is mandatory**: Before checkpointing Strategist complete, compare §VII against `spec_lock.md ## page_charts`. Any `templates/charts/<name>.svg` row missing from `page_charts` must be fixed immediately. This is especially important for brand templates such as Viettel, where `page_layouts` supplies only the shell and `page_charts` supplies the visualization structure.
    - **Hard rule**: Use both `page_layouts` and `page_charts` for the same page only when the layout template is a compatible shell for the chart. Do not pair chart pages with conflicting page layouts (e.g., `waterfall_chart` + timeline layout, KPI cards + circle-diagram layout). If no compatible layout exists, omit the page from `page_layouts`.
@@ -692,7 +699,7 @@ Templates are starting points. The Strategist may adjust based on content and au
 Project folder must exist before Strategist runs. If not, execute:
 
 ```bash
-python3 scripts/project_manager.py init <project_name> --format <canvas_format>
+python3 scripts/project_manager.py init <project_name> --format ppt169 --brand-profile viettel_default
 ```
 
 Save outputs to `projects/<project_name>_<format>_<YYYYMMDD>/design_spec.md`.
@@ -701,7 +708,7 @@ Save outputs to `projects/<project_name>_<format>_<YYYYMMDD>/design_spec.md`.
 
 ## 8. Complete Design Spec and Prompt Next Steps
 
-After writing `design_spec.md` and `spec_lock.md`, output the next-step prompt below. This is a handoff instruction, not part of `design_spec.md`. Pick the variant by whether Step 3 copied a template into `<project_path>/templates/`.
+After writing `design_spec.md` and `spec_lock.md`, output the next-step prompt below. This is a handoff instruction, not part of `design_spec.md`. Pick the variant by whether pages inherit layout SVGs.
 
 ### Template mode (template applied in Step 3)
 
@@ -712,11 +719,11 @@ Next step:
 - Otherwise → Invoke Executor
 ```
 
-### Free design (default, no template)
+### Adaptive Viettel composition (no page layout inheritance)
 
 ```
-✅ Design spec complete.
+✅ Design spec complete. Viettel brand lock ready.
 Next step:
 - Images include AI generation → Invoke Image_Generator
-- Otherwise → Invoke Executor (free design for every page)
+- Otherwise → Invoke Executor (adaptive Viettel composition for pages without layout inheritance)
 ```

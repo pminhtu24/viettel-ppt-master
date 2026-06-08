@@ -45,6 +45,27 @@ except ImportError:
 
 
 HEX_VALUE_RE = re.compile(r"#[0-9A-Fa-f]{3,8}")
+VIETTEL_BRAND_PROFILE = "viettel_default"
+VIETTEL_CUSTOM_OVERRIDE_PROFILE = "custom_override"
+VIETTEL_VIEWBOX = "0 0 1280 720"
+VIETTEL_FONT_STACK = '"FS Magistral"'
+VIETTEL_ALLOWED_FONT_WEIGHTS = {"", "normal", "400", "500", "bold", "700"}
+VIETTEL_DEEP_BLUE = "#12436D"
+VIETTEL_BLUE_SCOPES = {"chart", "diagram", "icon"}
+VIETTEL_ALLOWED_COLORS = {
+    "#000000",
+    "#12436D",
+    "#28A197",
+    "#44494D",
+    "#6B7280",
+    "#999999",
+    "#C00028",
+    "#E6E6E6",
+    "#EE0033",
+    "#F2F2F2",
+    "#F46A25",
+    "#FFFFFF",
+}
 
 # Ramp envelope for font-size drift detection.
 # From design_spec_reference.md §IV — Font Size Hierarchy: the ramp spans
@@ -313,7 +334,7 @@ class SVGQualityChecker:
                 # 5. Check text wrapping methods
                 self._check_text_elements(content, result)
                 self._check_text_layout_risk(content, result)
-                self._check_viettel_brand_layout(content, result)
+                self._check_viettel_brand_layout(content, svg_path, result)
 
                 # 6. Check image references (file existence and resolution)
                 self._check_image_references(content, svg_path, result)
@@ -529,10 +550,7 @@ class SVGQualityChecker:
 
         for font_family in font_matches:
             font_family = html.unescape(font_family)
-            brand_locked_viettel = any(
-                name in font_family.lower()
-                for name in ('fs pf beausans pro', 'fs magistral', 'sarabun')
-            )
+            brand_locked_viettel = 'fs magistral' in font_family.lower()
             # Drop the generic CSS fallback (sans-serif / serif / monospace)
             # and inspect the last concrete family.
             parts = [p.strip().strip('"').strip("'").lower()
@@ -544,7 +562,7 @@ class SVGQualityChecker:
                 continue
             tail = parts[-1]
             if tail not in ppt_safe_tail:
-                if brand_locked_viettel and tail in {'fs pf beausans pro', 'fs magistral', 'sarabun'}:
+                if brand_locked_viettel and tail == 'fs magistral':
                     continue
                 result['warnings'].append(
                     f"Font stack does not end on a PPT-safe family "
@@ -627,6 +645,7 @@ class SVGQualityChecker:
                     'x': x, 'y': y, 'w': w, 'h': h,
                     'x2': x + w, 'y2': y + h,
                     'fill': fill, 'stroke': stroke, 'rx': rx,
+                    'allow_title_zone': elem.get('data-allow-title-zone') == 'true',
                 }
                 # Containers are real cards / panels, not bars or decorative
                 # strips. Width threshold avoids mistaking chart bars for cards.
@@ -778,6 +797,8 @@ class SVGQualityChecker:
                 title_zone_bottom = max(title_zone_bottom, shape['y'])
         for shape in shapes:
             fill = shape.get('fill', '')
+            if shape.get('allow_title_zone'):
+                continue
             # Ignore rails, full-slide backgrounds, top accent bars, logo pills,
             # and subtle divider/background surfaces.
             if shape['x'] < 40 or shape['w'] >= 1100 or shape['h'] <= 12:
@@ -788,14 +809,41 @@ class SVGQualityChecker:
                 count += 1
         return count
 
-    def _check_viettel_brand_layout(self, content: str, result: Dict):
-        """Enforce Viettel shell invariants that generic layout checks miss."""
-        if not self._looks_like_viettel_svg(content):
+    def _check_viettel_brand_layout(self, content: str, svg_path: Path, result: Dict):
+        """Enforce Viettel brand invariants that generic SVG checks miss."""
+        if self._get_brand_profile(svg_path, content) != VIETTEL_BRAND_PROFILE:
             return
         try:
             root = ET.fromstring(content)
         except ET.ParseError:
             return
+
+        viewbox = (root.get('viewBox') or '').strip()
+        if viewbox != VIETTEL_VIEWBOX:
+            result['errors'].append(
+                f"Viettel canvas violation: expected viewBox '{VIETTEL_VIEWBOX}', got '{viewbox or 'missing'}'"
+            )
+
+        width = (root.get('width') or '').removesuffix('px')
+        height = (root.get('height') or '').removesuffix('px')
+        if width != '1280' or height != '720':
+            result['errors'].append(
+                f"Viettel canvas violation: expected width/height 1280x720, got {width or 'missing'}x{height or 'missing'}"
+            )
+
+        has_logo = any(
+            _local_name(elem.tag) == 'image' and
+            'viettel-logo.png' in (
+                elem.get('href') or
+                elem.get('{http://www.w3.org/1999/xlink}href') or
+                ''
+            ).lower()
+            for elem in root.iter()
+        )
+        if not has_logo:
+            result['errors'].append(
+                "Viettel brand violation: missing viettel-logo.png on the page"
+            )
 
         logo_box = {'x1': 1060.0, 'y1': 20.0, 'x2': 1224.0, 'y2': 82.0}
         logo_text_overlaps = 0
@@ -817,6 +865,102 @@ class SVGQualityChecker:
             result['errors'].append(
                 f"Viettel page number duplication: detected {bottom_page_numbers} bottom-right page-number text elements. "
                 "Keep exactly one shell/footer page number; do not add another in brand chrome or page content."
+            )
+        if 'cover' not in svg_path.stem.lower() and bottom_page_numbers == 0:
+            result['errors'].append(
+                "Viettel brand violation: missing bottom-right page number on a non-cover page"
+            )
+
+        self._check_viettel_fonts_and_colors(root, result)
+
+    def _get_brand_profile(self, svg_path: Path, content: str) -> str | None:
+        """Resolve explicit project brand profile, then fall back for templates."""
+        lock = self._get_spec_lock(svg_path)
+        if lock:
+            profile = lock.get('brand', {}).get('profile', '').strip()
+            if profile in {VIETTEL_BRAND_PROFILE, VIETTEL_CUSTOM_OVERRIDE_PROFILE}:
+                return profile
+        if self._looks_like_viettel_svg(content):
+            return VIETTEL_BRAND_PROFILE
+        return None
+
+    def _check_viettel_fonts_and_colors(self, root: ET.Element, result: Dict) -> None:
+        """Validate the locked Viettel font stack, palette, and blue scopes."""
+        invalid_fonts = 0
+        missing_fonts = 0
+        invalid_weights: set[str] = set()
+        invalid_colors: set[str] = set()
+        blue_text = 0
+        unscoped_blue = 0
+
+        def visit(
+            elem: ET.Element,
+            inherited_font: str = '',
+            inherited_weight: str = '',
+            blue_scope: str = '',
+        ) -> None:
+            nonlocal invalid_fonts, missing_fonts, blue_text, unscoped_blue
+
+            scope = (elem.get('data-viettel-blue-scope') or blue_scope).strip().lower()
+            font = html.unescape(_get_svg_attr(elem, 'font-family', inherited_font)).strip()
+            weight = _get_svg_attr(elem, 'font-weight', inherited_weight).strip().lower()
+            tag = _local_name(elem.tag)
+            is_text = tag in {'text', 'tspan'}
+            if is_text:
+                if not font:
+                    missing_fonts += 1
+                elif font != VIETTEL_FONT_STACK:
+                    invalid_fonts += 1
+                if weight not in VIETTEL_ALLOWED_FONT_WEIGHTS:
+                    invalid_weights.add(weight)
+
+            for attr in ('fill', 'stroke', 'stop-color'):
+                value = _get_svg_attr(elem, attr).strip().upper()
+                if not HEX_VALUE_RE.fullmatch(value):
+                    continue
+                if value not in VIETTEL_ALLOWED_COLORS:
+                    invalid_colors.add(value)
+                if value == VIETTEL_DEEP_BLUE:
+                    if is_text:
+                        blue_text += 1
+                    elif scope not in VIETTEL_BLUE_SCOPES:
+                        unscoped_blue += 1
+
+            for child in list(elem):
+                visit(child, font, weight, scope)
+
+        visit(root)
+
+        if missing_fonts or invalid_fonts:
+            parts = []
+            if missing_fonts:
+                parts.append(f"{missing_fonts} text element(s) without an effective font-family")
+            if invalid_fonts:
+                parts.append(f"{invalid_fonts} text element(s) outside the exact locked stack")
+            result['errors'].append(
+                "Viettel typography violation: " + ", ".join(parts) +
+                f"; required stack is {VIETTEL_FONT_STACK}"
+            )
+        if invalid_weights:
+            result['errors'].append(
+                "Viettel typography violation: forbidden font-weight value(s) " +
+                ", ".join(sorted(invalid_weights)) +
+                "; allowed weights are 400 Book/Regular, 500 Medium, and 700 Bold"
+            )
+        if invalid_colors:
+            result['errors'].append(
+                "Viettel palette violation: color(s) outside the approved palette: " +
+                ", ".join(sorted(invalid_colors))
+            )
+        if blue_text:
+            result['errors'].append(
+                f"Viettel deep-blue violation: {blue_text} text element(s) use {VIETTEL_DEEP_BLUE}; "
+                "deep blue is never a text color"
+            )
+        if unscoped_blue:
+            result['errors'].append(
+                f"Viettel deep-blue violation: {unscoped_blue} mark(s) use {VIETTEL_DEEP_BLUE} outside "
+                'data-viettel-blue-scope="chart|diagram|icon"'
             )
 
     def _looks_like_viettel_svg(self, content: str) -> bool:
@@ -935,6 +1079,12 @@ class SVGQualityChecker:
 
             # Resolve path relative to SVG file directory
             img_path = (svg_dir / href).resolve()
+            if self.template_mode and not img_path.exists():
+                # Templates retain project-relative paths while their source
+                # package keeps reusable assets beside the SVG files.
+                template_asset = svg_dir / Path(href).name
+                if template_asset.exists():
+                    img_path = template_asset.resolve()
 
             if not img_path.exists():
                 result['errors'].append(
@@ -1116,10 +1266,14 @@ class SVGQualityChecker:
         if size_drifts:
             parts.append(f"{len(size_drifts)} font-size value(s)")
         if parts:
-            result['warnings'].append(
+            message = (
                 f"spec_lock drift: {', '.join(parts)} not in spec_lock.md "
                 "(see drift summary for details)"
             )
+            if self._get_brand_profile(svg_path, content) == VIETTEL_BRAND_PROFILE:
+                result['errors'].append(message)
+            else:
+                result['warnings'].append(message)
 
     def _find_image_sources_manifest(self, svg_path: Path) -> Path | None:
         """Locate image_sources.json for a project SVG.

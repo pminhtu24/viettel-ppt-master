@@ -11,7 +11,7 @@ from xml.etree import ElementTree as ET
 
 
 COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
-VIETTEL_FONT_STACK = '&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun'
+VIETTEL_FONT_STACK = '&quot;FS Magistral&quot;'
 
 
 def strip_svg_comments(svg: str) -> str:
@@ -106,7 +106,7 @@ def viettel_chrome_svg(
     page_text = (
         f'<text x="1216" y="704" text-anchor="end" '
         f'font-family="{VIETTEL_FONT_STACK}" '
-        f'font-size="11" font-weight="600" fill="#44494D">{page}</text>'
+        f'font-size="11" font-weight="400" fill="#44494D">{page}</text>'
         if page and include_page_number
         else ""
     )

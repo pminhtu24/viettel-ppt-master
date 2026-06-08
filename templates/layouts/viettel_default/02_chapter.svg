@@ -3,15 +3,15 @@
   <rect x="0" y="0" width="18" height="720" fill="#EE0033"/>
   <image href="../images/viettel-logo.png" x="1088" y="28" width="128" height="42" preserveAspectRatio="xMidYMid meet"/>
 
-  <text x="110" y="206" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="96" font-weight="800" fill="#F2F2F2">{{CHAPTER_NUM}}</text>
+  <text x="110" y="206" font-family="&quot;FS Magistral&quot;" font-size="96" font-weight="700" fill="#F2F2F2">{{CHAPTER_NUM}}</text>
   <rect x="110" y="238" width="90" height="10" rx="5" fill="#EE0033"/>
-  <text x="110" y="328" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="52" font-weight="800" fill="#000000">{{CHAPTER_TITLE}}</text>
-  <text x="112" y="376" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="22" font-weight="500" fill="#44494D">{{CHAPTER_DESC}}</text>
+  <text x="110" y="328" data-box="110,274,720,72" data-wrap="true" font-family="&quot;FS Magistral&quot;" font-size="52" font-weight="700" fill="#000000">{{CHAPTER_TITLE}}</text>
+  <text x="112" y="376" data-box="112,350,720,42" data-wrap="true" font-family="&quot;FS Magistral&quot;" font-size="22" font-weight="500" fill="#44494D">{{CHAPTER_DESC}}</text>
 
   <rect x="914" y="170" width="220" height="220" rx="18" fill="#F2F2F2" stroke="#E6E6E6" stroke-width="1"/>
-  <rect x="952" y="208" width="144" height="144" rx="10" fill="#EE0033"/>
-  <text x="1024" y="300" text-anchor="middle" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="56" font-weight="800" fill="#FFFFFF">{{CHAPTER_NUM}}</text>
+  <rect x="952" y="208" width="144" height="144" rx="10" fill="#EE0033" data-allow-title-zone="true"/>
+  <text x="1024" y="300" text-anchor="middle" data-box="970,238,108,76" data-wrap="true" font-family="&quot;FS Magistral&quot;" font-size="56" font-weight="700" fill="#FFFFFF">{{CHAPTER_NUM}}</text>
 
   <line x1="110" y1="620" x2="1170" y2="620" stroke="#E6E6E6" stroke-width="1"/>
-  <text x="1170" y="654" text-anchor="end" font-family="&quot;FS PF BeauSans Pro&quot;, &quot;FS Magistral&quot;, Sarabun" font-size="13" fill="#44494D">{{PAGE_NUM}}</text>
+  <text x="1170" y="654" text-anchor="end" font-family="&quot;FS Magistral&quot;" font-size="13" fill="#44494D">{{PAGE_NUM}}</text>
 </svg>

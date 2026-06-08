@@ -1,6 +1,8 @@
 # Executor Common Guidelines
 
 > Style-specific content is in the corresponding `executor-{style}.md`. Technical constraints are in shared-standards.md.
+>
+> **Viettel default brand gate (HARD rule)**: read `spec_lock.md ## brand` before generation. `profile: viettel_default` requires PPT 16:9, Viettel logo/chrome on every page, the locked Viettel font stack, Viettel red, white/approved-gray surfaces, and dark-neutral text. Deep blue `#12436D` is permitted only for chart, diagram/infographic, and icon marks inside `<g data-viettel-blue-scope="chart|diagram|icon">`; never use it for text, backgrounds, cards, rails, footers, dividers, or decoration. Only `profile: custom_override` disables these Viettel-specific rules.
 
 ---
 
@@ -33,9 +35,9 @@ Resolve the per-page template SVG via `spec_lock.md page_layouts` (authoritative
 
 1. **Mirror-mode template** (template's `design_spec.md` frontmatter has `replication_mode: mirror`) → see §1.1 below. The page is consumed as a **visual reference**, not as a placeholder shell.
 2. `spec_lock.md page_layouts` has `P<NN>: <basename>` for this page → inherit the structure of `templates/<chosen_template>/<basename>.svg` (already in context from §1.0).
-3. `page_layouts` exists but **no entry** for this page → **free design**, no template inheritance.
+3. `page_layouts` exists but **no entry** for this page → no template inheritance. Under `viettel_default`, use adaptive Viettel composition and retain all brand rules; under `custom_override`, use free design.
 4. `page_layouts` section absent (legacy deck) **and** `templates/` directory exists → fall back to the page-type table below, matching by SVG filename keyword (cover/chapter/content/ending/toc). Read the matched file at first use if §1.0 batch did not cover it.
-5. No template at all → free design.
+5. No template at all → under `viettel_default`, use adaptive Viettel composition and apply brand chrome; under `custom_override`, use free design.
 
 > Note: `page_layouts` disambiguates the multiple content variants modern templates ship (e.g., `graduation_defense` has 8); the legacy table cannot.
 
@@ -51,7 +53,7 @@ When the project's chosen template is a `mirror` template (`design_spec.md` fron
 6. **No `{{}}` substitution** — mirror SVGs do not contain placeholder markers. Do not search for `{{TITLE}}` / `{{CONTENT_AREA}}` etc.; do not invent placeholders. The whole mirror contract is "verbatim source + in-place text edit".
 7. **Output filename** — follow the standard project SVG naming convention (`<NN>_<page_name>.svg` where `<NN>` matches the project page index, not the mirror source index). The mirror filename is the *reference*, not the *output*.
 
-**Detecting mirror mode**: read the chosen template's `design_spec.md` frontmatter once during §1.0 batch read. If `replication_mode: mirror`, every page that hits `page_layouts` follows §1.1 above; pages without a `page_layouts` entry still fall through to free design (resolution rule 3 above).
+**Detecting mirror mode**: read the chosen template's `design_spec.md` frontmatter once during §1.0 batch read. If `replication_mode: mirror`, every page that hits `page_layouts` follows §1.1 above; pages without a `page_layouts` entry follow resolution rule 3 above.
 
 **Mirror + chart pages**: chart structures inside a mirror SVG are already drawn (axis, series, labels). Treat them as visual references — replace the data labels and series text content to match the project's chart spec, but do not redraw the chart from a `templates/charts/<name>.svg` baseline. A mirror template's `page_charts` entries are normally absent for this reason.
 
@@ -70,12 +72,12 @@ When the project's chosen template is a `mirror` template (`design_spec.md` fron
 Before generating each page, output which template is used:
 
 ```
-📝 **Template mapping**: `templates/<chosen_template>/03a_content_image_text.svg` (or "None (free design)")
+📝 **Template mapping**: `templates/<chosen_template>/03a_content_image_text.svg` (or "None (adaptive Viettel composition)")
 🎯 **Adherence rules / layout strategy**: [specific description]
 ```
 
 - **Content pages**: template defines only header/footer; content area is free
-- **No template**: generate entirely per the Design Spec
+- **No template inheritance**: for `viettel_default`, compose content freely inside the Viettel brand contract; for `custom_override`, generate entirely per the Design Spec
 
 ---
 
@@ -96,8 +98,9 @@ Before the first SVG page, output a confirmation listing: canvas dimensions, bod
 **Forbidden — values outside the lock**:
 
 - Colors (fill / stroke / stop-color) MUST come from `colors`
+- Under `viettel_default`, every `#12436D` mark MUST be inside `<g data-viettel-blue-scope="chart|diagram|icon">`; `<text>` may never use deep blue, even inside a scoped group
 - Icons MUST come from `icons.inventory`; library MUST equal `icons.library`
-- Font family from `typography`: use role override (`title_family` / `body_family` / `emphasis_family` / `code_family`) if declared, else fall back to `font_family`
+- Font family from `typography`: under `viettel_default`, use only `font_family: "FS Magistral"` and reject role-family overrides; under `custom_override`, use a declared role override if present, else fall back to `font_family`
 - Font sizes follow a **ramp anchored on `typography.body`**, not a closed menu. Use the declared slots when they fit. Intermediate sizes (e.g., 40px hero number, 13px annotation) are allowed if the ratio to `body` falls within the role's band (see `design_spec.md §IV ramp table`). Sizes outside every band require extending the lock first.
 - Images MUST reference files listed under `images`; no invented filenames
 
@@ -155,8 +158,8 @@ Example:
 
 Before drawing each page, look up its entry in `page_layouts` to decide which basename to inherit (the SVG itself was loaded in §1.0):
 
-- Entry present (e.g., `P04: 03a_content_image_text`) → inherit the corresponding SVG already in context. The basename **must match** an actual file in the chosen template directory; if it doesn't, emit `warning: page_layouts P<NN> references missing file <basename>.svg — falling back to free design` and proceed.
-- No entry for this page → free design, no inheritance. **Not an error** — Strategist intentionally left this page free.
+- Entry present (e.g., `P04: 03a_content_image_text`) → inherit the corresponding SVG already in context. The basename **must match** an actual file in the chosen template directory; if it doesn't, emit `warning: page_layouts P<NN> references missing file <basename>.svg — falling back to adaptive composition` and proceed.
+- No entry for this page → no layout inheritance. **Not an error** — under `viettel_default`, compose adaptively inside the brand contract; under `custom_override`, use free design.
 - Whole section absent → see §1 fallback (legacy page-type matching).
 
 Do **not** invent a layout entry, and do **not** assume a template just because `templates/` exists — if `page_layouts` is present but silent for this page, that silence is the instruction.
@@ -374,11 +377,13 @@ Use `attribution_text` from the manifest entry as the **starting point**, then c
 
 ## 7. Font Usage
 
-Source of truth: `spec_lock.md typography`. Use `font_family` as default; override per role with `title_family` / `body_family` / `emphasis_family` / `code_family` if declared.
+Source of truth: `spec_lock.md typography`. Under `viettel_default`, use only `font_family: "FS Magistral"` for every role. Per-role family overrides apply only to explicit `custom_override` runs.
 
 If `spec_lock.md` is absent, consult [`strategist.md`](strategist.md) §g — do not invent a stack.
 
-**Hard rule**: every SVG `font-family` stack MUST end with a pre-installed family (Microsoft YaHei / SimHei / SimSun / Arial / Calibri / Segoe UI / Times New Roman / Georgia / Consolas / Courier New / Impact / Arial Black). PPTX has no runtime fallback — missing fonts degrade to Calibri.
+**Hard rule**: under `viettel_default`, every SVG text element uses the exact locked stack `"FS Magistral"`; missing-font handling is reported by preflight and does not change the design stack. Under `custom_override`, every SVG `font-family` stack MUST end with a pre-installed family (Microsoft YaHei / SimHei / SimSun / Arial / Calibri / Segoe UI / Times New Roman / Georgia / Consolas / Courier New / Impact / Arial Black). PPTX has no runtime fallback.
+
+**Viettel weight rule**: use `font-weight="700"` for all titles, headers, card/KPI labels, hero/KPI numbers, callouts, and highlighted text. Use `400` or omit `font-weight` for ordinary body/caption/source/footer text. Use `500` only for secondary subtitles/labels. Do not use `600`, `800`, or `900`; the required prominent face is FS Magistral Bold, not ExtraBold.
 
 ---
 
@@ -437,11 +442,11 @@ Auto-split `notes/total.md` into per-page files in `notes/`.
 # 1. Split speaker notes
 python3 scripts/total_md_split.py <project_path>
 
-# 2. SVG post-processing (auto-embed icons, images, etc.)
-python3 scripts/finalize_svg.py <project_path>
-
-# Viettel decks: apply fixed top-right logo and strip imported template comments
+# 2. SVG post-processing for the default Viettel profile
 python3 scripts/finalize_svg.py <project_path> --brand-chrome viettel --strip-comments
+
+# Explicit custom_override only
+python3 scripts/finalize_svg.py <project_path>
 
 # 3. Export PPTX
 python3 scripts/svg_to_pptx.py <project_path>
