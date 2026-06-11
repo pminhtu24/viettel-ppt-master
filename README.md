@@ -16,11 +16,11 @@ Trong NetClaw, Claude, Codex, nội dung yêu cầu nên có từ khóa `ppt`, `
 Ví dụ:
 
 ```text
-Sử dụng skill viettel-ppt-master tạo cho tôi bản slide báo cáo từ file /bao_cao.pdf theo phong cách viettel.
+Sử dụng skill viettel-ppt-master tạo cho tôi bản slide báo cáo từ file /bao_cao.pdf theo phong cách viettel, sử dụng nhiều chart minh họa.
 ```
 
 ```text
-Tạo PPT Viettel về chiến lược AI trong viễn thông, 12-15 slide, có nhiều chart minh họa và live-preview sau khi tạo xong.
+Tạo PPT Viettel về chiến lược AI trong viễn thông, 12-15 slide, tạo animation giữa các slide và live-preview sau khi tạo xong.
 ```
 
 ## Input hỗ trợ
@@ -42,7 +42,7 @@ Tạo PPT Viettel về chiến lược AI trong viễn thông, 12-15 slide, có 
 3. Chọn template: nếu có từ khóa Viettel, skill tự động dùng `templates/layouts/viettel_default/`.
 4. Strategist: đề xuất 8 điểm cần xác nhận như số slide, audience, style, màu sắc, typography, icon và image approach.
 5. Sinh deck: sau khi bạn xác nhận, skill sinh SVG từng slide theo thứ tự, không batch template hàng loạt.
-6. Live preview: mở editor local để xem slide và gửi annotation.
+6. Live preview (Optional): mở editor local để xem slide và gửi annotation.
 7. Kiểm tra và export: chạy quality check, tạo speaker notes, finalize SVG và xuất PPTX.
 
 ## Điều cần xác nhận với người dùng
@@ -71,7 +71,7 @@ Với deck dài hoặc source lớn, nên tách thành 2 chat:
 continue generation projects/<project_name>
 ```
 
-Chế độ này giúp giảm áp lực context khi sinh nhiều slide và vẫn đọc lại được source trong project.
+Chế độ này giúp giảm áp lực context trong sessions và cho model khi sinh nhiều slide và vẫn đọc lại được source trong project.
 
 ## Live preview và sửa slide
 
