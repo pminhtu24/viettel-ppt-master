@@ -1,257 +1,227 @@
 {
   "version": 1,
   "canvas": "1280x720",
-  "usage": "Default softened background layers for viettel_default pages. Assign one id per page in spec_lock.md ## page_backgrounds, copy the SVG body elements underneath page chrome and content, and keep logo, footer, page number, and text fit rules from the page shell. Backgrounds are supporting atmosphere only; simulate blur/softness with pale fills, low opacity, broad shapes, and gradients rather than SVG filters.",
+  "usage": "Section-only softened background layers for viettel_default pages. Use these ids only for cover, chapter, section-divider, ending, and low-content breathing pages in spec_lock.md ## page_backgrounds. Dense content, chart, KPI, and table pages should omit page_backgrounds and keep the standard clean Viettel shell. Backgrounds are supporting atmosphere only; simulate blur/softness with pale fills, low opacity, broad shapes, and gradients rather than SVG filters.",
   "items": [
     {
       "id": "bg_clean_white_rail",
       "file": "bg_clean_white_rail.svg",
       "category": "baseline",
-      "recommended_pages": ["cover", "ending", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
       "rhythm": ["anchor", "breathing"],
       "intensity": "low",
       "safe_text_zone": "x=96-980, y=140-560",
-      "description": "White reporting field with a refined Viettel left rail and small bottom accents."
+      "description": "Section-only white reporting field for calm cover, divider, ending, and low-content pages."
     },
     {
       "id": "bg_red_corner_sweep",
       "file": "bg_red_corner_sweep.svg",
       "category": "cover",
-      "recommended_pages": ["cover", "chapter", "ending"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
       "rhythm": ["anchor", "breathing"],
       "intensity": "high",
       "safe_text_zone": "x=96-820, y=150-520",
-      "description": "Bold red corner sweep for first-impression pages while preserving a calm title area."
+      "description": "Section-only red corner sweep for cover, divider, ending, and other low-content pages."
     },
     {
       "id": "bg_red_corner_depth",
       "file": "bg_red_corner_depth.svg",
       "category": "cover",
-      "recommended_pages": ["cover", "chapter", "ending", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
       "rhythm": ["anchor", "breathing"],
       "intensity": "high",
       "safe_text_zone": "x=96-790, y=150-520",
-      "description": "Deeper folded red corner sweep with layered planes for stronger first-impression pages."
+      "description": "Section-only folded red corner depth for divider, chapter, ending, and low-content pages."
     },
     {
       "id": "bg_red_folded_stage",
       "file": "bg_red_folded_stage.svg",
       "category": "brand",
-      "recommended_pages": ["cover", "chapter", "section-divider", "ending"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
       "rhythm": ["anchor", "breathing"],
       "intensity": "high",
       "safe_text_zone": "x=96-760, y=145-545",
-      "description": "Folded stage-like red geometry on the right, keeping a wide calm field for title content."
+      "description": "Section-only folded stage geometry for divider, chapter, ending, and low-content pages."
     },
     {
       "id": "bg_3d_floating_slabs",
       "file": "bg_3d_floating_slabs.svg",
       "category": "three-dimensional",
-      "recommended_pages": ["platform", "architecture", "capabilities", "strategy"],
-      "rhythm": ["dense", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=88-720, y=132-610",
-      "description": "Light isometric floating slabs for platform and architecture slides."
+      "description": "Section-only isometric floating slabs for dimensional dividers and low-content section pages."
     },
     {
       "id": "bg_3d_cube_stack",
       "file": "bg_3d_cube_stack.svg",
       "category": "three-dimensional",
-      "recommended_pages": ["platform", "architecture", "operating-model", "capabilities"],
-      "rhythm": ["dense", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=88-720, y=132-610",
-      "description": "Soft cube-stack composition suggesting layered systems without heavy decoration."
+      "description": "Section-only cube-stack composition for dimensional dividers and low-content pages."
     },
     {
       "id": "bg_3d_glass_panels",
       "file": "bg_3d_glass_panels.svg",
       "category": "three-dimensional",
-      "recommended_pages": ["dashboard", "operations", "summary", "ai-ops"],
-      "rhythm": ["dense", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=88-700, y=132-610",
-      "description": "Transparent isometric glass panels for dashboard and operations storytelling."
+      "description": "Section-only transparent isometric glass panels for dimensional dividers and low-content pages."
     },
     {
       "id": "bg_diagonal_brand_rail",
       "file": "bg_diagonal_brand_rail.svg",
       "category": "brand",
-      "recommended_pages": ["cover", "content", "chapter"],
-      "rhythm": ["anchor", "dense", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-1040, y=130-590",
-      "description": "Diagonal red and gray rails that make plain pages feel more designed."
+      "description": "Section-only diagonal red and gray rails for cover, divider, ending, and low-content pages."
     },
     {
       "id": "bg_network_texture_light",
       "file": "bg_network_texture_light.svg",
       "category": "telecom",
-      "recommended_pages": ["cover", "chapter", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
       "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-820, y=150-560",
-      "description": "Light telecom network texture with subdued gray links and small red signal points."
+      "description": "Section-only telecom network texture for chapter, divider, cover, ending, and low-content pages."
     },
     {
       "id": "bg_signal_arc",
       "file": "bg_signal_arc.svg",
       "category": "telecom",
-      "recommended_pages": ["chapter", "breathing", "ending"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
       "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-920, y=140-560",
-      "description": "Signal arcs from the page edges, useful for transition and connectivity slides."
-    },
-    {
-      "id": "bg_kpi_band",
-      "file": "bg_kpi_band.svg",
-      "category": "kpi",
-      "recommended_pages": ["kpi", "executive-summary", "dashboard"],
-      "rhythm": ["dense", "breathing"],
-      "intensity": "medium",
-      "safe_text_zone": "x=88-1050, y=132-560",
-      "description": "Low bottom band and small accent tiles to support KPI storytelling."
+      "description": "Section-only signal arcs for transition, chapter, ending, and low-content pages."
     },
     {
       "id": "bg_topographic_lines",
       "file": "bg_topographic_lines.svg",
       "category": "strategy",
-      "recommended_pages": ["strategy", "market", "breathing"],
-      "rhythm": ["breathing", "dense"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-850, y=140-560",
-      "description": "Contour-line atmosphere for strategy, market landscape, and planning pages."
+      "description": "Section-only contour-line atmosphere for strategy dividers and low-content pages."
     },
     {
       "id": "bg_orbit_nodes",
       "file": "bg_orbit_nodes.svg",
       "category": "ecosystem",
-      "recommended_pages": ["ecosystem", "platform", "ai-ops"],
-      "rhythm": ["breathing", "dense"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-780, y=140-560",
-      "description": "Orbiting node system for platform, partner ecosystem, and AI operating model pages."
+      "description": "Section-only orbiting node system for ecosystem dividers and low-content pages."
     },
     {
       "id": "bg_map_mesh",
       "file": "bg_map_mesh.svg",
       "category": "coverage",
-      "recommended_pages": ["market", "coverage", "operations"],
-      "rhythm": ["dense", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-860, y=140-560",
-      "description": "Abstract coverage mesh, deliberately not a literal geographic map."
+      "description": "Section-only abstract coverage mesh for market, operations, and coverage dividers."
     },
     {
       "id": "bg_layered_cards_field",
       "file": "bg_layered_cards_field.svg",
       "category": "content",
-      "recommended_pages": ["summary", "case-study", "executive-summary"],
-      "rhythm": ["dense", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-700, y=132-590",
-      "description": "Layered abstract cards on the right side, giving plain content pages more depth."
+      "description": "Section-only layered abstract cards for summary dividers and low-content pages."
     },
     {
       "id": "bg_wave_ribbon_soft",
       "file": "bg_wave_ribbon_soft.svg",
       "category": "brand",
-      "recommended_pages": ["cover", "chapter", "ending", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
       "rhythm": ["anchor", "breathing"],
       "intensity": "high",
       "safe_text_zone": "x=96-980, y=120-480",
-      "description": "Soft wave ribbons across the lower canvas for a more expressive but still light brand field."
+      "description": "Section-only soft wave ribbons for expressive dividers, chapters, endings, and low-content pages."
     },
     {
       "id": "bg_radial_dashboard_field",
       "file": "bg_radial_dashboard_field.svg",
       "category": "dashboard",
-      "recommended_pages": ["dashboard", "kpi", "operations", "summary"],
-      "rhythm": ["dense", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-720, y=132-590",
-      "description": "Radial dashboard motif on the right edge with calm left-side space for narrative."
-    },
-    {
-      "id": "bg_modular_tiles_light",
-      "file": "bg_modular_tiles_light.svg",
-      "category": "modular",
-      "recommended_pages": ["platform", "capabilities", "product", "architecture"],
-      "rhythm": ["dense", "breathing"],
-      "intensity": "medium",
-      "safe_text_zone": "x=96-710, y=132-600",
-      "description": "Modular tile mosaic for platform, product, and capability slides."
+      "description": "Section-only radial dashboard motif for operations dividers and low-content pages."
     },
     {
       "id": "bg_enterprise_stack",
       "file": "bg_enterprise_stack.svg",
       "category": "architecture",
-      "recommended_pages": ["architecture", "platform", "operating-model", "strategy"],
-      "rhythm": ["dense", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-760, y=132-590",
-      "description": "Layered enterprise stack motif for system architecture and operating model stories."
+      "description": "Section-only enterprise stack motif for architecture dividers and low-content pages."
     },
     {
       "id": "bg_circuit_trace",
       "file": "bg_circuit_trace.svg",
       "category": "technical",
-      "recommended_pages": ["network", "ai-ops", "security", "architecture"],
-      "rhythm": ["dense", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-700, y=132-610",
-      "description": "Circuit-like trace field for network, AI operations, and security themes."
+      "description": "Section-only circuit-like trace field for network, AI operations, and security dividers."
     },
     {
       "id": "bg_market_rings",
       "file": "bg_market_rings.svg",
       "category": "market",
-      "recommended_pages": ["market", "strategy", "coverage", "portfolio"],
-      "rhythm": ["breathing", "dense"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-720, y=132-590",
-      "description": "Concentric market rings on the right side for portfolio and market landscape pages."
+      "description": "Section-only concentric market rings for portfolio and market landscape dividers."
     },
     {
       "id": "bg_cloud_edge",
       "file": "bg_cloud_edge.svg",
       "category": "cloud",
-      "recommended_pages": ["cloud", "platform", "operations", "breathing"],
-      "rhythm": ["breathing", "dense"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-780, y=132-560",
-      "description": "Soft cloud-edge abstraction for platform, cloud, and operations themes."
+      "description": "Section-only cloud-edge abstraction for platform, cloud, and operations dividers."
     },
     {
       "id": "bg_security_shield_field",
       "file": "bg_security_shield_field.svg",
       "category": "security",
-      "recommended_pages": ["security", "risk", "governance", "chapter"],
-      "rhythm": ["breathing", "dense"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-760, y=132-590",
-      "description": "Large quiet shield field for cybersecurity, governance, and risk slides."
-    },
-    {
-      "id": "bg_speed_lines",
-      "file": "bg_speed_lines.svg",
-      "category": "momentum",
-      "recommended_pages": ["growth", "launch", "roadmap", "executive-summary"],
-      "rhythm": ["breathing", "dense"],
-      "intensity": "medium",
-      "safe_text_zone": "x=96-680, y=132-590",
-      "description": "Horizontal speed-line field for growth, acceleration, and launch narratives."
+      "description": "Section-only quiet shield field for cybersecurity, governance, and risk dividers."
     },
     {
       "id": "bg_mosaic_dots",
       "file": "bg_mosaic_dots.svg",
       "category": "network",
-      "recommended_pages": ["ecosystem", "network", "data", "overview"],
-      "rhythm": ["dense", "breathing"],
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
       "safe_text_zone": "x=96-730, y=132-590",
-      "description": "Dot-mosaic field for network, data, and ecosystem overview pages."
+      "description": "Section-only dot-mosaic field for network, data, and ecosystem dividers."
     }
   ]
 }

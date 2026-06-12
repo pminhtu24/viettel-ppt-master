@@ -86,16 +86,16 @@ Before generating each page, output which template is used:
 
 For `viettel_default`, projects normally include background SVGs at
 `templates/backgrounds/`. These files are decorative layers, not page layouts,
-and every new Viettel page should receive one through `spec_lock.md ##
+and should be used only for section-like pages through `spec_lock.md ##
 page_backgrounds`.
 
 Rules:
 
 - Read `templates/backgrounds/backgrounds_index.json` once during the pre-generation batch read.
-- Read only the `templates/backgrounds/<id>.svg` files listed in `spec_lock.md page_backgrounds`; do not glob-read the whole folder.
+- Read only the `templates/backgrounds/<id>.svg` files listed in `spec_lock.md page_backgrounds`; if the section is absent, read no background SVGs.
 - Copy the selected background SVG's body elements near the top of the output SVG, after the base page `<rect>` and below all shell chrome and content. Do not copy it as the entire page.
 - Keep the normal Viettel logo, top accent/rail, footer, page number, title safe area, and text-fit rules.
-- High-intensity backgrounds are reserved for cover, chapter, ending, and `breathing` pages. Dense chart/table pages should use calmer options with large safe zones such as `bg_kpi_band`, `bg_radial_dashboard_field`, or `bg_3d_glass_panels`.
+- Backgrounds are reserved for cover, chapter, section-divider, ending, and low-content `breathing` pages. Dense content, chart, KPI, and table pages should omit `page_backgrounds` and use the clean Viettel shell.
 - Treat backgrounds as supporting atmosphere: if background marks compete with content, reduce opacity, cover them with a pale content surface, or switch to a lower-intensity background. Do not use SVG `<filter>` / blur effects; simulate softness with pale fills, broad geometry, gradients, and low opacity.
 - Deep blue `#12436D` remains forbidden for background/decorative layers.
 
@@ -144,14 +144,14 @@ Before drawing each page, look up its entry in `page_rhythm` (key format `P<NN>`
 
 **Per-page background lookup — `page_backgrounds` section**:
 
-Before drawing each Viettel page, look up its entry in `page_backgrounds` (key
-format `P<NN>` matching §IX of `design_spec.md`) and apply the selected
-background layer:
+Before drawing each Viettel page, look up its optional entry in
+`page_backgrounds` (key format `P<NN>` matching §IX of `design_spec.md`) and
+apply a background layer only when an entry exists:
 
-- Entry present (e.g., `P04: bg_kpi_band`) → copy the corresponding background SVG body elements already loaded in §1.0 into the output SVG's background layer.
-- Missing entry on `viettel_default` → emit `warning: page_backgrounds missing <P<NN>> — applying safe fallback background`; use `bg_kpi_band` for `dense` pages and `bg_clean_white_rail` for `anchor` / `breathing` pages.
-- Whole section absent on `viettel_default` → emit the warning once, then use the same safe fallback rule for every page. This is legacy compatibility only; new Strategist outputs MUST include `page_backgrounds`.
-- Entry missing from `templates/backgrounds/backgrounds_index.json` or missing file → emit `warning: page_backgrounds <P<NN>> references missing background <id> — applying safe fallback background`.
+- Entry present (e.g., `P04: bg_clean_white_rail`) → copy the corresponding background SVG body elements already loaded in §1.0 into the output SVG's background layer.
+- Missing entry on `viettel_default` → apply no decorative background. This is expected for dense content, chart, KPI, and table pages.
+- Whole section absent on `viettel_default` → apply no decorative backgrounds. This is valid for decks with no section-like pages.
+- Entry missing from `templates/backgrounds/backgrounds_index.json` or missing file → emit `warning: page_backgrounds <P<NN>> references missing background <id> — skipping decorative background`.
 - Under `custom_override`, ignore `page_backgrounds` unless the custom template explicitly defines its own background library.
 
 Do not allow the background to own page number, logo, title text, chart marks,

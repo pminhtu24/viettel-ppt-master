@@ -549,44 +549,39 @@ The font bundle lives in `templates/layouts/viettel_default/fonts/`. During proj
 
 > Do not borrow non-Viettel brand imagery from other templates. If no official asset is supplied, keep the shell vector-only and light.
 
-### Default Background Library
+### Section Background Library
 
-The template ships a default background layer library in `backgrounds/`.
+The template ships a section-only background layer library in `backgrounds/`.
 These SVGs are **not standalone slide shells**: they contain only background and
 decorative elements, with no logo, footer, page number, placeholders, or text.
-Normal Viettel generation assigns one softened background layer to every page
-through `spec_lock.md ## page_backgrounds`; use very light backgrounds on
-dense/chart pages and stronger backgrounds only for cover, chapter, ending, or
-true breathing pages.
+Use them only through `spec_lock.md ## page_backgrounds` for cover, chapter,
+section-divider, ending, and low-content breathing pages. Dense content, chart,
+KPI, and table pages omit `page_backgrounds` and keep the clean Viettel shell.
 
 | Asset | Purpose | Runtime Path |
 | --- | --- | --- |
-| `backgrounds/backgrounds_index.json` | Lookup table for page-role, rhythm, intensity, and safe text zone | `templates/backgrounds/backgrounds_index.json` |
-| `backgrounds/bg_*.svg` | Optional full-canvas background layers | `templates/backgrounds/<id>.svg` |
+| `backgrounds/backgrounds_index.json` | Lookup table for section role, rhythm, intensity, and safe text zone | `templates/backgrounds/backgrounds_index.json` |
+| `backgrounds/bg_*.svg` | Optional section-only full-canvas background layers | `templates/backgrounds/<id>.svg` |
 
 **Selection guide**:
 
-| Page need | Preferred backgrounds |
+| Section page need | Preferred backgrounds |
 | --- | --- |
-| Baseline / safe corporate page | `bg_clean_white_rail`, `bg_layered_cards_field` |
-| Cover / ending with stronger brand presence | `bg_red_corner_sweep`, `bg_red_corner_depth`, `bg_red_folded_stage` |
-| Chapter / section transition | `bg_red_folded_stage`, `bg_signal_arc`, `bg_network_texture_light` |
-| Dense chart / dashboard | `bg_kpi_band`, `bg_radial_dashboard_field`, `bg_3d_glass_panels` |
-| KPI / executive summary | `bg_kpi_band`, `bg_speed_lines` |
-| Strategy / roadmap / ecosystem | `bg_topographic_lines`, `bg_orbit_nodes`, `bg_map_mesh`, `bg_market_rings`, `bg_speed_lines` |
-| Image-text / case-study split | `bg_layered_cards_field`, `bg_diagonal_brand_rail` |
-| Platform / architecture / technical systems | `bg_modular_tiles_light`, `bg_enterprise_stack`, `bg_circuit_trace`, `bg_3d_floating_slabs`, `bg_3d_cube_stack`, `bg_mosaic_dots` |
-| Operations / dashboard / monitoring | `bg_radial_dashboard_field`, `bg_3d_glass_panels`, `bg_speed_lines` |
-| 3D / dimensional presentation pages | `bg_3d_floating_slabs`, `bg_3d_cube_stack`, `bg_3d_glass_panels` |
-| Security / cloud / network overview | `bg_security_shield_field`, `bg_cloud_edge`, `bg_mosaic_dots` |
-| Softer expressive section pages | `bg_wave_ribbon_soft`, `bg_layered_cards_field`, `bg_signal_arc` |
+| Calm cover / ending | `bg_clean_white_rail`, `bg_signal_arc` |
+| Strong brand cover / ending | `bg_red_corner_sweep`, `bg_red_corner_depth`, `bg_red_folded_stage`, `bg_wave_ribbon_soft` |
+| Chapter / section transition | `bg_red_folded_stage`, `bg_red_corner_depth`, `bg_signal_arc`, `bg_network_texture_light` |
+| 3D / dimensional divider | `bg_3d_floating_slabs`, `bg_3d_cube_stack`, `bg_3d_glass_panels` |
+| Strategy / market divider | `bg_topographic_lines`, `bg_market_rings`, `bg_orbit_nodes`, `bg_map_mesh` |
+| Technical / platform divider | `bg_enterprise_stack`, `bg_circuit_trace`, `bg_mosaic_dots` |
+| Operations / dashboard divider | `bg_radial_dashboard_field`, `bg_3d_glass_panels`, `bg_layered_cards_field` |
+| Security / cloud divider | `bg_security_shield_field`, `bg_cloud_edge`, `bg_mosaic_dots` |
 
 **Usage rules**:
 
 1. Read `templates/backgrounds/backgrounds_index.json` before selecting a background.
 2. Copy the selected SVG's body elements below page chrome and content; do not treat it as a page layout.
 3. Keep Viettel logo, footer, page number, title safe area, and text-fit rules from the shell page.
-4. Use high-intensity backgrounds only on cover, chapter, ending, or true breathing pages.
+4. Use backgrounds only on cover, chapter, section-divider, ending, or true low-content breathing pages.
 5. Backgrounds are supporting atmosphere only: keep marks pale, low-opacity, and softly blended so content and charts remain dominant.
 6. Do not use SVG filters/blur effects; simulate softness with opacity, broad shapes, gradients, and calm safe zones.
 7. Do not recolor backgrounds outside the approved Viettel palette. Deep blue remains forbidden for background/decorative layers.
@@ -676,7 +671,7 @@ true breathing pages.
 
 1. **Copy template files** to project `templates/` directory before starting generation
 2. **Copy `viettel-logo.png`** to project `images/` directory
-3. Use `templates/backgrounds/backgrounds_index.json` to assign one background layer per page in `spec_lock.md ## page_backgrounds`
+3. Use `templates/backgrounds/backgrounds_index.json` to assign background layers only to section-like pages in `spec_lock.md ## page_backgrounds`
 4. **Select page types** based on content structure:
    - Use `01_cover.svg` for opening slide
    - Use `02_toc.svg` for table of contents (supports 5 items)

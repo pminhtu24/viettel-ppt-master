@@ -258,18 +258,18 @@ Catalog read: 71 templates
 
 ---
 
-### Viettel Background Assignment (viettel_default)
+### Viettel Section Background Assignment (viettel_default)
 
-> For `brand.profile: viettel_default`, Strategist MUST read `templates/backgrounds/backgrounds_index.json` and assign one background id to every page. Backgrounds support the content; they must not compete with titles, charts, tables, or KPI cards.
+> For `brand.profile: viettel_default`, Strategist MUST read `templates/backgrounds/backgrounds_index.json` and assign background ids only to cover, chapter, section-divider, ending, and low-content breathing pages. Dense content, chart, KPI, and table pages MUST omit `page_backgrounds` so the standard clean shell stays behind content.
 >
 > Softness rule: choose backgrounds that are already visually softened by pale fills, low opacity, wide geometry, and calm safe zones. Do not request SVG filters or blur effects.
 
 | Page | Background ID | Category | Intensity | Reason |
 | ---- | ------------- | -------- | --------- | ------ |
 | P01 | `bg_red_corner_sweep` | cover | high | Cover needs stronger brand presence; title sits in the calm left zone |
-| P02 | `bg_kpi_band` | kpi | medium | Dense dashboard page; low bottom band supports KPI/data content while the main canvas stays calm |
+| P03 | `bg_red_folded_stage` | brand | high | Section divider can carry a stronger visual field because content is sparse |
 
-> **Spec lock handoff rule**: every row MUST be copied into `spec_lock.md ## page_backgrounds` with the same page key and background id. New Viettel decks must have one row per page.
+> **Spec lock handoff rule**: every row MUST be copied into `spec_lock.md ## page_backgrounds` with the same page key and background id. Content-heavy pages MUST NOT appear in `page_backgrounds`.
 
 ---
 

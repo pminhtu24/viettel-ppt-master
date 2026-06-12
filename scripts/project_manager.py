@@ -413,18 +413,11 @@ class ProjectManager:
     def _validate_page_backgrounds(self, project_path: Path) -> list[str]:
         """Validate spec_lock page_backgrounds against the installed background library."""
         spec_lock_path = project_path / "spec_lock.md"
-        profile = self._extract_brand_profile(spec_lock_path)
         page_backgrounds = self._extract_page_backgrounds(spec_lock_path)
-        if profile != DEFAULT_BRAND_PROFILE and not page_backgrounds:
+        if not page_backgrounds:
             return []
 
         errors: list[str] = []
-        if profile == DEFAULT_BRAND_PROFILE and not page_backgrounds:
-            errors.append(
-                "page_backgrounds missing for viettel_default: new Viettel decks must assign a background to every page"
-            )
-            return errors
-
         backgrounds_dir = project_path / "templates" / "backgrounds"
         index_path = backgrounds_dir / "backgrounds_index.json"
         if not index_path.exists():
@@ -463,13 +456,6 @@ class ProjectManager:
             if not (backgrounds_dir / filename).exists():
                 errors.append(
                     f"page_backgrounds invalid for {page}: {filename} is missing from templates/backgrounds"
-                )
-
-        page_rhythm = self._extract_page_rhythm(spec_lock_path)
-        if page_rhythm:
-            for page in sorted(set(page_rhythm) - set(page_backgrounds)):
-                errors.append(
-                    f"page_backgrounds missing for {page}: every page_rhythm entry must have a background"
                 )
         return errors
 
