@@ -16,11 +16,14 @@
 |---|---|
 | Chosen template's `design_spec.md` (read frontmatter to detect `replication_mode`) | `templates/<chosen_template>/design_spec.md` |
 | Every distinct `<basename>` in `spec_lock.md page_layouts` | `templates/<chosen_template>/<basename>.svg` |
+| `page_backgrounds` exists | `templates/backgrounds/backgrounds_index.json` |
+| Every distinct background id in `spec_lock.md page_backgrounds` | `templates/backgrounds/<background_id>.svg` |
 | Every distinct chart name in `spec_lock.md page_charts` | `templates/charts/<chart_name>.svg` |
 | Chart types in `design_spec.md §VII` not covered above | `templates/charts/<chart_name>.svg` |
 
 **Forbidden — re-reading during generation**:
 - Layout SVG already loaded in this batch
+- Background SVG already loaded in this batch
 - Chart SVG already loaded in this batch
 
 `spec_lock.md` is the only file re-read per page (§2.1).
@@ -79,20 +82,21 @@ Before generating each page, output which template is used:
 - **Content pages**: template defines only header/footer; content area is free
 - **No template inheritance**: for `viettel_default`, compose content freely inside the Viettel brand contract; for `custom_override`, generate entirely per the Design Spec
 
-### Optional Viettel Background Layers
+### Viettel Background Layers
 
-For `viettel_default`, the template may include optional background SVGs at
-`templates/backgrounds/`. These files are decorative layers, not page layouts.
-Use them only when the Design Spec, page brief, or template guidance explicitly
-calls for more atmosphere than the plain white shell.
+For `viettel_default`, projects normally include background SVGs at
+`templates/backgrounds/`. These files are decorative layers, not page layouts,
+and every new Viettel page should receive one through `spec_lock.md ##
+page_backgrounds`.
 
 Rules:
 
-- Read `templates/backgrounds/backgrounds_index.json` once before selecting a background.
-- Read only the selected `templates/backgrounds/<id>.svg` files; do not glob-read the whole folder.
-- Copy the selected background SVG's body elements near the top of the output SVG, under the shell chrome and all content. Do not copy it as the entire page.
+- Read `templates/backgrounds/backgrounds_index.json` once during the pre-generation batch read.
+- Read only the `templates/backgrounds/<id>.svg` files listed in `spec_lock.md page_backgrounds`; do not glob-read the whole folder.
+- Copy the selected background SVG's body elements near the top of the output SVG, after the base page `<rect>` and below all shell chrome and content. Do not copy it as the entire page.
 - Keep the normal Viettel logo, top accent/rail, footer, page number, title safe area, and text-fit rules.
-- High-intensity backgrounds are reserved for cover, chapter, ending, and `breathing` pages. Dense chart/table pages should use low-intensity options such as `bg_chart_quiet_grid`, `bg_technical_grid`, or no background.
+- High-intensity backgrounds are reserved for cover, chapter, ending, and `breathing` pages. Dense chart/table pages should use calmer options with large safe zones such as `bg_kpi_band`, `bg_radial_dashboard_field`, or `bg_3d_glass_panels`.
+- Treat backgrounds as supporting atmosphere: if background marks compete with content, reduce opacity, cover them with a pale content surface, or switch to a lower-intensity background. Do not use SVG `<filter>` / blur effects; simulate softness with pale fills, broad geometry, gradients, and low opacity.
 - Deep blue `#12436D` remains forbidden for background/decorative layers.
 
 ---
@@ -137,6 +141,23 @@ Before drawing each page, look up its entry in `page_rhythm` (key format `P<NN>`
 **Missing `page_rhythm` section** → emit `warning: spec_lock.md missing page_rhythm — defaulting all pages to dense` once, fall back to `dense` for all pages.
 
 **Tag not found for current page** → fall back to `dense` silently. Do not invent a tag.
+
+**Per-page background lookup — `page_backgrounds` section**:
+
+Before drawing each Viettel page, look up its entry in `page_backgrounds` (key
+format `P<NN>` matching §IX of `design_spec.md`) and apply the selected
+background layer:
+
+- Entry present (e.g., `P04: bg_kpi_band`) → copy the corresponding background SVG body elements already loaded in §1.0 into the output SVG's background layer.
+- Missing entry on `viettel_default` → emit `warning: page_backgrounds missing <P<NN>> — applying safe fallback background`; use `bg_kpi_band` for `dense` pages and `bg_clean_white_rail` for `anchor` / `breathing` pages.
+- Whole section absent on `viettel_default` → emit the warning once, then use the same safe fallback rule for every page. This is legacy compatibility only; new Strategist outputs MUST include `page_backgrounds`.
+- Entry missing from `templates/backgrounds/backgrounds_index.json` or missing file → emit `warning: page_backgrounds <P<NN>> references missing background <id> — applying safe fallback background`.
+- Under `custom_override`, ignore `page_backgrounds` unless the custom template explicitly defines its own background library.
+
+Do not allow the background to own page number, logo, title text, chart marks,
+or content containers. If the background visually interferes with chart/table
+readability, switch to a lower-intensity fallback or add a white/surface content
+panel above it.
 
 ### 2.2 Text Fit Contract (Mandatory)
 

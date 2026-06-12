@@ -258,6 +258,21 @@ Catalog read: 71 templates
 
 ---
 
+### Viettel Background Assignment (viettel_default)
+
+> For `brand.profile: viettel_default`, Strategist MUST read `templates/backgrounds/backgrounds_index.json` and assign one background id to every page. Backgrounds support the content; they must not compete with titles, charts, tables, or KPI cards.
+>
+> Softness rule: choose backgrounds that are already visually softened by pale fills, low opacity, wide geometry, and calm safe zones. Do not request SVG filters or blur effects.
+
+| Page | Background ID | Category | Intensity | Reason |
+| ---- | ------------- | -------- | --------- | ------ |
+| P01 | `bg_red_corner_sweep` | cover | high | Cover needs stronger brand presence; title sits in the calm left zone |
+| P02 | `bg_kpi_band` | kpi | medium | Dense dashboard page; low bottom band supports KPI/data content while the main canvas stays calm |
+
+> **Spec lock handoff rule**: every row MUST be copied into `spec_lock.md ## page_backgrounds` with the same page key and background id. New Viettel decks must have one row per page.
+
+---
+
 ## VIII. Image Resource List (if needed)
 
 | Filename | Dimensions | Ratio | Purpose | Type | Layout pattern | Acquire Via | Status | Reference | text_policy | page_role |

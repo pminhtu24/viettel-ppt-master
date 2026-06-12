@@ -1,0 +1,24 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_red_folded_stage">
+  <defs>
+    <linearGradient id="foldedStageGlow" x1="100%" y1="0%" x2="18%" y2="72%">
+      <stop offset="0%" stop-color="#EE0033" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#EE0033" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+  <rect x="0" y="0" width="1280" height="720" fill="url(#foldedStageGlow)"/>
+  <path d="M856 132 L1280 0 V720 L856 590 Z" fill="#F6F6F6"/>
+  <path d="M918 164 L1280 54 V344 L918 438 Z" fill="#EE0033" fill-opacity="0.08"/>
+  <path d="M964 448 L1280 350 V720 L964 606 Z" fill="#EE0033" fill-opacity="0.18"/>
+  <path d="M1058 486 L1280 418 V720 L1058 640 Z" fill="#EE0033" fill-opacity="0.54"/>
+  <path d="M856 132 L918 164 L918 438 L856 590 Z" fill="#E6E6E6" fill-opacity="0.5"/>
+  <path d="M918 438 L1280 344" stroke="#FFFFFF" stroke-width="3" stroke-opacity="0.72"/>
+  <path d="M964 606 L1280 720" stroke="#FFFFFF" stroke-width="3" stroke-opacity="0.45"/>
+  <path d="M796 176 L918 164 L918 438 L796 458 Z" fill="#FFFFFF" fill-opacity="0.72"/>
+  <path d="M796 176 L918 164" stroke="#B3B3B3" stroke-width="1.5" stroke-opacity="0.36"/>
+  <path d="M796 458 L918 438" stroke="#EE0033" stroke-width="2" stroke-opacity="0.14"/>
+  <circle cx="1110" cy="214" r="5" fill="#EE0033" fill-opacity="0.42"/>
+  <circle cx="1176" cy="196" r="8" fill="#FFFFFF" fill-opacity="0.62"/>
+  <rect x="0" y="0" width="18" height="720" fill="#EE0033"/>
+  <rect x="18" y="0" width="6" height="720" fill="#E6E6E6"/>
+</svg>

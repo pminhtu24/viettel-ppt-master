@@ -1,0 +1,17 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_modular_tiles_light">
+  <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+  <rect x="772" y="118" width="104" height="104" rx="10" fill="#F2F2F2"/>
+  <rect x="892" y="118" width="164" height="104" rx="10" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+  <rect x="1072" y="118" width="104" height="104" rx="10" fill="#F2F2F2"/>
+  <rect x="772" y="238" width="164" height="104" rx="10" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+  <rect x="952" y="238" width="104" height="104" rx="10" fill="#F2F2F2"/>
+  <rect x="1072" y="238" width="104" height="104" rx="10" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+  <rect x="832" y="358" width="104" height="104" rx="10" fill="#F2F2F2"/>
+  <rect x="952" y="358" width="224" height="104" rx="10" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+  <rect x="772" y="478" width="224" height="104" rx="10" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+  <rect x="1012" y="478" width="164" height="104" rx="10" fill="#F2F2F2"/>
+  <rect x="804" y="150" width="40" height="6" rx="3" fill="#EE0033" fill-opacity="0.38"/>
+  <rect x="984" y="270" width="40" height="6" rx="3" fill="#EE0033" fill-opacity="0.32"/>
+  <rect x="1044" y="510" width="56" height="6" rx="3" fill="#EE0033" fill-opacity="0.36"/>
+  <circle cx="1188" cy="598" r="48" fill="#EE0033" fill-opacity="0.08"/>
+</svg>

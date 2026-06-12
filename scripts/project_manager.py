@@ -328,6 +328,71 @@ class ProjectManager:
                 rows[match.group(1)] = match.group(2)
         return rows
 
+    def _extract_page_backgrounds(self, spec_lock_path: Path) -> dict[str, str]:
+        """Return page -> background id rows declared in spec_lock.md ## page_backgrounds."""
+        if not spec_lock_path.exists():
+            return {}
+
+        rows: dict[str, str] = {}
+        in_section = False
+        for line in spec_lock_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            stripped = line.strip()
+            if stripped == "## page_backgrounds":
+                in_section = True
+                continue
+            if in_section and line.startswith("## "):
+                break
+            if not in_section:
+                continue
+
+            match = re.match(r"-\s+(P\d{2}):\s*([A-Za-z0-9_]+)\s*$", stripped)
+            if match:
+                rows[match.group(1)] = match.group(2)
+        return rows
+
+    def _extract_page_rhythm(self, spec_lock_path: Path) -> dict[str, str]:
+        """Return page -> rhythm rows declared in spec_lock.md ## page_rhythm."""
+        if not spec_lock_path.exists():
+            return {}
+
+        rows: dict[str, str] = {}
+        in_section = False
+        for line in spec_lock_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            stripped = line.strip()
+            if stripped == "## page_rhythm":
+                in_section = True
+                continue
+            if in_section and line.startswith("## "):
+                break
+            if not in_section:
+                continue
+
+            match = re.match(r"-\s+(P\d{2}):\s*([A-Za-z0-9_]+)\s*$", stripped)
+            if match:
+                rows[match.group(1)] = match.group(2)
+        return rows
+
+    @staticmethod
+    def _extract_brand_profile(spec_lock_path: Path) -> str:
+        """Return brand.profile from spec_lock.md when present."""
+        if not spec_lock_path.exists():
+            return ""
+
+        in_section = False
+        for line in spec_lock_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            stripped = line.strip()
+            if stripped == "## brand":
+                in_section = True
+                continue
+            if in_section and line.startswith("## "):
+                break
+            if not in_section:
+                continue
+            match = re.match(r"-\s+profile:\s*([A-Za-z0-9_]+)\s*$", stripped)
+            if match:
+                return match.group(1)
+        return ""
+
     def _validate_page_charts_handoff(self, project_path: Path) -> list[str]:
         """Ensure Design Spec chart references are carried into spec_lock page_charts."""
         expected = self._extract_visualization_reference_rows(project_path / "design_spec.md")
@@ -342,6 +407,69 @@ class ProjectManager:
                 found = actual_key if actual_key else "missing"
                 errors.append(
                     f"page_charts mismatch for {page}: expected {chart_key} from design_spec.md §VII, found {found}"
+                )
+        return errors
+
+    def _validate_page_backgrounds(self, project_path: Path) -> list[str]:
+        """Validate spec_lock page_backgrounds against the installed background library."""
+        spec_lock_path = project_path / "spec_lock.md"
+        profile = self._extract_brand_profile(spec_lock_path)
+        page_backgrounds = self._extract_page_backgrounds(spec_lock_path)
+        if profile != DEFAULT_BRAND_PROFILE and not page_backgrounds:
+            return []
+
+        errors: list[str] = []
+        if profile == DEFAULT_BRAND_PROFILE and not page_backgrounds:
+            errors.append(
+                "page_backgrounds missing for viettel_default: new Viettel decks must assign a background to every page"
+            )
+            return errors
+
+        backgrounds_dir = project_path / "templates" / "backgrounds"
+        index_path = backgrounds_dir / "backgrounds_index.json"
+        if not index_path.exists():
+            errors.append(
+                "page_backgrounds declared but templates/backgrounds/backgrounds_index.json is missing"
+            )
+            return errors
+
+        try:
+            data = json.loads(index_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            errors.append(f"backgrounds_index.json is invalid JSON: {exc}")
+            return errors
+
+        items = data.get("items")
+        if not isinstance(items, list):
+            errors.append("backgrounds_index.json missing list field: items")
+            return errors
+
+        background_files: dict[str, str] = {}
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            background_id = item.get("id")
+            filename = item.get("file")
+            if isinstance(background_id, str) and isinstance(filename, str):
+                background_files[background_id] = filename
+
+        for page, background_id in page_backgrounds.items():
+            filename = background_files.get(background_id)
+            if not filename:
+                errors.append(
+                    f"page_backgrounds invalid for {page}: {background_id} not found in backgrounds_index.json"
+                )
+                continue
+            if not (backgrounds_dir / filename).exists():
+                errors.append(
+                    f"page_backgrounds invalid for {page}: {filename} is missing from templates/backgrounds"
+                )
+
+        page_rhythm = self._extract_page_rhythm(spec_lock_path)
+        if page_rhythm:
+            for page in sorted(set(page_rhythm) - set(page_backgrounds)):
+                errors.append(
+                    f"page_backgrounds missing for {page}: every page_rhythm entry must have a background"
                 )
         return errors
 
@@ -864,6 +992,11 @@ class ProjectManager:
             chart_handoff_errors = self._validate_page_charts_handoff(project_path_obj)
             if chart_handoff_errors:
                 errors.extend(chart_handoff_errors)
+                is_valid = False
+
+            background_errors = self._validate_page_backgrounds(project_path_obj)
+            if background_errors:
+                errors.extend(background_errors)
                 is_valid = False
 
             info = get_project_info_common(str(project_path_obj))

@@ -1,0 +1,15 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_layered_cards_field">
+  <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+  <rect x="724" y="122" width="398" height="238" rx="14" fill="#F2F2F2" stroke="#E6E6E6" stroke-width="1"/>
+  <rect x="776" y="178" width="398" height="238" rx="14" fill="#FFFFFF" fill-opacity="0.88" stroke="#E6E6E6" stroke-width="1"/>
+  <rect x="828" y="234" width="320" height="188" rx="12" fill="#F2F2F2" fill-opacity="0.62" stroke="#E6E6E6" stroke-width="1"/>
+  <rect x="792" y="198" width="72" height="6" rx="3" fill="#EE0033" fill-opacity="0.52"/>
+  <rect x="880" y="198" width="54" height="6" rx="3" fill="#E6E6E6"/>
+  <rect x="850" y="262" width="92" height="6" rx="3" fill="#EE0033" fill-opacity="0.3"/>
+  <rect x="850" y="300" width="230" height="4" rx="2" fill="#E6E6E6"/>
+  <rect x="850" y="326" width="188" height="4" rx="2" fill="#E6E6E6"/>
+  <circle cx="1122" cy="292" r="64" fill="#EE0033" fill-opacity="0.06"/>
+  <circle cx="1164" cy="342" r="28" fill="#EE0033" fill-opacity="0.1"/>
+  <rect x="96" y="612" width="122" height="6" rx="3" fill="#EE0033" fill-opacity="0.72"/>
+  <rect x="232" y="612" width="66" height="6" rx="3" fill="#E6E6E6"/>
+</svg>

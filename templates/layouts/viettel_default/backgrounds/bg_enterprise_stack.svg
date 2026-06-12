@@ -1,0 +1,16 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_enterprise_stack">
+  <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+  <path d="M844 230 L1010 154 L1180 230 L1012 312 Z" fill="#F2F2F2" stroke="#E6E6E6" stroke-width="1"/>
+  <path d="M844 302 L1010 226 L1180 302 L1012 384 Z" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+  <path d="M844 374 L1010 298 L1180 374 L1012 456 Z" fill="#F2F2F2" stroke="#E6E6E6" stroke-width="1"/>
+  <path d="M844 446 L1010 370 L1180 446 L1012 528 Z" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+  <path d="M844 302 L844 230 M1180 302 L1180 230 M1012 384 L1012 312" stroke="#E6E6E6" stroke-width="1"/>
+  <path d="M844 374 L844 302 M1180 374 L1180 302 M1012 456 L1012 384" stroke="#E6E6E6" stroke-width="1"/>
+  <path d="M844 446 L844 374 M1180 446 L1180 374 M1012 528 L1012 456" stroke="#E6E6E6" stroke-width="1"/>
+  <path d="M914 258 L1010 214 L1110 258" stroke="#EE0033" stroke-width="3" stroke-opacity="0.26" fill="none"/>
+  <path d="M906 402 L1010 354 L1122 402" stroke="#EE0033" stroke-width="3" stroke-opacity="0.16" fill="none"/>
+  <circle cx="1010" cy="214" r="7" fill="#EE0033" fill-opacity="0.34"/>
+  <circle cx="1010" cy="354" r="7" fill="#EE0033" fill-opacity="0.24"/>
+  <rect x="108" y="594" width="120" height="6" rx="3" fill="#EE0033" fill-opacity="0.68"/>
+  <rect x="240" y="594" width="74" height="6" rx="3" fill="#E6E6E6"/>
+</svg>

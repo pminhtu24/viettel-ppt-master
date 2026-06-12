@@ -1,7 +1,7 @@
 {
   "version": 1,
   "canvas": "1280x720",
-  "usage": "Optional background layers for viettel_default pages. Copy the SVG body elements underneath page chrome and content; keep logo, footer, page number, and text fit rules from the page shell.",
+  "usage": "Default softened background layers for viettel_default pages. Assign one id per page in spec_lock.md ## page_backgrounds, copy the SVG body elements underneath page chrome and content, and keep logo, footer, page number, and text fit rules from the page shell. Backgrounds are supporting atmosphere only; simulate blur/softness with pale fills, low opacity, broad shapes, and gradients rather than SVG filters.",
   "items": [
     {
       "id": "bg_clean_white_rail",
@@ -14,16 +14,6 @@
       "description": "White reporting field with a refined Viettel left rail and small bottom accents."
     },
     {
-      "id": "bg_soft_gray_field",
-      "file": "bg_soft_gray_field.svg",
-      "category": "content",
-      "recommended_pages": ["content", "summary", "toc"],
-      "rhythm": ["dense", "breathing"],
-      "intensity": "low",
-      "safe_text_zone": "x=88-1040, y=132-612",
-      "description": "Soft gray content field that adds surface depth without changing the clean report feel."
-    },
-    {
       "id": "bg_red_corner_sweep",
       "file": "bg_red_corner_sweep.svg",
       "category": "cover",
@@ -32,6 +22,56 @@
       "intensity": "high",
       "safe_text_zone": "x=96-820, y=150-520",
       "description": "Bold red corner sweep for first-impression pages while preserving a calm title area."
+    },
+    {
+      "id": "bg_red_corner_depth",
+      "file": "bg_red_corner_depth.svg",
+      "category": "cover",
+      "recommended_pages": ["cover", "chapter", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "high",
+      "safe_text_zone": "x=96-790, y=150-520",
+      "description": "Deeper folded red corner sweep with layered planes for stronger first-impression pages."
+    },
+    {
+      "id": "bg_red_folded_stage",
+      "file": "bg_red_folded_stage.svg",
+      "category": "brand",
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "high",
+      "safe_text_zone": "x=96-760, y=145-545",
+      "description": "Folded stage-like red geometry on the right, keeping a wide calm field for title content."
+    },
+    {
+      "id": "bg_3d_floating_slabs",
+      "file": "bg_3d_floating_slabs.svg",
+      "category": "three-dimensional",
+      "recommended_pages": ["platform", "architecture", "capabilities", "strategy"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=88-720, y=132-610",
+      "description": "Light isometric floating slabs for platform and architecture slides."
+    },
+    {
+      "id": "bg_3d_cube_stack",
+      "file": "bg_3d_cube_stack.svg",
+      "category": "three-dimensional",
+      "recommended_pages": ["platform", "architecture", "operating-model", "capabilities"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=88-720, y=132-610",
+      "description": "Soft cube-stack composition suggesting layered systems without heavy decoration."
+    },
+    {
+      "id": "bg_3d_glass_panels",
+      "file": "bg_3d_glass_panels.svg",
+      "category": "three-dimensional",
+      "recommended_pages": ["dashboard", "operations", "summary", "ai-ops"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=88-700, y=132-610",
+      "description": "Transparent isometric glass panels for dashboard and operations storytelling."
     },
     {
       "id": "bg_diagonal_brand_rail",
@@ -64,36 +104,6 @@
       "description": "Signal arcs from the page edges, useful for transition and connectivity slides."
     },
     {
-      "id": "bg_data_pulse",
-      "file": "bg_data_pulse.svg",
-      "category": "data",
-      "recommended_pages": ["content", "dashboard", "summary"],
-      "rhythm": ["dense", "breathing"],
-      "intensity": "medium",
-      "safe_text_zone": "x=88-1030, y=132-610",
-      "description": "Subtle data-pulse lines and nodes that support analytics stories without becoming a chart."
-    },
-    {
-      "id": "bg_technical_grid",
-      "file": "bg_technical_grid.svg",
-      "category": "technical",
-      "recommended_pages": ["chart", "architecture", "technical"],
-      "rhythm": ["dense"],
-      "intensity": "low",
-      "safe_text_zone": "x=72-1208, y=132-618",
-      "description": "Precise technical grid for architecture or system slides."
-    },
-    {
-      "id": "bg_chart_quiet_grid",
-      "file": "bg_chart_quiet_grid.svg",
-      "category": "chart",
-      "recommended_pages": ["chart", "dashboard", "table"],
-      "rhythm": ["dense"],
-      "intensity": "very-low",
-      "safe_text_zone": "x=72-1208, y=132-618",
-      "description": "Nearly white chart-friendly grid calibrated for dense data pages."
-    },
-    {
       "id": "bg_kpi_band",
       "file": "bg_kpi_band.svg",
       "category": "kpi",
@@ -104,26 +114,6 @@
       "description": "Low bottom band and small accent tiles to support KPI storytelling."
     },
     {
-      "id": "bg_split_panel_left",
-      "file": "bg_split_panel_left.svg",
-      "category": "split",
-      "recommended_pages": ["image-text", "case-study", "comparison"],
-      "rhythm": ["dense", "breathing"],
-      "intensity": "medium",
-      "safe_text_zone": "x=620-1160, y=132-610",
-      "description": "Left visual panel with open right field for text, charts, or commentary."
-    },
-    {
-      "id": "bg_split_panel_right",
-      "file": "bg_split_panel_right.svg",
-      "category": "split",
-      "recommended_pages": ["chart-notes", "summary", "comparison"],
-      "rhythm": ["dense"],
-      "intensity": "medium",
-      "safe_text_zone": "x=80-830, y=132-610",
-      "description": "Right insight panel with a larger open field on the left."
-    },
-    {
       "id": "bg_topographic_lines",
       "file": "bg_topographic_lines.svg",
       "category": "strategy",
@@ -132,16 +122,6 @@
       "intensity": "medium",
       "safe_text_zone": "x=96-850, y=140-560",
       "description": "Contour-line atmosphere for strategy, market landscape, and planning pages."
-    },
-    {
-      "id": "bg_growth_path",
-      "file": "bg_growth_path.svg",
-      "category": "roadmap",
-      "recommended_pages": ["roadmap", "timeline", "strategy"],
-      "rhythm": ["dense", "breathing"],
-      "intensity": "medium",
-      "safe_text_zone": "x=88-1040, y=132-560",
-      "description": "A light growth path with milestones, useful under roadmap or initiative content."
     },
     {
       "id": "bg_orbit_nodes",
@@ -164,24 +144,114 @@
       "description": "Abstract coverage mesh, deliberately not a literal geographic map."
     },
     {
-      "id": "bg_chapter_watermark_field",
-      "file": "bg_chapter_watermark_field.svg",
-      "category": "chapter",
-      "recommended_pages": ["chapter", "section-divider"],
-      "rhythm": ["anchor", "breathing"],
-      "intensity": "high",
-      "safe_text_zone": "x=96-820, y=190-500",
-      "description": "Geometric watermark field for stronger chapter dividers without embedded text."
+      "id": "bg_layered_cards_field",
+      "file": "bg_layered_cards_field.svg",
+      "category": "content",
+      "recommended_pages": ["summary", "case-study", "executive-summary"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-700, y=132-590",
+      "description": "Layered abstract cards on the right side, giving plain content pages more depth."
     },
     {
-      "id": "bg_closing_focus",
-      "file": "bg_closing_focus.svg",
-      "category": "ending",
-      "recommended_pages": ["ending", "closing", "thank-you"],
+      "id": "bg_wave_ribbon_soft",
+      "file": "bg_wave_ribbon_soft.svg",
+      "category": "brand",
+      "recommended_pages": ["cover", "chapter", "ending", "breathing"],
       "rhythm": ["anchor", "breathing"],
+      "intensity": "high",
+      "safe_text_zone": "x=96-980, y=120-480",
+      "description": "Soft wave ribbons across the lower canvas for a more expressive but still light brand field."
+    },
+    {
+      "id": "bg_radial_dashboard_field",
+      "file": "bg_radial_dashboard_field.svg",
+      "category": "dashboard",
+      "recommended_pages": ["dashboard", "kpi", "operations", "summary"],
+      "rhythm": ["dense", "breathing"],
       "intensity": "medium",
-      "safe_text_zone": "x=116-900, y=170-500",
-      "description": "Focused closing background with subtle red glow and quiet gray structure."
+      "safe_text_zone": "x=96-720, y=132-590",
+      "description": "Radial dashboard motif on the right edge with calm left-side space for narrative."
+    },
+    {
+      "id": "bg_modular_tiles_light",
+      "file": "bg_modular_tiles_light.svg",
+      "category": "modular",
+      "recommended_pages": ["platform", "capabilities", "product", "architecture"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-710, y=132-600",
+      "description": "Modular tile mosaic for platform, product, and capability slides."
+    },
+    {
+      "id": "bg_enterprise_stack",
+      "file": "bg_enterprise_stack.svg",
+      "category": "architecture",
+      "recommended_pages": ["architecture", "platform", "operating-model", "strategy"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-760, y=132-590",
+      "description": "Layered enterprise stack motif for system architecture and operating model stories."
+    },
+    {
+      "id": "bg_circuit_trace",
+      "file": "bg_circuit_trace.svg",
+      "category": "technical",
+      "recommended_pages": ["network", "ai-ops", "security", "architecture"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-700, y=132-610",
+      "description": "Circuit-like trace field for network, AI operations, and security themes."
+    },
+    {
+      "id": "bg_market_rings",
+      "file": "bg_market_rings.svg",
+      "category": "market",
+      "recommended_pages": ["market", "strategy", "coverage", "portfolio"],
+      "rhythm": ["breathing", "dense"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-720, y=132-590",
+      "description": "Concentric market rings on the right side for portfolio and market landscape pages."
+    },
+    {
+      "id": "bg_cloud_edge",
+      "file": "bg_cloud_edge.svg",
+      "category": "cloud",
+      "recommended_pages": ["cloud", "platform", "operations", "breathing"],
+      "rhythm": ["breathing", "dense"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-780, y=132-560",
+      "description": "Soft cloud-edge abstraction for platform, cloud, and operations themes."
+    },
+    {
+      "id": "bg_security_shield_field",
+      "file": "bg_security_shield_field.svg",
+      "category": "security",
+      "recommended_pages": ["security", "risk", "governance", "chapter"],
+      "rhythm": ["breathing", "dense"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-760, y=132-590",
+      "description": "Large quiet shield field for cybersecurity, governance, and risk slides."
+    },
+    {
+      "id": "bg_speed_lines",
+      "file": "bg_speed_lines.svg",
+      "category": "momentum",
+      "recommended_pages": ["growth", "launch", "roadmap", "executive-summary"],
+      "rhythm": ["breathing", "dense"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-680, y=132-590",
+      "description": "Horizontal speed-line field for growth, acceleration, and launch narratives."
+    },
+    {
+      "id": "bg_mosaic_dots",
+      "file": "bg_mosaic_dots.svg",
+      "category": "network",
+      "recommended_pages": ["ecosystem", "network", "data", "overview"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-730, y=132-590",
+      "description": "Dot-mosaic field for network, data, and ecosystem overview pages."
     }
   ]
 }

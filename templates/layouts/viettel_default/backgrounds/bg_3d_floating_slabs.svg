@@ -1,0 +1,29 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_3d_floating_slabs">
+  <defs>
+    <linearGradient id="slabFaceRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EE0033" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#EE0033" stop-opacity="0.04"/>
+    </linearGradient>
+    <linearGradient id="slabFaceGray" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F6F6F6"/>
+      <stop offset="100%" stop-color="#E6E6E6"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+  <path d="M860 138 L1118 76 L1212 132 L954 198 Z" fill="#F6F6F6"/>
+  <path d="M954 198 L1212 132 L1212 190 L954 260 Z" fill="#E6E6E6" fill-opacity="0.72"/>
+  <path d="M860 138 L954 198 L954 260 L860 202 Z" fill="#EE0033" fill-opacity="0.12"/>
+  <path d="M888 156 L1114 102 L1182 140 L956 198 Z" fill="url(#slabFaceRed)"/>
+  <path d="M752 304 L1038 228 L1160 300 L874 382 Z" fill="url(#slabFaceGray)"/>
+  <path d="M874 382 L1160 300 L1160 372 L874 458 Z" fill="#E6E6E6" fill-opacity="0.66"/>
+  <path d="M752 304 L874 382 L874 458 L752 382 Z" fill="#EE0033" fill-opacity="0.16"/>
+  <path d="M796 324 L1034 262 L1116 310 L878 380 Z" fill="#FFFFFF" fill-opacity="0.62"/>
+  <path d="M940 502 L1184 424 L1260 470 L1018 552 Z" fill="#F6F6F6"/>
+  <path d="M1018 552 L1260 470 L1260 526 L1018 612 Z" fill="#EE0033" fill-opacity="0.28"/>
+  <path d="M940 502 L1018 552 L1018 612 L940 562 Z" fill="#E6E6E6" fill-opacity="0.72"/>
+  <path d="M760 412 C914 456 1032 516 1126 612" stroke="#EE0033" stroke-width="3" stroke-opacity="0.12" fill="none"/>
+  <circle cx="1018" cy="326" r="7" fill="#EE0033" fill-opacity="0.36"/>
+  <circle cx="1108" cy="354" r="5" fill="#B3B3B3" fill-opacity="0.42"/>
+  <rect x="0" y="0" width="18" height="720" fill="#EE0033"/>
+  <rect x="18" y="0" width="6" height="720" fill="#E6E6E6"/>
+</svg>

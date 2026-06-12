@@ -127,6 +127,26 @@
 >
 > **Missing or empty section** → Executor falls back to `dense` for every page (legacy pre-rhythm behavior). Remove the section only for legacy decks; new decks MUST fill it.
 
+## page_backgrounds
+
+- P01: bg_red_corner_sweep
+- P02: bg_kpi_band
+- P03: bg_red_folded_stage
+- P04: bg_clean_white_rail
+- P05: bg_circuit_trace
+- P06: bg_wave_ribbon_soft
+- P07: bg_red_corner_depth
+
+> One entry per page for `brand.profile: viettel_default`. Key: `P<NN>` matching §IX. Value: a background id from `templates/backgrounds/backgrounds_index.json`, without `.svg`.
+>
+> **Default Viettel policy**: every normal Viettel page gets a background layer. Backgrounds are supporting atmosphere only, never primary content. Dense/chart/table pages MUST use calmer backgrounds with large safe zones and low visual competition; cover/chapter/ending/breathing pages may use stronger backgrounds.
+>
+> **Softening rule**: background details should be visually softened with pale fills, low opacity, wide shapes, and gradient-like fades. Do not use SVG `<filter>` / blur effects; they are not PPTX-safe. Keep sharp detail away from the main content/chart area.
+>
+> **Selection source**: read `templates/backgrounds/backgrounds_index.json`. Match by page role, `page_rhythm`, content topic, and `safe_text_zone`. Avoid repeating the same background on adjacent pages when another suitable option exists.
+>
+> **Missing entry** → Executor emits a warning and applies a safe fallback (`bg_kpi_band` for dense/chart pages, `bg_clean_white_rail` for anchor/breathing pages). New Strategist outputs MUST NOT rely on this fallback.
+
 ## page_layouts
 
 - P01: 01_cover

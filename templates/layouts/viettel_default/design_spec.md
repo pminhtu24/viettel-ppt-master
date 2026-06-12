@@ -549,13 +549,15 @@ The font bundle lives in `templates/layouts/viettel_default/fonts/`. During proj
 
 > Do not borrow non-Viettel brand imagery from other templates. If no official asset is supplied, keep the shell vector-only and light.
 
-### Optional Background Library
+### Default Background Library
 
-The template ships an optional background layer library in `backgrounds/`.
+The template ships a default background layer library in `backgrounds/`.
 These SVGs are **not standalone slide shells**: they contain only background and
 decorative elements, with no logo, footer, page number, placeholders, or text.
-Use them underneath the normal Viettel shell chrome when a plain white page feels
-too quiet.
+Normal Viettel generation assigns one softened background layer to every page
+through `spec_lock.md ## page_backgrounds`; use very light backgrounds on
+dense/chart pages and stronger backgrounds only for cover, chapter, ending, or
+true breathing pages.
 
 | Asset | Purpose | Runtime Path |
 | --- | --- | --- |
@@ -566,13 +568,18 @@ too quiet.
 
 | Page need | Preferred backgrounds |
 | --- | --- |
-| Baseline / safe corporate page | `bg_clean_white_rail`, `bg_soft_gray_field` |
-| Cover / ending with stronger brand presence | `bg_red_corner_sweep`, `bg_closing_focus` |
-| Chapter / section transition | `bg_chapter_watermark_field`, `bg_signal_arc`, `bg_network_texture_light` |
-| Dense chart / dashboard | `bg_chart_quiet_grid`, `bg_technical_grid`, `bg_split_panel_right` |
-| KPI / executive summary | `bg_kpi_band`, `bg_data_pulse` |
-| Strategy / roadmap / ecosystem | `bg_topographic_lines`, `bg_growth_path`, `bg_orbit_nodes`, `bg_map_mesh` |
-| Image-text / case-study split | `bg_split_panel_left`, `bg_split_panel_right` |
+| Baseline / safe corporate page | `bg_clean_white_rail`, `bg_layered_cards_field` |
+| Cover / ending with stronger brand presence | `bg_red_corner_sweep`, `bg_red_corner_depth`, `bg_red_folded_stage` |
+| Chapter / section transition | `bg_red_folded_stage`, `bg_signal_arc`, `bg_network_texture_light` |
+| Dense chart / dashboard | `bg_kpi_band`, `bg_radial_dashboard_field`, `bg_3d_glass_panels` |
+| KPI / executive summary | `bg_kpi_band`, `bg_speed_lines` |
+| Strategy / roadmap / ecosystem | `bg_topographic_lines`, `bg_orbit_nodes`, `bg_map_mesh`, `bg_market_rings`, `bg_speed_lines` |
+| Image-text / case-study split | `bg_layered_cards_field`, `bg_diagonal_brand_rail` |
+| Platform / architecture / technical systems | `bg_modular_tiles_light`, `bg_enterprise_stack`, `bg_circuit_trace`, `bg_3d_floating_slabs`, `bg_3d_cube_stack`, `bg_mosaic_dots` |
+| Operations / dashboard / monitoring | `bg_radial_dashboard_field`, `bg_3d_glass_panels`, `bg_speed_lines` |
+| 3D / dimensional presentation pages | `bg_3d_floating_slabs`, `bg_3d_cube_stack`, `bg_3d_glass_panels` |
+| Security / cloud / network overview | `bg_security_shield_field`, `bg_cloud_edge`, `bg_mosaic_dots` |
+| Softer expressive section pages | `bg_wave_ribbon_soft`, `bg_layered_cards_field`, `bg_signal_arc` |
 
 **Usage rules**:
 
@@ -580,7 +587,9 @@ too quiet.
 2. Copy the selected SVG's body elements below page chrome and content; do not treat it as a page layout.
 3. Keep Viettel logo, footer, page number, title safe area, and text-fit rules from the shell page.
 4. Use high-intensity backgrounds only on cover, chapter, ending, or true breathing pages.
-5. Do not recolor backgrounds outside the approved Viettel palette. Deep blue remains forbidden for background/decorative layers.
+5. Backgrounds are supporting atmosphere only: keep marks pale, low-opacity, and softly blended so content and charts remain dominant.
+6. Do not use SVG filters/blur effects; simulate softness with opacity, broad shapes, gradients, and calm safe zones.
+7. Do not recolor backgrounds outside the approved Viettel palette. Deep blue remains forbidden for background/decorative layers.
 
 ---
 
@@ -667,7 +676,7 @@ too quiet.
 
 1. **Copy template files** to project `templates/` directory before starting generation
 2. **Copy `viettel-logo.png`** to project `images/` directory
-3. **Optional**: use `templates/backgrounds/backgrounds_index.json` to pick a background layer when a page needs more visual atmosphere
+3. Use `templates/backgrounds/backgrounds_index.json` to assign one background layer per page in `spec_lock.md ## page_backgrounds`
 4. **Select page types** based on content structure:
    - Use `01_cover.svg` for opening slide
    - Use `02_toc.svg` for table of contents (supports 5 items)
