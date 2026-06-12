@@ -212,6 +212,8 @@ class ProjectManager:
                 shutil.copy2(asset, templates_dir / asset.name)
             elif asset.suffix.lower() in IMAGE_ASSET_SUFFIXES:
                 shutil.copy2(asset, images_dir / asset.name)
+            elif asset.name == "backgrounds" and asset.is_dir():
+                shutil.copytree(asset, templates_dir / asset.name)
             elif asset.name == "fonts" and asset.is_dir():
                 fonts_dir.mkdir(parents=True, exist_ok=True)
                 for font_file in sorted(asset.iterdir()):

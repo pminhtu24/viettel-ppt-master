@@ -1,0 +1,18 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_map_mesh">
+  <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+  <path d="M762 164 L860 116 L986 154 L1118 126 L1206 214 L1168 330 L1220 452 L1104 548 L956 510 L826 574 L720 474 L760 342 Z" fill="#F2F2F2" fill-opacity="0.58" stroke="#E6E6E6" stroke-width="1"/>
+  <path d="M762 164 L986 154 L1168 330 L956 510 L720 474 L760 342 L860 116 L1118 126 L1206 214 L1220 452 L1104 548 L826 574" stroke="#E6E6E6" stroke-width="1.5" fill="none"/>
+  <path d="M760 342 L986 154 L956 510 M860 116 L1168 330 L826 574 M1118 126 L1104 548 M720 474 L1206 214" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.86" fill="none"/>
+  <circle cx="762" cy="164" r="5" fill="#999999" fill-opacity="0.44"/>
+  <circle cx="860" cy="116" r="6" fill="#EE0033" fill-opacity="0.36"/>
+  <circle cx="986" cy="154" r="5" fill="#999999" fill-opacity="0.44"/>
+  <circle cx="1118" cy="126" r="7" fill="#EE0033" fill-opacity="0.34"/>
+  <circle cx="1206" cy="214" r="5" fill="#999999" fill-opacity="0.44"/>
+  <circle cx="1168" cy="330" r="7" fill="#EE0033" fill-opacity="0.38"/>
+  <circle cx="1220" cy="452" r="5" fill="#999999" fill-opacity="0.44"/>
+  <circle cx="1104" cy="548" r="6" fill="#EE0033" fill-opacity="0.32"/>
+  <circle cx="956" cy="510" r="5" fill="#999999" fill-opacity="0.44"/>
+  <circle cx="826" cy="574" r="5" fill="#999999" fill-opacity="0.44"/>
+  <circle cx="720" cy="474" r="6" fill="#EE0033" fill-opacity="0.3"/>
+  <circle cx="760" cy="342" r="5" fill="#999999" fill-opacity="0.44"/>
+</svg>

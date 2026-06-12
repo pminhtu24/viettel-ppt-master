@@ -1,0 +1,16 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_split_panel_right">
+  <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+  <rect x="872" y="112" width="336" height="528" rx="12" fill="#F2F2F2" stroke="#E6E6E6" stroke-width="1"/>
+  <rect x="872" y="112" width="336" height="6" rx="3" fill="#EE0033"/>
+  <rect x="908" y="162" width="68" height="6" rx="3" fill="#EE0033" fill-opacity="0.46"/>
+  <rect x="908" y="202" width="236" height="3" rx="1.5" fill="#E6E6E6"/>
+  <rect x="908" y="228" width="198" height="3" rx="1.5" fill="#E6E6E6"/>
+  <rect x="908" y="304" width="68" height="6" rx="3" fill="#EE0033" fill-opacity="0.36"/>
+  <rect x="908" y="344" width="236" height="3" rx="1.5" fill="#E6E6E6"/>
+  <rect x="908" y="370" width="198" height="3" rx="1.5" fill="#E6E6E6"/>
+  <rect x="72" y="132" width="760" height="486" rx="6" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="6 6"/>
+  <path d="M112 574 H792" stroke="#F2F2F2" stroke-width="1"/>
+  <path d="M112 456 H792" stroke="#F2F2F2" stroke-width="1"/>
+  <path d="M112 338 H792" stroke="#F2F2F2" stroke-width="1"/>
+  <path d="M112 220 H792" stroke="#F2F2F2" stroke-width="1"/>
+</svg>

@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "canvas": "1280x720",
+  "usage": "Optional background layers for viettel_default pages. Copy the SVG body elements underneath page chrome and content; keep logo, footer, page number, and text fit rules from the page shell.",
+  "items": [
+    {
+      "id": "bg_clean_white_rail",
+      "file": "bg_clean_white_rail.svg",
+      "category": "baseline",
+      "recommended_pages": ["cover", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "low",
+      "safe_text_zone": "x=96-980, y=140-560",
+      "description": "White reporting field with a refined Viettel left rail and small bottom accents."
+    },
+    {
+      "id": "bg_soft_gray_field",
+      "file": "bg_soft_gray_field.svg",
+      "category": "content",
+      "recommended_pages": ["content", "summary", "toc"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "low",
+      "safe_text_zone": "x=88-1040, y=132-612",
+      "description": "Soft gray content field that adds surface depth without changing the clean report feel."
+    },
+    {
+      "id": "bg_red_corner_sweep",
+      "file": "bg_red_corner_sweep.svg",
+      "category": "cover",
+      "recommended_pages": ["cover", "chapter", "ending"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "high",
+      "safe_text_zone": "x=96-820, y=150-520",
+      "description": "Bold red corner sweep for first-impression pages while preserving a calm title area."
+    },
+    {
+      "id": "bg_diagonal_brand_rail",
+      "file": "bg_diagonal_brand_rail.svg",
+      "category": "brand",
+      "recommended_pages": ["cover", "content", "chapter"],
+      "rhythm": ["anchor", "dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-1040, y=130-590",
+      "description": "Diagonal red and gray rails that make plain pages feel more designed."
+    },
+    {
+      "id": "bg_network_texture_light",
+      "file": "bg_network_texture_light.svg",
+      "category": "telecom",
+      "recommended_pages": ["cover", "chapter", "breathing"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-820, y=150-560",
+      "description": "Light telecom network texture with subdued gray links and small red signal points."
+    },
+    {
+      "id": "bg_signal_arc",
+      "file": "bg_signal_arc.svg",
+      "category": "telecom",
+      "recommended_pages": ["chapter", "breathing", "ending"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-920, y=140-560",
+      "description": "Signal arcs from the page edges, useful for transition and connectivity slides."
+    },
+    {
+      "id": "bg_data_pulse",
+      "file": "bg_data_pulse.svg",
+      "category": "data",
+      "recommended_pages": ["content", "dashboard", "summary"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=88-1030, y=132-610",
+      "description": "Subtle data-pulse lines and nodes that support analytics stories without becoming a chart."
+    },
+    {
+      "id": "bg_technical_grid",
+      "file": "bg_technical_grid.svg",
+      "category": "technical",
+      "recommended_pages": ["chart", "architecture", "technical"],
+      "rhythm": ["dense"],
+      "intensity": "low",
+      "safe_text_zone": "x=72-1208, y=132-618",
+      "description": "Precise technical grid for architecture or system slides."
+    },
+    {
+      "id": "bg_chart_quiet_grid",
+      "file": "bg_chart_quiet_grid.svg",
+      "category": "chart",
+      "recommended_pages": ["chart", "dashboard", "table"],
+      "rhythm": ["dense"],
+      "intensity": "very-low",
+      "safe_text_zone": "x=72-1208, y=132-618",
+      "description": "Nearly white chart-friendly grid calibrated for dense data pages."
+    },
+    {
+      "id": "bg_kpi_band",
+      "file": "bg_kpi_band.svg",
+      "category": "kpi",
+      "recommended_pages": ["kpi", "executive-summary", "dashboard"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=88-1050, y=132-560",
+      "description": "Low bottom band and small accent tiles to support KPI storytelling."
+    },
+    {
+      "id": "bg_split_panel_left",
+      "file": "bg_split_panel_left.svg",
+      "category": "split",
+      "recommended_pages": ["image-text", "case-study", "comparison"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=620-1160, y=132-610",
+      "description": "Left visual panel with open right field for text, charts, or commentary."
+    },
+    {
+      "id": "bg_split_panel_right",
+      "file": "bg_split_panel_right.svg",
+      "category": "split",
+      "recommended_pages": ["chart-notes", "summary", "comparison"],
+      "rhythm": ["dense"],
+      "intensity": "medium",
+      "safe_text_zone": "x=80-830, y=132-610",
+      "description": "Right insight panel with a larger open field on the left."
+    },
+    {
+      "id": "bg_topographic_lines",
+      "file": "bg_topographic_lines.svg",
+      "category": "strategy",
+      "recommended_pages": ["strategy", "market", "breathing"],
+      "rhythm": ["breathing", "dense"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-850, y=140-560",
+      "description": "Contour-line atmosphere for strategy, market landscape, and planning pages."
+    },
+    {
+      "id": "bg_growth_path",
+      "file": "bg_growth_path.svg",
+      "category": "roadmap",
+      "recommended_pages": ["roadmap", "timeline", "strategy"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=88-1040, y=132-560",
+      "description": "A light growth path with milestones, useful under roadmap or initiative content."
+    },
+    {
+      "id": "bg_orbit_nodes",
+      "file": "bg_orbit_nodes.svg",
+      "category": "ecosystem",
+      "recommended_pages": ["ecosystem", "platform", "ai-ops"],
+      "rhythm": ["breathing", "dense"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-780, y=140-560",
+      "description": "Orbiting node system for platform, partner ecosystem, and AI operating model pages."
+    },
+    {
+      "id": "bg_map_mesh",
+      "file": "bg_map_mesh.svg",
+      "category": "coverage",
+      "recommended_pages": ["market", "coverage", "operations"],
+      "rhythm": ["dense", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-860, y=140-560",
+      "description": "Abstract coverage mesh, deliberately not a literal geographic map."
+    },
+    {
+      "id": "bg_chapter_watermark_field",
+      "file": "bg_chapter_watermark_field.svg",
+      "category": "chapter",
+      "recommended_pages": ["chapter", "section-divider"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "high",
+      "safe_text_zone": "x=96-820, y=190-500",
+      "description": "Geometric watermark field for stronger chapter dividers without embedded text."
+    },
+    {
+      "id": "bg_closing_focus",
+      "file": "bg_closing_focus.svg",
+      "category": "ending",
+      "recommended_pages": ["ending", "closing", "thank-you"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=116-900, y=170-500",
+      "description": "Focused closing background with subtle red glow and quiet gray structure."
+    }
+  ]
+}

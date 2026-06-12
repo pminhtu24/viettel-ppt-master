@@ -1,0 +1,18 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_red_corner_sweep">
+  <defs>
+    <linearGradient id="redCornerSweep" x1="100%" y1="100%" x2="18%" y2="10%">
+      <stop offset="0%" stop-color="#EE0033"/>
+      <stop offset="100%" stop-color="#EE0033" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+  <path d="M1280 0 V720 H846 C948 642 1034 548 1104 438 C1190 304 1234 166 1280 0 Z" fill="url(#redCornerSweep)"/>
+  <path d="M1280 462 C1188 528 1112 590 1050 720 H1280 Z" fill="#EE0033" fill-opacity="0.88"/>
+  <path d="M932 82 C1042 120 1118 190 1164 292" stroke="#EE0033" stroke-width="3" stroke-opacity="0.16" fill="none"/>
+  <path d="M882 126 C996 170 1066 244 1108 346" stroke="#EE0033" stroke-width="2" stroke-opacity="0.12" fill="none"/>
+  <circle cx="1140" cy="188" r="94" fill="#FFFFFF" fill-opacity="0.24"/>
+  <circle cx="1200" cy="612" r="8" fill="#FFFFFF" fill-opacity="0.84"/>
+  <circle cx="1168" cy="636" r="5" fill="#FFFFFF" fill-opacity="0.72"/>
+  <rect x="0" y="0" width="18" height="720" fill="#EE0033"/>
+  <rect x="18" y="0" width="6" height="720" fill="#E6E6E6"/>
+</svg>

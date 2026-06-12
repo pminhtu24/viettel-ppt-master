@@ -549,6 +549,39 @@ The font bundle lives in `templates/layouts/viettel_default/fonts/`. During proj
 
 > Do not borrow non-Viettel brand imagery from other templates. If no official asset is supplied, keep the shell vector-only and light.
 
+### Optional Background Library
+
+The template ships an optional background layer library in `backgrounds/`.
+These SVGs are **not standalone slide shells**: they contain only background and
+decorative elements, with no logo, footer, page number, placeholders, or text.
+Use them underneath the normal Viettel shell chrome when a plain white page feels
+too quiet.
+
+| Asset | Purpose | Runtime Path |
+| --- | --- | --- |
+| `backgrounds/backgrounds_index.json` | Lookup table for page-role, rhythm, intensity, and safe text zone | `templates/backgrounds/backgrounds_index.json` |
+| `backgrounds/bg_*.svg` | Optional full-canvas background layers | `templates/backgrounds/<id>.svg` |
+
+**Selection guide**:
+
+| Page need | Preferred backgrounds |
+| --- | --- |
+| Baseline / safe corporate page | `bg_clean_white_rail`, `bg_soft_gray_field` |
+| Cover / ending with stronger brand presence | `bg_red_corner_sweep`, `bg_closing_focus` |
+| Chapter / section transition | `bg_chapter_watermark_field`, `bg_signal_arc`, `bg_network_texture_light` |
+| Dense chart / dashboard | `bg_chart_quiet_grid`, `bg_technical_grid`, `bg_split_panel_right` |
+| KPI / executive summary | `bg_kpi_band`, `bg_data_pulse` |
+| Strategy / roadmap / ecosystem | `bg_topographic_lines`, `bg_growth_path`, `bg_orbit_nodes`, `bg_map_mesh` |
+| Image-text / case-study split | `bg_split_panel_left`, `bg_split_panel_right` |
+
+**Usage rules**:
+
+1. Read `templates/backgrounds/backgrounds_index.json` before selecting a background.
+2. Copy the selected SVG's body elements below page chrome and content; do not treat it as a page layout.
+3. Keep Viettel logo, footer, page number, title safe area, and text-fit rules from the shell page.
+4. Use high-intensity backgrounds only on cover, chapter, ending, or true breathing pages.
+5. Do not recolor backgrounds outside the approved Viettel palette. Deep blue remains forbidden for background/decorative layers.
+
 ---
 
 ## IX. Chart Specifications
@@ -634,20 +667,21 @@ The font bundle lives in `templates/layouts/viettel_default/fonts/`. During proj
 
 1. **Copy template files** to project `templates/` directory before starting generation
 2. **Copy `viettel-logo.png`** to project `images/` directory
-3. **Select page types** based on content structure:
+3. **Optional**: use `templates/backgrounds/backgrounds_index.json` to pick a background layer when a page needs more visual atmosphere
+4. **Select page types** based on content structure:
    - Use `01_cover.svg` for opening slide
    - Use `02_toc.svg` for table of contents (supports 5 items)
    - Use `02_chapter.svg` for section dividers
    - Use `03_content.svg` as the main content shell
    - Use `03c_content_chart.svg` for chart-library pages that need an insights panel
    - Use `04_ending.svg` for closing slide
-4. **For chart/KPI/table/flow pages**, select a matching `templates/charts/` template and write the page into `spec_lock.md ## page_charts`
-5. **Replace placeholders** with actual content (remove `{{CONTENT_AREA}}` after filling)
-6. **Apply brand chrome** during post-processing if generating charts/pages without template shell:
+5. **For chart/KPI/table/flow pages**, select a matching `templates/charts/` template and write the page into `spec_lock.md ## page_charts`
+6. **Replace placeholders** with actual content (remove `{{CONTENT_AREA}}` after filling)
+7. **Apply brand chrome** during post-processing if generating charts/pages without template shell:
    ```bash
    python3 scripts/finalize_svg.py <project_path> --brand-chrome viettel --strip-comments
    ```
-7. **Export to PPTX** after all content is filled:
+8. **Export to PPTX** after all content is filled:
    ```bash
    python3 scripts/svg_to_pptx.py <project_path>
    ```

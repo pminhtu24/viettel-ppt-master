@@ -1,0 +1,13 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_technical_grid">
+  <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+  <rect x="72" y="132" width="1136" height="486" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1"/>
+  <path d="M72 213 H1208 M72 294 H1208 M72 375 H1208 M72 456 H1208 M72 537 H1208" stroke="#F2F2F2" stroke-width="1"/>
+  <path d="M214 132 V618 M356 132 V618 M498 132 V618 M640 132 V618 M782 132 V618 M924 132 V618 M1066 132 V618" stroke="#F2F2F2" stroke-width="1"/>
+  <path d="M72 132 H1208" stroke="#EE0033" stroke-width="2" stroke-opacity="0.34"/>
+  <rect x="72" y="132" width="46" height="4" fill="#EE0033"/>
+  <rect x="118" y="132" width="70" height="4" fill="#E6E6E6"/>
+  <circle cx="214" cy="213" r="3" fill="#EE0033" fill-opacity="0.46"/>
+  <circle cx="640" cy="375" r="3" fill="#EE0033" fill-opacity="0.42"/>
+  <circle cx="1066" cy="537" r="3" fill="#EE0033" fill-opacity="0.38"/>
+  <path d="M72 618 H1208" stroke="#E6E6E6" stroke-width="1"/>
+</svg>

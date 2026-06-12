@@ -79,6 +79,22 @@ Before generating each page, output which template is used:
 - **Content pages**: template defines only header/footer; content area is free
 - **No template inheritance**: for `viettel_default`, compose content freely inside the Viettel brand contract; for `custom_override`, generate entirely per the Design Spec
 
+### Optional Viettel Background Layers
+
+For `viettel_default`, the template may include optional background SVGs at
+`templates/backgrounds/`. These files are decorative layers, not page layouts.
+Use them only when the Design Spec, page brief, or template guidance explicitly
+calls for more atmosphere than the plain white shell.
+
+Rules:
+
+- Read `templates/backgrounds/backgrounds_index.json` once before selecting a background.
+- Read only the selected `templates/backgrounds/<id>.svg` files; do not glob-read the whole folder.
+- Copy the selected background SVG's body elements near the top of the output SVG, under the shell chrome and all content. Do not copy it as the entire page.
+- Keep the normal Viettel logo, top accent/rail, footer, page number, title safe area, and text-fit rules.
+- High-intensity backgrounds are reserved for cover, chapter, ending, and `breathing` pages. Dense chart/table pages should use low-intensity options such as `bg_chart_quiet_grid`, `bg_technical_grid`, or no background.
+- Deep blue `#12436D` remains forbidden for background/decorative layers.
+
 ---
 
 ## 2. Design Parameter Confirmation (Mandatory Step)

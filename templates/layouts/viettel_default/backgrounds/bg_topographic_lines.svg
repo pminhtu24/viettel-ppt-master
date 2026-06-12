@@ -1,0 +1,13 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_topographic_lines">
+  <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+  <path d="M748 102 C856 66 982 82 1074 158 C1162 230 1210 330 1216 452" stroke="#E6E6E6" stroke-width="2" fill="none"/>
+  <path d="M786 154 C876 124 982 138 1058 202 C1130 262 1168 344 1172 444" stroke="#E6E6E6" stroke-width="2" fill="none"/>
+  <path d="M824 208 C896 186 978 198 1040 248 C1098 296 1128 362 1130 438" stroke="#E6E6E6" stroke-width="2" fill="none"/>
+  <path d="M862 264 C914 248 974 256 1022 294 C1066 330 1088 378 1088 432" stroke="#F2F2F2" stroke-width="2" fill="none"/>
+  <path d="M902 320 C934 310 972 316 1002 340 C1030 364 1044 396 1042 430" stroke="#EE0033" stroke-width="2" stroke-opacity="0.22" fill="none"/>
+  <path d="M56 584 C160 536 244 544 332 612" stroke="#E6E6E6" stroke-width="2" fill="none"/>
+  <path d="M38 640 C160 588 270 596 384 674" stroke="#F2F2F2" stroke-width="2" fill="none"/>
+  <circle cx="1002" cy="340" r="5" fill="#EE0033" fill-opacity="0.36"/>
+  <rect x="0" y="0" width="18" height="720" fill="#EE0033"/>
+  <rect x="18" y="0" width="6" height="720" fill="#E6E6E6"/>
+</svg>
