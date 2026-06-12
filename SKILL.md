@@ -1,13 +1,8 @@
 ---
 name: viettel-ppt-master
 description: >
-  AI-driven multi-format SVG content generation system for Viettel-branded
-  presentations. Converts source documents (PDF/DOCX/URL/Markdown) into
-  high-quality SVG pages and exports to PPTX through multi-role collaboration,
-  prioritizing corporate-grade design, Viettel brand consistency, clean layouts,
-  data storytelling, and executive-ready slide visuals. Use when user asks to
-  "create PPT", "make presentation", "PPT", "deck slide", or mentions
-  "viettel-ppt-master".
+  Viettel-branded presentation generation workflow that turns source materials
+  (PDF, DOCX, URLs, Markdown) into polished SVG slides and PPTX decks through multi-role collaboration,prioritizing corporate-grade design, Viettel brand consistency, clean layouts,data storytelling, and executive-ready slide visuals. Use when user asks to "create PPT", "make presentation", "PPT", "deck slide", or mentions "viettel-ppt-master".
 ---
 
 # PPT Master Skill
