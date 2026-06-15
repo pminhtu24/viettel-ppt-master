@@ -169,6 +169,27 @@
 | **Figure-text overlap** | Hero moments — headline / big number sits over or against an image edge instead of beside it |
 | **Negative-space-driven** | A single element in 40-60% whitespace — lets one idea land with weight |
 
+### Section Divider Planning (viettel_default)
+
+> Section dividers are the primary place for Viettel decorative backgrounds.
+> Strategist should create them from source structure when the deck has real
+> narrative breaks, not only when the user explicitly asks.
+
+Create a section/chapter divider when:
+
+- the source has major headings or numbered parts;
+- the deck has 8+ planned slides and naturally splits into at least 2 narrative blocks;
+- the story changes mode (context → current state, problem → solution, analysis → recommendation, roadmap → conclusion);
+- a dense sequence of 3-5 content slides needs a clear transition before the next topic.
+
+Rules:
+
+- The divider must have an independent title and optionally one short subtitle; it is not a blank decorative slide.
+- For 8-12 slide decks, target 1-3 dividers excluding cover/ending when the source supports them.
+- For 13+ slide decks, target 2-5 dividers when the source supports them.
+- Mark true chapter/section openers as `anchor`; mark standalone transition/emphasis pages as `breathing`.
+- Only section-like pages may appear in `page_backgrounds`; dense content, chart, KPI, and table pages must omit backgrounds.
+
 ### Spacing Specification
 
 > Spacing defaults depend on **container type**. Cards are one option, not the universal default. Tables below split by container type; a page may consult only one set (e.g., a `breathing` page with no cards uses only universal + non-card entries).

@@ -33,6 +33,7 @@ description: >
 >
 > - **Response language**: match the user's input and source materials. Explicit user override takes precedence.
 > - **Template format**: `design_spec.md` MUST follow its original English template structure (section headings, field names) regardless of conversation language. Content values may be in the user's language.
+> - **Viettel section rhythm**: when a Viettel deck has clear source headings or 8+ slides with multiple narrative blocks, Strategist should create meaningful section dividers from the source structure. These are the only normal pages that receive decorative backgrounds; dense content/chart/KPI/table pages keep the clean Viettel shell.
 
 > [!IMPORTANT]
 >

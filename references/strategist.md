@@ -653,6 +653,40 @@ Viettel templates are brand shells. The Strategist may adapt content composition
 
 ---
 
+## 5.1 Section Divider Planning
+
+For `viettel_default`, section dividers are the intended place for expressive
+backgrounds. Strategist should create them from the source structure, not wait
+for the user to explicitly request them.
+
+Create a section/chapter divider when one of these triggers is present:
+
+- The source has major headings or numbered parts (`I`, `II`, `III`, `Part`,
+  `Chapter`, `Section`, large H1/H2 clusters).
+- The deck has 8+ planned slides and naturally splits into at least 2 distinct
+  narrative blocks.
+- The story changes mode, such as context -> current state, problem -> solution,
+  analysis -> recommendation, solution -> roadmap, roadmap -> conclusion.
+- A dense sequence of 3-5 content slides needs a clear transition before the
+  next topic.
+
+Divider rules:
+
+- A divider must have an independent title and optionally one short subtitle;
+  it is not a blank decorative slide.
+- Do not create a divider before every small subsection; use one per major
+  narrative block.
+- For decks with 8-12 slides, target 1-3 dividers excluding cover/ending when
+  the source structure supports them.
+- For decks with 13+ slides, target 2-5 dividers when the source structure
+  supports them.
+- Mark true chapter/section openers as `anchor`; mark standalone transition or
+  emphasis pages as `breathing`.
+- Only these section-like pages may appear in `page_backgrounds`; dense content,
+  chart, KPI, and table pages must not.
+
+---
+
 ## 6. Workflow & Deliverables
 
 ### 6.1 Content Planning Strategy
@@ -686,7 +720,7 @@ Viettel templates are brand shells. The Strategist may adapt content composition
 4. **Generate execution lock**: read `templates/spec_lock_reference.md` and produce `projects/<project_name>.../spec_lock.md` — a distilled, machine-readable short form of the brand / color / typography / icon / image / **page_rhythm** / optional **page_backgrounds** / **page_layouts** / **page_charts** decisions above. This file is what the Executor re-reads before every page (see [executor-base.md](executor-base.md) §2.1). The values in `spec_lock.md` MUST exactly match the decisions recorded in `design_spec.md`; if they ever diverge, `spec_lock.md` wins and `design_spec.md` should be treated as historical narrative.
    - **brand is mandatory**: normal runs write `profile: viettel_default` and `deep_blue_scope: chart_diagram_icon_only`. Write `profile: custom_override` only after an explicit hard non-Viettel request and record the reason in `design_spec.md`.
    - **page_rhythm is mandatory**: Based on the page list in §IX Content Outline, assign each page one of `anchor` / `dense` / `breathing` (see `spec_lock_reference.md` for the full vocabulary). This is what breaks the uniform "every page is a card grid" feel — without it the Executor defaults all pages to `dense`.
-   - **Rhythm follows narrative, not quota**: `breathing` pages mark natural pauses — chapter transitions, standalone emphasis (hero quote / big number), SCQA bridges. Dense decks may legitimately be all `dense`. **Do NOT invent filler pages** ("Thank you", empty dividers) to pad rhythm — every `breathing` page must say something independent.
+   - **Rhythm follows narrative, not quota**: `breathing` pages mark natural pauses — chapter transitions, standalone emphasis (hero quote / big number), SCQA bridges. For Viettel decks with clear major headings or 8+ slides, proactively create meaningful section dividers from the source structure (see §5.1). Dense decks may still be all `dense` only when the source has no real narrative break. **Do NOT invent filler pages** ("Thank you", empty dividers) to pad rhythm — every `breathing` page must say something independent.
    - **page_backgrounds is section-only for Viettel**: For `brand.profile: viettel_default`, read `templates/backgrounds/backgrounds_index.json` and assign background ids only to cover, chapter, section-divider, ending, and low-content `breathing` pages in §IX. Dense content, chart, KPI, and table pages MUST NOT appear in `page_backgrounds`; they use the clean Viettel shell.
    - **Soft background rule**: Backgrounds must help foreground content stand out. Prefer pale surfaces, low-opacity marks, broad shapes, and gradient-like fades. Do not request SVG blur/filter effects; they are not PPTX-safe.
    - **page_layouts (write only when a layout SVG is inherited)**: For each page that inherits a template SVG, add `P<NN>: <svg_basename>` (e.g., `P04: 03a_content_image_text`). Pages using adaptive Viettel composition get **no entry**; absence means "no layout inheritance", not "no Viettel brand". If zero pages inherit a layout SVG, omit the section entirely.
