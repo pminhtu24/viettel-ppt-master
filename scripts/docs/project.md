@@ -19,11 +19,12 @@ Notes:
 - Project creation is locked to PPT 16:9.
 - `viettel_default` is the default brand profile and automatically installs the Viettel SVG shell, logo, and bundled fonts.
 - Use `--brand-profile custom_override` only for an explicit hard non-Viettel request.
-- Files outside the repo are copied into `sources/` by default
-- With `--move`, files outside the repo are moved into `sources/`
-- Files already inside the repo are moved into `sources/` by default (with a stderr
-  note), to avoid leaving unintended artifacts that could be committed by mistake.
-  Pass `--copy` to force a copy for in-repo sources instead.
+- Default behavior (no flag passed) automatically chooses the safe transfer mode:
+  - **Binary source files** (PDF, DOCX, PPTX, images) outside the repo are **copied** into `sources/` (original preserved).
+  - **Derived `.md` files** (e.g. from Step 1) are always **moved** into `sources/` (temp artifacts cleaned up).
+  - Any file located inside the repository is **moved** to avoid accidental git commits.
+- Pass `--move` to force-move all files regardless of location or type.
+- Pass `--copy` to force-copy all files (overrides the `.md` auto-move behavior).
 - `--move` and `--copy` are mutually exclusive.
 
 Supported format for this skill:

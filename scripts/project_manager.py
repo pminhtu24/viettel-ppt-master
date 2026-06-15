@@ -823,9 +823,16 @@ class ProjectManager:
                 summary["skipped"].append(f"{item}: directories are not supported")
                 continue
 
-            if copy:
+            suffix = source_path.suffix.lower()
+
+            if move:
+                effective_move = True
+            elif copy:
+                # --copy force-copies all files regardless of type or location.
                 effective_move = False
-            elif move:
+            elif suffix in {".md", ".markdown"}:
+                # Derived markdown artifacts are never the original source file:
+                # always move into sources/ to clean up, regardless of location.
                 effective_move = True
             elif is_within_path(source_path, REPO_ROOT):
                 effective_move = True
@@ -836,7 +843,6 @@ class ProjectManager:
                 )
             else:
                 effective_move = False
-            suffix = source_path.suffix.lower()
 
             if suffix in {".md", ".markdown"}:
                 duplicate_markdown = self._find_equivalent_markdown(source_path, sources_dir)
