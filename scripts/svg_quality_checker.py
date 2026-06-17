@@ -66,6 +66,31 @@ VIETTEL_ALLOWED_COLORS = {
     "#F46A25",
     "#FFFFFF",
 }
+NON_RENDER_TAGS = {
+    "defs",
+    "title",
+    "desc",
+    "metadata",
+    "linearGradient",
+    "radialGradient",
+    "stop",
+    "filter",
+    "clipPath",
+    "marker",
+}
+VISIBLE_PRIMITIVE_TAGS = {
+    "circle",
+    "ellipse",
+    "image",
+    "line",
+    "path",
+    "polygon",
+    "polyline",
+    "rect",
+    "text",
+    "use",
+}
+WHITE_FILLS = {"#FFFFFF", "#FFF", "WHITE", "RGB(255,255,255)"}
 
 # Ramp envelope for font-size drift detection.
 # From design_spec_reference.md §IV — Font Size Hierarchy: the ramp spans
@@ -330,6 +355,7 @@ class SVGQualityChecker:
 
                 # 4. Check width/height consistency with viewBox
                 self._check_dimensions(content, result)
+                self._check_full_canvas_white_rect_order(content, result)
 
                 # 5. Check text wrapping methods
                 self._check_text_elements(content, result)
@@ -591,6 +617,116 @@ class SVGQualityChecker:
                             f"width/height ({width}x{height}) does not match viewBox "
                             f"({vb_width}x{vb_height})"
                         )
+
+    def _check_full_canvas_white_rect_order(self, content: str, result: Dict):
+        """Catch late full-slide white rectangles that erase backgrounds.
+
+        Viettel layout and background reference SVGs are allowed to contain a
+        white base rectangle for standalone preview. In generated pages,
+        however, that base must be a single first visible primitive. A second
+        or late full-canvas opaque white rect usually means the Executor pasted
+        a template/background body after the decorative background layer, which
+        leaves slide content visible but blanks the custom background.
+        """
+        try:
+            root = ET.fromstring(content)
+        except ET.ParseError:
+            return
+
+        canvas = self._canvas_size_from_svg(root)
+        if not canvas:
+            return
+        canvas_w, canvas_h = canvas
+
+        visible_index = 0
+        white_rect_positions: List[int] = []
+
+        def visit(elem: ET.Element):
+            nonlocal visible_index
+            tag = _local_name(elem.tag)
+            if tag in NON_RENDER_TAGS:
+                return
+
+            if tag in VISIBLE_PRIMITIVE_TAGS:
+                if tag != "g":
+                    visible_index += 1
+                    if self._is_opaque_full_canvas_white_rect(elem, canvas_w, canvas_h):
+                        white_rect_positions.append(visible_index)
+
+            for child in list(elem):
+                visit(child)
+
+        for child in list(root):
+            visit(child)
+
+        if not white_rect_positions:
+            return
+        if len(white_rect_positions) > 1:
+            result['errors'].append(
+                "Full-canvas white rectangle layering violation: found "
+                f"{len(white_rect_positions)} opaque white page-size rects "
+                f"({canvas_w:g}x{canvas_h:g}) "
+                f"at visible positions {white_rect_positions}. Keep exactly one "
+                "page base rect, and it must be the first visible shape before "
+                "any decorative background/content."
+            )
+        elif white_rect_positions[0] != 1:
+            result['errors'].append(
+                "Full-canvas white rectangle layering violation: the opaque "
+                f"page-size white rect is at visible position {white_rect_positions[0]}, "
+                "not first. Move the page base rect before background layers, "
+                "or omit the copied template/background white base rect."
+            )
+
+    def _canvas_size_from_svg(self, root: ET.Element) -> tuple[float, float] | None:
+        viewbox = (root.get('viewBox') or '').strip()
+        parts = [p for p in re.split(r'[\s,]+', viewbox) if p]
+        if len(parts) == 4:
+            try:
+                return float(parts[2]), float(parts[3])
+            except ValueError:
+                pass
+
+        width = (root.get('width') or '').removesuffix('px')
+        height = (root.get('height') or '').removesuffix('px')
+        try:
+            return float(width), float(height)
+        except ValueError:
+            return None
+
+    def _is_opaque_full_canvas_white_rect(
+        self,
+        elem: ET.Element,
+        canvas_w: float,
+        canvas_h: float,
+    ) -> bool:
+        if _local_name(elem.tag) != "rect":
+            return False
+        fill = (_get_svg_attr(elem, "fill") or "").strip().upper().replace(" ", "")
+        if fill not in WHITE_FILLS:
+            return False
+        if self._opacity_value(elem, "opacity") < 0.999:
+            return False
+        if self._opacity_value(elem, "fill-opacity") < 0.999:
+            return False
+
+        x = _float_attr(elem, "x", 0.0)
+        y = _float_attr(elem, "y", 0.0)
+        w = _float_attr(elem, "width", 0.0)
+        h = _float_attr(elem, "height", 0.0)
+        return (
+            abs(x) <= 0.01 and
+            abs(y) <= 0.01 and
+            abs(w - canvas_w) <= 0.01 and
+            abs(h - canvas_h) <= 0.01
+        )
+
+    def _opacity_value(self, elem: ET.Element, name: str) -> float:
+        raw = _get_svg_attr(elem, name, "1").strip()
+        try:
+            return float(raw)
+        except ValueError:
+            return 1.0
 
     def _check_text_elements(self, content: str, result: Dict):
         """Check text elements and wrapping methods"""

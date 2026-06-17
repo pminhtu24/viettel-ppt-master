@@ -138,6 +138,8 @@
 >
 > **Default Viettel policy**: only cover, chapter, section-divider, ending, and low-content breathing pages get a background layer. Dense content, chart, KPI, and table pages MUST omit `page_backgrounds` and use the standard clean Viettel shell.
 >
+> **Layering rule**: background SVGs are copied as decorative layers only. Executor must keep exactly one full-canvas opaque page base rect, placed before the background layer; omit any copied background/layout full-canvas white/base rect that would appear after the background.
+>
 > **Softening rule**: background details should be visually softened with pale fills, low opacity, wide shapes, and gradient-like fades. Do not use SVG `<filter>` / blur effects; they are not PPTX-safe. Keep sharp detail away from the main content/chart area.
 >
 > **Selection source**: read `templates/backgrounds/backgrounds_index.json`. Match by section/page role, `page_rhythm`, content topic, and `safe_text_zone`. Avoid repeating the same background on adjacent section pages when another suitable option exists.

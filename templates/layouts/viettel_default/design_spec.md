@@ -579,7 +579,7 @@ KPI, and table pages omit `page_backgrounds` and keep the clean Viettel shell.
 **Usage rules**:
 
 1. Read `templates/backgrounds/backgrounds_index.json` before selecting a background.
-2. Copy the selected SVG's body elements below page chrome and content; do not treat it as a page layout.
+2. XML order is mandatory: one page base `<rect>` first, then the selected background's decorative elements, then shell chrome/content. Do not copy the background SVG's full-canvas white/base `<rect>`, and do not paste a layout/template white base rect after the background layer.
 3. Keep Viettel logo, footer, page number, title safe area, and text-fit rules from the shell page.
 4. Use backgrounds only on cover, chapter, section-divider, ending, or true low-content breathing pages.
 5. Backgrounds are supporting atmosphere only: keep marks pale, low-opacity, and softly blended so content and charts remain dominant.

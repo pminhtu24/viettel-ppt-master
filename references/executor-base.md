@@ -93,7 +93,8 @@ Rules:
 
 - Read `templates/backgrounds/backgrounds_index.json` once during the pre-generation batch read.
 - Read only the `templates/backgrounds/<id>.svg` files listed in `spec_lock.md page_backgrounds`; if the section is absent, read no background SVGs.
-- Copy the selected background SVG's body elements near the top of the output SVG, after the base page `<rect>` and below all shell chrome and content. Do not copy it as the entire page.
+- Copy the selected background SVG's decorative body elements near the top of the output SVG, immediately after the single base page `<rect>` and before shell chrome/content. Do not copy the background SVG as the entire page, and do not copy any full-canvas opaque white/base `<rect>` from the background file.
+- When inheriting a layout SVG and applying `page_backgrounds`, the final XML order MUST be: `<defs>` if needed → one base page `<rect>` → optional decorative background layer (without its white/base rect) → template chrome/content/page elements. Never paste a layout/template full-canvas white rect after the decorative background layer.
 - Keep the normal Viettel logo, top accent/rail, footer, page number, title safe area, and text-fit rules.
 - Backgrounds are reserved for cover, chapter, section-divider, ending, and low-content `breathing` pages. Dense content, chart, KPI, and table pages should omit `page_backgrounds` and use the clean Viettel shell.
 - Treat backgrounds as supporting atmosphere: if background marks compete with content, reduce opacity, cover them with a pale content surface, or switch to a lower-intensity background. Do not use SVG `<filter>` / blur effects; simulate softness with pale fills, broad geometry, gradients, and low opacity.
@@ -148,16 +149,16 @@ Before drawing each Viettel page, look up its optional entry in
 `page_backgrounds` (key format `P<NN>` matching §IX of `design_spec.md`) and
 apply a background layer only when an entry exists:
 
-- Entry present (e.g., `P04: bg_clean_white_rail`) → copy the corresponding background SVG body elements already loaded in §1.0 into the output SVG's background layer.
+- Entry present (e.g., `P04: bg_clean_white_rail`) → copy the corresponding background SVG decorative body elements already loaded in §1.0 into the output SVG's background layer, excluding any full-canvas opaque white/base `<rect>`.
 - Missing entry on `viettel_default` → apply no decorative background. This is expected for dense content, chart, KPI, and table pages.
 - Whole section absent on `viettel_default` → apply no decorative backgrounds. This is valid for decks with no section-like pages.
 - Entry missing from `templates/backgrounds/backgrounds_index.json` or missing file → emit `warning: page_backgrounds <P<NN>> references missing background <id> — skipping decorative background`.
 - Under `custom_override`, ignore `page_backgrounds` unless the custom template explicitly defines its own background library.
 
 Do not allow the background to own page number, logo, title text, chart marks,
-or content containers. If the background visually interferes with chart/table
-readability, switch to a lower-intensity fallback or add a white/surface content
-panel above it.
+content containers, or the page's opaque base fill. If the background visually
+interferes with chart/table readability, switch to a lower-intensity fallback
+or add a white/surface content panel above it.
 
 ### 2.2 Text Fit Contract (Mandatory)
 

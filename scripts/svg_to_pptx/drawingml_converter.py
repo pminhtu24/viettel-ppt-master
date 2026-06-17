@@ -365,6 +365,83 @@ def _local_tag(elem: ET.Element) -> str:
     return elem.tag.split('}', 1)[-1] if isinstance(elem.tag, str) and '}' in elem.tag else str(elem.tag)
 
 
+def _style_attr(elem: ET.Element, prop: str) -> str | None:
+    style = elem.get('style') or ''
+    for part in style.split(';'):
+        if ':' not in part:
+            continue
+        key, value = part.split(':', 1)
+        if key.strip() == prop:
+            return value.strip()
+    return None
+
+
+def _numeric_attr(elem: ET.Element, name: str, default: float = 0.0) -> float:
+    raw = elem.get(name)
+    if raw is None:
+        return default
+    raw = raw.strip()
+    if raw.endswith('px'):
+        raw = raw[:-2]
+    try:
+        return float(raw)
+    except ValueError:
+        return default
+
+
+def _root_canvas_size(root: ET.Element) -> tuple[float, float] | None:
+    viewbox = (root.get('viewBox') or '').strip()
+    parts = [part for part in re.split(r'[\s,]+', viewbox) if part]
+    if len(parts) == 4:
+        try:
+            return float(parts[2]), float(parts[3])
+        except ValueError:
+            pass
+
+    width = (root.get('width') or '').strip().removesuffix('px')
+    height = (root.get('height') or '').strip().removesuffix('px')
+    try:
+        return float(width), float(height)
+    except ValueError:
+        return None
+
+
+def _opacity_attr(elem: ET.Element, name: str) -> float:
+    raw = elem.get(name) or _style_attr(elem, name) or '1'
+    try:
+        return float(raw)
+    except ValueError:
+        return 1.0
+
+
+def _is_opaque_white_canvas_rect(
+    elem: ET.Element,
+    canvas_size: tuple[float, float] | None,
+) -> bool:
+    """Return True for the first SVG preview-only white page base.
+
+    Native PPTX already has a white slide background. Converting the SVG's
+    leading white base rect into a DrawingML shape leaves a selectable blank
+    page object behind every slide. Keep that rect in SVG for browser preview,
+    but skip it in native export.
+    """
+    if canvas_size is None or _local_tag(elem) != 'rect':
+        return False
+    canvas_w, canvas_h = canvas_size
+    fill = (elem.get('fill') or _style_attr(elem, 'fill') or '').strip().upper().replace(' ', '')
+    if fill not in {'#FFFFFF', '#FFF', 'WHITE', 'RGB(255,255,255)'}:
+        return False
+    if _opacity_attr(elem, 'opacity') < 0.999 or _opacity_attr(elem, 'fill-opacity') < 0.999:
+        return False
+
+    return (
+        abs(_numeric_attr(elem, 'x', 0.0)) <= 0.01
+        and abs(_numeric_attr(elem, 'y', 0.0)) <= 0.01
+        and abs(_numeric_attr(elem, 'width', 0.0) - canvas_w) <= 0.01
+        and abs(_numeric_attr(elem, 'height', 0.0) - canvas_h) <= 0.01
+    )
+
+
 def _collect_unsupported_visuals(root: ET.Element) -> list[str]:
     issues: list[str] = []
 
@@ -447,6 +524,8 @@ def convert_svg_to_slide_shapes(
     shapes: list[str] = []
     converted = 0
     skipped = 0
+    canvas_size = _root_canvas_size(root)
+    first_visible_seen = False
     # Per-element shape ids of every top-level child, used as an animation
     # fallback when no <g id="..."> groups are present at the root.
     fallback_targets: list = []
@@ -455,6 +534,12 @@ def convert_svg_to_slide_shapes(
         tag = child.tag.replace(f'{{{SVG_NS}}}', '')
         if tag == 'defs':
             continue
+        if tag not in _NON_VISUAL_TAGS:
+            if not first_visible_seen and _is_opaque_white_canvas_rect(child, canvas_size):
+                first_visible_seen = True
+                skipped += 1
+                continue
+            first_visible_seen = True
         result = convert_element(child, ctx)
         if result:
             shapes.append(result.xml)
