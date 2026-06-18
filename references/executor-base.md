@@ -221,12 +221,28 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
 - **Viettel logo clearance**: the fixed logo reserves `x=1060-1224, y=20-82`. Header/title text, subtitles, chart labels, and callouts MUST NOT enter this slot. Content-page titles should use `data-box="88,36,960,58" data-wrap="true"` or manual line breaks so long titles wrap before the logo.
 - **Viettel page number ownership**: each slide has exactly one page-number treatment. If a page inherits a Viettel shell, do not draw an additional bottom-right slide number; post-processing adds page numbers only to pages that do not already contain the shell footer/page-number treatment.
 - **Brand font runtime honesty**: if font preflight reports that the lead brand font is missing, keep the declared stack in the SVG/PPTX source but tell the user `brand fidelity degraded`. Do not rewrite the deck to hide the fallback state.
-- **Main-agent ownership**: SVG generation must run in the main agent (not sub-agents) — pages share upstream context for cross-page visual continuity
-- **Generation rhythm**: lock global design context first, then generate pages sequentially in one continuous context. No batched groups (e.g., 5 at a time).
+- **Main-agent ownership**: SVG generation must run in the main agent (not sub-agents) — pages share upstream context for cross-page visual continuity. Experimental chapter-parallel runs still forbid SubAgent SVG authorship.
+- **Generation rhythm**: lock global design context first. Default production mode is `generation_mode=serial`: generate pages sequentially in one continuous context. Experimental `generation_mode=chapter_parallel` is opt-in and must use the chapter work-package contract below; ad hoc batches (e.g., 5 at a time) are still forbidden.
 - **Phased batch generation** (recommended):
-  1. **Visual Construction Phase**: generate all SVG pages sequentially for visual consistency. Use layout judgment for chart marks during the draft. **MUST embed plot-area markers** per §3.1 below on every chart page — coordinate calibration is a post-generation step (see [`workflows/verify-charts.md`](../workflows/verify-charts.md)) that depends on these markers.
-  2. **Quality Check Gate**: run `python3 scripts/svg_quality_checker.py <project_path>` on `svg_output/`. Any `error` (banned features, viewBox mismatch, spec_lock drift, non-PPT-safe font, etc.) MUST be fixed on the offending page before proceeding — regenerate and re-check. Address `warning`s when straightforward. Do NOT defer to after `finalize_svg.py` — finalize rewrites SVG and masks some violations.
-  3. **Logic Construction Phase**: after SVGs pass the quality check, batch-generate speaker notes for narrative continuity.
+  1. **Visual Construction Phase**: generate all SVG pages sequentially for visual consistency unless `generation_mode=chapter_parallel` was explicitly selected. Use layout judgment for chart marks during the draft. **MUST embed plot-area markers** per §3.1 below on every chart page — coordinate calibration is a post-generation step (see [`workflows/verify-charts.md`](../workflows/verify-charts.md)) that depends on these markers.
+  2. **Per-page Quality Gate**: immediately after each SVG page is written, run `python3 scripts/svg_quality_checker.py <project_path>/svg_output/<page_file>.svg`. Any `error` MUST be fixed on that page before the current serial/package stream advances.
+  3. **Full Quality Check Gate**: run `python3 scripts/svg_quality_checker.py <project_path>` on `svg_output/`. Any `error` (banned features, viewBox mismatch, spec_lock drift, non-PPT-safe font, text overlap, layer-cover risk, etc.) MUST be fixed on the offending page before proceeding — regenerate and re-check. Address `warning`s when straightforward. Do NOT defer to after `finalize_svg.py` — finalize rewrites SVG and masks some violations.
+  4. **Parallel Output Gate**: only for `generation_mode=chapter_parallel`, run `python3 scripts/parallel_generation.py validate <project_path>` after all package outputs exist. Missing slides, duplicate slide numbers, out-of-order output, spec snapshot drift, or SVG quality errors block export.
+  5. **Logic Construction Phase**: after SVGs pass the quality check, batch-generate speaker notes for narrative continuity.
+
+### 3.0A Experimental Chapter-Parallel Contract
+
+Use this only when the run explicitly selects `generation_mode=chapter_parallel`.
+
+1. Run `python3 scripts/parallel_generation.py plan <project_path> --concurrency 2` after `design_spec.md`, `spec_lock.md`, and template/chart/background batch reads are complete.
+2. Treat `<project_path>/parallel_generation/spec_lock_snapshot.md`, `parallel_context.md`, `manifest.json`, and `page_contracts/Pxx.md` as the immutable generation packet.
+3. Package split:
+   - Cover, TOC/agenda, and ending pages are standalone packages.
+   - A chapter/section-divider page starts a chapter package.
+   - Content pages after a chapter opener stay inside that chapter package.
+   - Pages inside one package are generated sequentially; only separate packages may run concurrently.
+4. Each package must re-read the current `spec_lock.md` before writing its page and must cross-check against the snapshot. Any conflict means stop and regenerate the package plan.
+5. Do not script-generate SVG pages. The planner creates contracts only; SVG authoring remains hand-written.
 
 ### 3.1 Chart Plot-Area Marker (MANDATORY on every chart page)
 

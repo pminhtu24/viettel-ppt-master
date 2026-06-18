@@ -175,6 +175,45 @@ def _parse_translate(transform: str) -> tuple[float, float]:
     return float(match.group(1)), float(match.group(2) or 0.0)
 
 
+def _normalize_hex_color(value: str | None) -> str | None:
+    """Return #RRGGBB for simple HEX colors, otherwise None."""
+    if not value:
+        return None
+    raw = value.strip().upper()
+    if raw in {"NONE", "TRANSPARENT"}:
+        return None
+    match = re.fullmatch(r"#([0-9A-F]{3}|[0-9A-F]{6}|[0-9A-F]{8})", raw)
+    if not match:
+        return None
+    token = match.group(1)
+    if len(token) == 3:
+        token = "".join(ch * 2 for ch in token)
+    if len(token) == 8:
+        token = token[:6]
+    return f"#{token}"
+
+
+def _contrast_ratio(fg: str, bg: str) -> float:
+    """Compute WCAG-style contrast ratio for #RRGGBB colors."""
+    def channel(value: int) -> float:
+        c = value / 255.0
+        if c <= 0.03928:
+            return c / 12.92
+        return ((c + 0.055) / 1.055) ** 2.4
+
+    def luminance(hex_color: str) -> float:
+        r = int(hex_color[1:3], 16)
+        g = int(hex_color[3:5], 16)
+        b = int(hex_color[5:7], 16)
+        return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+
+    l1 = luminance(fg)
+    l2 = luminance(bg)
+    lighter = max(l1, l2)
+    darker = min(l1, l2)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
 def _parse_placeholders_fallback(block: str) -> Dict[str, Tuple[str, ...]]:
     """Tiny YAML-free reader for the documented ``placeholders:`` shape.
 
@@ -360,6 +399,7 @@ class SVGQualityChecker:
                 # 5. Check text wrapping methods
                 self._check_text_elements(content, result)
                 self._check_text_layout_risk(content, result)
+                self._check_visual_collision_risk(content, result)
                 self._check_viettel_brand_layout(content, svg_path, result)
 
                 # 6. Check image references (file existence and resolution)
@@ -906,6 +946,384 @@ class SVGQualityChecker:
                 f"Detected {title_intrusions} content shape(s) intruding into the title/header zone. "
                 f"Keep chart marks and content cards below the title divider or reduce chart scale."
             )
+
+    def _check_visual_collision_risk(self, content: str, result: Dict):
+        """Detect visual risks that are visible only after SVG paint ordering.
+
+        The checker intentionally stays conservative: text/text collisions and
+        later opaque shapes covering text are errors; low contrast is reported
+        as a warning so existing decks can triage it without weakening hard
+        Viettel brand gates.
+        """
+        try:
+            root = ET.fromstring(content)
+        except ET.ParseError:
+            return
+
+        texts, shapes = self._collect_visual_objects(root)
+        text_overlap_count = self._count_text_overlaps(texts)
+        cover_count = self._count_later_shape_text_covers(texts, shapes)
+        low_contrast = self._find_low_contrast_texts(texts, shapes)
+
+        if text_overlap_count:
+            result['errors'].append(
+                f"Detected {text_overlap_count} text overlap/collision risk(s): "
+                "estimated text boxes intersect. Move labels apart, reduce copy, "
+                "or add data-allow-overlap=\"true\" only for intentional overlaps."
+            )
+        if cover_count:
+            result['errors'].append(
+                f"Detected {cover_count} layer-cover risk(s): a later opaque shape/image "
+                "appears to cover text. Move the shape behind the text or mark the "
+                "intentional overlay with data-allow-cover-text=\"true\"."
+            )
+        if low_contrast:
+            examples = ", ".join(
+                f"{item['text']} ({item['ratio']:.2f}:1)" for item in low_contrast[:3]
+            )
+            suffix = "" if len(low_contrast) <= 3 else f", +{len(low_contrast) - 3} more"
+            result['warnings'].append(
+                f"Detected {len(low_contrast)} low-contrast text risk(s): {examples}{suffix}. "
+                "Use a darker/lighter approved color or adjust the background."
+            )
+
+    def _collect_visual_objects(self, root: ET.Element) -> tuple[List[Dict], List[Dict]]:
+        texts: List[Dict] = []
+        shapes: List[Dict] = []
+        order = 0
+        paint_colors = self._extract_paint_colors(root)
+
+        def visible(elem: ET.Element) -> bool:
+            display = _get_svg_attr(elem, 'display', '').strip().lower()
+            visibility = _get_svg_attr(elem, 'visibility', '').strip().lower()
+            return display != 'none' and visibility != 'hidden'
+
+        def visit(
+            elem: ET.Element,
+            tx: float = 0.0,
+            ty: float = 0.0,
+            inherited_fill: str = '#000000',
+            inherited_font_size: float = 16.0,
+            inherited_font_weight: str = '400',
+            inherited_opacity: float = 1.0,
+        ) -> None:
+            nonlocal order
+
+            tag = _local_name(elem.tag)
+            if tag in NON_RENDER_TAGS or not visible(elem):
+                return
+
+            dx, dy = _parse_translate(elem.get('transform', ''))
+            tx += dx
+            ty += dy
+
+            fill_raw = _get_svg_attr(elem, 'fill', inherited_fill)
+            fill = fill_raw if fill_raw else inherited_fill
+            font_size = _float_attr(elem, 'font-size', inherited_font_size)
+            font_weight = _get_svg_attr(elem, 'font-weight', inherited_font_weight)
+            opacity = inherited_opacity * self._opacity_value(elem, 'opacity')
+            fill_opacity = opacity * self._opacity_value(elem, 'fill-opacity')
+
+            if tag in VISIBLE_PRIMITIVE_TAGS:
+                order += 1
+
+            if tag == 'text':
+                text = ''.join(elem.itertext()).strip()
+                color = self._resolve_paint_color(fill, paint_colors) or '#000000'
+                if text and fill_opacity > 0.01:
+                    bounds = self._text_bounds_for_element(
+                        elem,
+                        text,
+                        tx,
+                        ty,
+                        font_size,
+                        font_weight,
+                    )
+                    if bounds:
+                        bounds.update({
+                            'order': order,
+                            'text': text,
+                            'fill': color,
+                            'font_size': font_size,
+                            'font_weight': font_weight,
+                            'opacity': fill_opacity,
+                            'allow_overlap': elem.get('data-allow-overlap') == 'true',
+                            'allow_low_contrast': elem.get('data-allow-low-contrast') == 'true',
+                            'allow_cover_text': elem.get('data-allow-cover-text') == 'true',
+                        })
+                        texts.append(bounds)
+            else:
+                shape = self._shape_bounds_for_element(elem, tag, tx, ty)
+                if shape:
+                    fill_color = self._resolve_paint_color(fill, paint_colors)
+                    shape.update({
+                        'order': order,
+                        'tag': tag,
+                        'fill': fill_color,
+                        'opacity': fill_opacity,
+                        'allow_cover_text': elem.get('data-allow-cover-text') == 'true',
+                    })
+                    shapes.append(shape)
+
+            for child in list(elem):
+                visit(child, tx, ty, fill, font_size, font_weight, opacity)
+
+        visit(root)
+        return texts, shapes
+
+    def _extract_paint_colors(self, root: ET.Element) -> Dict[str, str]:
+        """Resolve simple gradient ids to an average HEX color."""
+        colors: Dict[str, str] = {}
+        for elem in root.iter():
+            tag = _local_name(elem.tag)
+            if tag not in {'linearGradient', 'radialGradient'}:
+                continue
+            gradient_id = elem.get('id')
+            if not gradient_id:
+                continue
+            stops = []
+            for child in list(elem):
+                if _local_name(child.tag) != 'stop':
+                    continue
+                color = _normalize_hex_color(_get_svg_attr(child, 'stop-color', ''))
+                if color:
+                    stops.append(color)
+            if stops:
+                colors[gradient_id] = self._average_hex(stops)
+        return colors
+
+    def _resolve_paint_color(self, value: str | None, paint_colors: Dict[str, str]) -> str | None:
+        direct = _normalize_hex_color(value)
+        if direct:
+            return direct
+        if not value:
+            return None
+        match = re.fullmatch(r'url\(#([^)]+)\)', value.strip())
+        if not match:
+            return None
+        return paint_colors.get(match.group(1))
+
+    @staticmethod
+    def _average_hex(colors: List[str]) -> str:
+        channels = []
+        for color in colors:
+            channels.append((
+                int(color[1:3], 16),
+                int(color[3:5], 16),
+                int(color[5:7], 16),
+            ))
+        count = len(channels)
+        r = round(sum(item[0] for item in channels) / count)
+        g = round(sum(item[1] for item in channels) / count)
+        b = round(sum(item[2] for item in channels) / count)
+        return f"#{r:02X}{g:02X}{b:02X}"
+
+    def _text_bounds_for_element(
+        self,
+        elem: ET.Element,
+        text: str,
+        tx: float,
+        ty: float,
+        font_size: float,
+        font_weight: str,
+    ) -> Dict | None:
+        x = _float_attr(elem, 'x') + tx
+        y = _float_attr(elem, 'y') + ty
+        anchor = _get_svg_attr(elem, 'text-anchor', 'start')
+        estimated_w = _estimate_svg_text_width(text, font_size, font_weight) * 1.12
+        tspan_count = sum(
+            1 for child in elem.iter()
+            if child is not elem and _local_name(child.tag) == 'tspan'
+        )
+        estimated_h = font_size * 1.35 * max(1, tspan_count)
+
+        if anchor == 'middle':
+            box_x = x - estimated_w / 2
+        elif anchor == 'end':
+            box_x = x - estimated_w
+        else:
+            box_x = x
+        box_y = y - font_size * 0.85
+
+        data_box = elem.get('data-box')
+        if data_box:
+            parts = [p.strip() for p in re.split(r'[\s,]+', data_box) if p.strip()]
+            if len(parts) == 4:
+                try:
+                    bx, by, bw, bh = [float(p) for p in parts]
+                    box_x, box_y, estimated_w, estimated_h = bx + tx, by + ty, bw, bh
+                except ValueError:
+                    pass
+
+        if estimated_w <= 0 or estimated_h <= 0:
+            return None
+        return {
+            'x': x,
+            'y': y,
+            'x1': box_x,
+            'y1': box_y,
+            'x2': box_x + estimated_w,
+            'y2': box_y + estimated_h,
+        }
+
+    def _shape_bounds_for_element(
+        self,
+        elem: ET.Element,
+        tag: str,
+        tx: float,
+        ty: float,
+    ) -> Dict | None:
+        if tag == 'rect':
+            x = _float_attr(elem, 'x') + tx
+            y = _float_attr(elem, 'y') + ty
+            w = _float_attr(elem, 'width')
+            h = _float_attr(elem, 'height')
+        elif tag == 'circle':
+            cx = _float_attr(elem, 'cx') + tx
+            cy = _float_attr(elem, 'cy') + ty
+            r = _float_attr(elem, 'r')
+            x, y, w, h = cx - r, cy - r, r * 2, r * 2
+        elif tag == 'ellipse':
+            cx = _float_attr(elem, 'cx') + tx
+            cy = _float_attr(elem, 'cy') + ty
+            rx = _float_attr(elem, 'rx')
+            ry = _float_attr(elem, 'ry')
+            x, y, w, h = cx - rx, cy - ry, rx * 2, ry * 2
+        elif tag == 'image':
+            x = _float_attr(elem, 'x') + tx
+            y = _float_attr(elem, 'y') + ty
+            w = _float_attr(elem, 'width')
+            h = _float_attr(elem, 'height')
+        elif tag in {'polygon', 'polyline'}:
+            bounds = self._points_bounds(elem.get('points', ''), tx, ty)
+            if bounds is None:
+                return None
+            x, y, w, h = bounds
+        else:
+            return None
+
+        if w <= 0 or h <= 0:
+            return None
+        return {
+            'x': x,
+            'y': y,
+            'w': w,
+            'h': h,
+            'x1': x,
+            'y1': y,
+            'x2': x + w,
+            'y2': y + h,
+        }
+
+    def _points_bounds(self, raw_points: str, tx: float, ty: float) -> tuple[float, float, float, float] | None:
+        nums = []
+        for token in re.split(r'[\s,]+', raw_points.strip()):
+            if not token:
+                continue
+            try:
+                nums.append(float(token))
+            except ValueError:
+                return None
+        if len(nums) < 4 or len(nums) % 2 != 0:
+            return None
+        xs = [nums[i] + tx for i in range(0, len(nums), 2)]
+        ys = [nums[i] + ty for i in range(1, len(nums), 2)]
+        x1, x2 = min(xs), max(xs)
+        y1, y2 = min(ys), max(ys)
+        return x1, y1, x2 - x1, y2 - y1
+
+    def _count_text_overlaps(self, texts: List[Dict]) -> int:
+        count = 0
+        for i, first in enumerate(texts):
+            if first.get('allow_overlap'):
+                continue
+            for second in texts[i + 1:]:
+                if second.get('allow_overlap'):
+                    continue
+                if self._is_bottom_right_page_number(first) and self._is_bottom_right_page_number(second):
+                    continue
+                metrics = self._intersection_metrics(first, second)
+                if not metrics:
+                    continue
+                min_w = max(1.0, min(first['x2'] - first['x1'], second['x2'] - second['x1']))
+                min_h = max(1.0, min(first['y2'] - first['y1'], second['y2'] - second['y1']))
+                if metrics['w'] >= min(24.0, min_w * 0.25) and metrics['h'] >= min(10.0, min_h * 0.35):
+                    count += 1
+        return count
+
+    def _count_later_shape_text_covers(self, texts: List[Dict], shapes: List[Dict]) -> int:
+        count = 0
+        for text in texts:
+            if text.get('allow_cover_text'):
+                continue
+            text_area = max(1.0, (text['x2'] - text['x1']) * (text['y2'] - text['y1']))
+            for shape in shapes:
+                if shape['order'] <= text['order'] or shape.get('allow_cover_text'):
+                    continue
+                if shape['tag'] != 'image' and not shape.get('fill'):
+                    continue
+                if shape.get('opacity', 1.0) < 0.75:
+                    continue
+                metrics = self._intersection_metrics(text, shape)
+                if not metrics:
+                    continue
+                text_h = max(1.0, text['y2'] - text['y1'])
+                if metrics['area'] / text_area >= 0.25 and metrics['h'] >= min(14.0, text_h * 0.45):
+                    count += 1
+                    break
+        return count
+
+    def _find_low_contrast_texts(self, texts: List[Dict], shapes: List[Dict]) -> List[Dict]:
+        risks: List[Dict] = []
+        for text in texts:
+            if text.get('allow_low_contrast') or self._is_bottom_right_page_number(text):
+                continue
+            if text.get('font_size', 16.0) <= 12:
+                continue
+            fg = text.get('fill')
+            if not fg:
+                continue
+            bg = self._background_fill_for_text(text, shapes) or '#FFFFFF'
+            ratio = _contrast_ratio(fg, bg)
+            if ratio < 3.0:
+                risks.append({
+                    'text': self._short_text(text.get('text', '')),
+                    'ratio': ratio,
+                })
+        return risks
+
+    def _background_fill_for_text(self, text: Dict, shapes: List[Dict]) -> str | None:
+        cx = (text['x1'] + text['x2']) / 2
+        cy = (text['y1'] + text['y2']) / 2
+        candidates = []
+        for shape in shapes:
+            if shape['order'] >= text['order']:
+                continue
+            fill = shape.get('fill')
+            if not fill or shape.get('opacity', 1.0) < 0.25:
+                continue
+            if shape['x1'] <= cx <= shape['x2'] and shape['y1'] <= cy <= shape['y2']:
+                candidates.append(shape)
+        if not candidates:
+            return None
+        candidates.sort(key=lambda item: item['order'], reverse=True)
+        return candidates[0].get('fill')
+
+    def _intersection_metrics(self, a: Dict, b: Dict) -> Dict | None:
+        x1 = max(a['x1'], b['x1'])
+        y1 = max(a['y1'], b['y1'])
+        x2 = min(a['x2'], b['x2'])
+        y2 = min(a['y2'], b['y2'])
+        if x2 <= x1 or y2 <= y1:
+            return None
+        return {'w': x2 - x1, 'h': y2 - y1, 'area': (x2 - x1) * (y2 - y1)}
+
+    @staticmethod
+    def _short_text(text: str) -> str:
+        text = re.sub(r'\s+', ' ', text).strip()
+        if len(text) <= 36:
+            return text
+        return text[:33].rstrip() + "..."
 
     def _find_text_container(self, text: Dict, containers: List[Dict]) -> Dict | None:
         """Return the smallest container containing a text anchor point."""
@@ -1497,6 +1915,10 @@ class SVGQualityChecker:
             return 'Font issues'
         elif 'text layout overflow' in error_msg.lower() or 'wrap contract' in error_msg.lower():
             return 'Text layout overflow'
+        elif 'text overlap/collision' in error_msg.lower():
+            return 'Text overlap'
+        elif 'layer-cover risk' in error_msg.lower():
+            return 'Layer covering text'
         elif 'title/header zone' in error_msg.lower():
             return 'Title zone intrusion'
         else:
@@ -1859,6 +2281,7 @@ class SVGQualityChecker:
             print(f"  2. viewBox issues: Ensure consistency with canvas format (see references/canvas-formats.md)")
             print(f"  3. foreignObject: Use separate <text> lines or data-box/data-wrap")
             print(f"  4. Font issues: end every font-family stack with a PPT-safe family (e.g. Microsoft YaHei / Arial / Consolas)")
+            print(f"  5. Visual collisions: move overlapping text apart and keep opaque shapes/images behind text")
 
     def _print_animation_summary(self):
         """Print animations.json validation issues if present."""
