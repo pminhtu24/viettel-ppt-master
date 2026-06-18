@@ -123,6 +123,28 @@ Checks include:
 - width/height consistency
 - line-break structure
 
+## `parallel_generation.py` and `openclaw_parallel_runner.py`
+
+Experimental chapter-parallel generation support. These tools run before
+`finalize_svg.py`; they do not template or code-generate SVG markup.
+
+```bash
+python3 scripts/parallel_generation.py plan <project_path> --concurrency 2
+python3 scripts/parallel_generation.py validate <project_path>
+python3 scripts/openclaw_parallel_runner.py run <project_path> --dry-run
+python3 scripts/openclaw_parallel_runner.py run <project_path> \
+  --concurrency 2 \
+  --worker-command "openclaw run --cwd {repo_root} --prompt-file {prompt_file}"
+python3 scripts/openclaw_parallel_runner.py status <project_path>
+```
+
+Behavior:
+- `parallel_generation.py plan` writes immutable package context under `<project_path>/parallel_generation/`.
+- `openclaw_parallel_runner.py run` creates per-package prompts, spawns the configured worker command, and requires workers to write SVGs into run-local staging directories.
+- The runner merges staged SVGs into `<project_path>/svg_output/` only after worker success, package staging validation, and `worker_report.json` checks.
+- After merge, the runner calls `parallel_generation.py validate`; export remains blocked until validation passes.
+- Use `--replace-output` only when intentionally replacing an existing `svg_output/`; the runner backs it up under the run folder first.
+
 ## `svg_position_calculator.py`
 
 Analyze and review supported chart coordinates after SVG generation.

@@ -222,12 +222,12 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
 - **Viettel page number ownership**: each slide has exactly one page-number treatment. If a page inherits a Viettel shell, do not draw an additional bottom-right slide number; post-processing adds page numbers only to pages that do not already contain the shell footer/page-number treatment.
 - **Brand font runtime honesty**: if font preflight reports that the lead brand font is missing, keep the declared stack in the SVG/PPTX source but tell the user `brand fidelity degraded`. Do not rewrite the deck to hide the fallback state.
 - **Main-agent ownership**: SVG generation must run in the main agent (not sub-agents) — pages share upstream context for cross-page visual continuity. Experimental chapter-parallel runs still forbid SubAgent SVG authorship.
-- **Generation rhythm**: lock global design context first. Default production mode is `generation_mode=serial`: generate pages sequentially in one continuous context. Experimental `generation_mode=chapter_parallel` is opt-in and must use the chapter work-package contract below; ad hoc batches (e.g., 5 at a time) are still forbidden.
+- **Generation rhythm**: lock global design context first. Default production mode is `generation_mode=serial`: generate pages sequentially in one continuous context. Experimental `generation_mode=chapter_parallel` is opt-in and must use the chapter work-package contract below; ad hoc batches (e.g., 5 at a time) are still forbidden. True OpenClaw runtime parallelism requires the `openclaw_parallel_runner.py` adapter plus a host-provided worker command.
 - **Phased batch generation** (recommended):
   1. **Visual Construction Phase**: generate all SVG pages sequentially for visual consistency unless `generation_mode=chapter_parallel` was explicitly selected. Use layout judgment for chart marks during the draft. **MUST embed plot-area markers** per §3.1 below on every chart page — coordinate calibration is a post-generation step (see [`workflows/verify-charts.md`](../workflows/verify-charts.md)) that depends on these markers.
   2. **Per-page Quality Gate**: immediately after each SVG page is written, run `python3 scripts/svg_quality_checker.py <project_path>/svg_output/<page_file>.svg`. Any `error` MUST be fixed on that page before the current serial/package stream advances.
   3. **Full Quality Check Gate**: run `python3 scripts/svg_quality_checker.py <project_path>` on `svg_output/`. Any `error` (banned features, viewBox mismatch, spec_lock drift, non-PPT-safe font, text overlap, layer-cover risk, etc.) MUST be fixed on the offending page before proceeding — regenerate and re-check. Address `warning`s when straightforward. Do NOT defer to after `finalize_svg.py` — finalize rewrites SVG and masks some violations.
-  4. **Parallel Output Gate**: only for `generation_mode=chapter_parallel`, run `python3 scripts/parallel_generation.py validate <project_path>` after all package outputs exist. Missing slides, duplicate slide numbers, out-of-order output, spec snapshot drift, or SVG quality errors block export.
+  4. **Parallel Output Gate**: only for `generation_mode=chapter_parallel`, run `python3 scripts/parallel_generation.py validate <project_path>` after all package outputs exist. If using OpenClaw multi-session, `python3 scripts/openclaw_parallel_runner.py run ...` performs staging merge and this validation before reporting success. Missing slides, duplicate slide numbers, out-of-order output, spec snapshot drift, or SVG quality errors block export.
   5. **Logic Construction Phase**: after SVGs pass the quality check, batch-generate speaker notes for narrative continuity.
 
 ### 3.0A Experimental Chapter-Parallel Contract
@@ -243,6 +243,23 @@ Use this only when the run explicitly selects `generation_mode=chapter_parallel`
    - Pages inside one package are generated sequentially; only separate packages may run concurrently.
 4. Each package must re-read the current `spec_lock.md` before writing its page and must cross-check against the snapshot. Any conflict means stop and regenerate the package plan.
 5. Do not script-generate SVG pages. The planner creates contracts only; SVG authoring remains hand-written.
+
+### 3.0B Experimental OpenClaw Multi-Session Runner
+
+Use this only after the host runtime provides an OpenClaw worker command. The repository intentionally uses a command-template adapter instead of hard-coding an OpenClaw API.
+
+```bash
+python3 scripts/openclaw_parallel_runner.py run <project_path> \
+  --concurrency 2 \
+  --worker-command "openclaw run --cwd {repo_root} --prompt-file {prompt_file}"
+```
+
+- Start with `--dry-run` to inspect prompts under `<project_path>/parallel_generation/runs/<run_id>/prompts/`.
+- Supported placeholders: `{repo_root}`, `{project_path}`, `{run_dir}`, `{package_id}`, `{prompt_file}`, `{work_dir}`.
+- Each worker writes only to `<run_dir>/work/<package_id>/svg_output/` and writes `<run_dir>/work/<package_id>/worker_report.json`.
+- The runner merges staged SVGs into `<project_path>/svg_output/` only after all workers exit successfully and package staging has no missing, duplicate, or out-of-scope slide.
+- Use `--replace-output` only when intentionally replacing an existing `svg_output/`; the runner backs it up under the run folder before merging.
+- Check progress with `python3 scripts/openclaw_parallel_runner.py status <project_path>`.
 
 ### 3.1 Chart Plot-Area Marker (MANDATORY on every chart page)
 
