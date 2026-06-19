@@ -1699,14 +1699,14 @@ class SVGQualityChecker:
     def _get_spec_lock(self, svg_path: Path):
         """Locate and parse spec_lock.md near the SVG. Returns dict or None.
 
-        Looks in svg_path.parent and svg_path.parent.parent (covers the two
-        common layouts: SVG directly under <project>/ or under
-        <project>/svg_output/). Results are cached per lock path.
+        Walks upward from the SVG directory. This covers common layouts
+        (<project>/svg_output/) and staged chapter-parallel output under
+        <project>/parallel_generation/runs/<run_id>/work/<group>/svg_output/.
         """
         if _parse_spec_lock is None:
             return None
-        for candidate in (svg_path.parent / 'spec_lock.md',
-                          svg_path.parent.parent / 'spec_lock.md'):
+        for parent in (svg_path.parent, *svg_path.parent.parents):
+            candidate = parent / 'spec_lock.md'
             if candidate in self._lock_cache:
                 return self._lock_cache[candidate]
             if candidate.exists():

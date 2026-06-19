@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import json
 import re
+import shutil
 import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -50,6 +51,14 @@ class PageContract:
     layout: str = ""
     chart: str = ""
     outline: str = ""
+
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _timestamp() -> str:
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
 def _sha256(path: Path) -> str:
@@ -343,15 +352,7 @@ def _write_context(
         (contracts_dir / f"{page.key}.md").write_text("\n".join(contract), encoding="utf-8")
 
 
-def cmd_plan(args: argparse.Namespace) -> int:
-    project = args.project_path.resolve()
-    if not project.exists():
-        print(f"[ERROR] Project path does not exist: {project}")
-        return 1
-    if args.concurrency < 1 or args.concurrency > 8:
-        print("[ERROR] --concurrency must be between 1 and 8")
-        return 1
-
+def _write_plan(project: Path, concurrency: int) -> tuple[dict[str, Any], Path]:
     pages, groups = _build_page_contracts(project)
     out_dir = project / "parallel_generation"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -359,9 +360,9 @@ def cmd_plan(args: argparse.Namespace) -> int:
     manifest = {
         "version": 1,
         "mode": "chapter_parallel",
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": _utc_now(),
         "project": project.name,
-        "concurrency": args.concurrency,
+        "concurrency": concurrency,
         "source_hashes": {
             "design_spec.md": _sha256(project / "design_spec.md"),
             "spec_lock.md": _sha256(project / "spec_lock.md"),
@@ -377,10 +378,25 @@ def cmd_plan(args: argparse.Namespace) -> int:
         json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
+    return manifest, out_dir
 
+
+def cmd_plan(args: argparse.Namespace) -> int:
+    project = args.project_path.resolve()
+    if not project.exists():
+        print(f"[ERROR] Project path does not exist: {project}")
+        return 1
+    if args.concurrency < 1 or args.concurrency > 8:
+        print("[ERROR] --concurrency must be between 1 and 8")
+        return 1
+
+    manifest, out_dir = _write_plan(project, args.concurrency)
     print(f"[OK] Wrote parallel generation plan: {out_dir}")
-    print(f"[OK] Pages: {len(pages)} | Groups: {len(groups)} | Concurrency: {args.concurrency}")
-    for group in groups:
+    print(
+        f"[OK] Pages: {len(manifest['pages'])} | "
+        f"Groups: {len(manifest['groups'])} | Concurrency: {args.concurrency}"
+    )
+    for group in manifest["groups"]:
         eligible = "parallel" if group["parallel_eligible"] else "standalone"
         print(f"  - {group['id']} [{eligible}]: {', '.join(group['pages'])}")
     return 0
@@ -395,6 +411,257 @@ def _load_manifest(project: Path) -> dict[str, Any]:
     return json.loads(manifest_path.read_text(encoding="utf-8"))
 
 
+def _run_dir(project: Path, requested: str | None = None) -> Path:
+    runs_dir = project / "parallel_generation" / "runs"
+    runs_dir.mkdir(parents=True, exist_ok=True)
+    base = requested or _timestamp()
+    candidate = runs_dir / base
+    if not candidate.exists():
+        candidate.mkdir(parents=True)
+        return candidate
+
+    suffix = 2
+    while True:
+        alternate = runs_dir / f"{base}-{suffix}"
+        if not alternate.exists():
+            alternate.mkdir(parents=True)
+            return alternate
+        suffix += 1
+
+
+def _load_run_manifest(project: Path, run_id: str) -> tuple[Path, dict[str, Any]]:
+    run_dir = project / "parallel_generation" / "runs" / run_id
+    run_manifest_path = run_dir / "run_manifest.json"
+    if not run_manifest_path.exists():
+        raise FileNotFoundError(f"run_manifest.json not found: {run_manifest_path}")
+    return run_dir, json.loads(run_manifest_path.read_text(encoding="utf-8"))
+
+
+def _page_lookup(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    return {str(page["key"]): page for page in manifest.get("pages", [])}
+
+
+def _page_number(page_key: str) -> int:
+    m = re.fullmatch(r"[Pp](\d{2,3})", str(page_key))
+    if not m:
+        raise ValueError(f"Invalid page key: {page_key}")
+    return int(m.group(1))
+
+
+def _expected_numbers(page_keys: list[str]) -> list[int]:
+    return sorted(_page_number(page) for page in page_keys)
+
+
+def _render_package_prompt(
+    project: Path,
+    run_dir: Path,
+    group: dict[str, Any],
+    manifest: dict[str, Any],
+) -> str:
+    pages_by_key = _page_lookup(manifest)
+    package_id = str(group["id"])
+    work_dir = run_dir / "work" / package_id
+    svg_dir = work_dir / "svg_output"
+    report_path = work_dir / "package_report.json"
+
+    page_lines: list[str] = []
+    contract_blocks: list[str] = []
+    for page_key in group.get("pages", []):
+        page = pages_by_key.get(str(page_key), {})
+        number = _page_number(str(page_key))
+        title = page.get("title") or "(untitled)"
+        layout = page.get("layout") or "none"
+        rhythm = page.get("rhythm") or "unspecified"
+        chart = page.get("chart") or "none"
+        contract_path = project / "parallel_generation" / "page_contracts" / f"{page_key}.md"
+        contract_text = contract_path.read_text(encoding="utf-8") if contract_path.exists() else ""
+        page_lines.append(
+            f"- `{page_key}`: expected filename prefix `{number:02d}_`, "
+            f"title `{title}`, layout `{layout}`, rhythm `{rhythm}`, chart `{chart}`"
+        )
+        contract_blocks.append(
+            f"## Contract {page_key}\n\nSource: `{contract_path}`\n\n{contract_text}".rstrip()
+        )
+
+    return "\n".join(
+        [
+            "# Viettel PPT Chapter Package Task",
+            "",
+            "You are an isolated OpenClaw sub-agent assigned to one chapter package.",
+            "Generate only the SVG pages listed in this prompt.",
+            "",
+            "## Scope",
+            "",
+            f"- Project path: `{project}`",
+            f"- Run directory: `{run_dir}`",
+            f"- Package ID: `{package_id}`",
+            f"- Package kind: `{group.get('kind', 'unknown')}`",
+            f"- Staging SVG directory: `{svg_dir}`",
+            f"- Required report file: `{report_path}`",
+            "- Do not write directly to `<project_path>/svg_output/`.",
+            "- Do not edit any page outside this package.",
+            "- Keep pages inside this package serial and visually continuous.",
+            "- Hand-write SVG files; do not script-generate page markup.",
+            "",
+            "## Required Reads",
+            "",
+            "- Read `<project_path>/design_spec.md`.",
+            "- Read `<project_path>/spec_lock.md` before each page.",
+            "- Cross-check `<project_path>/parallel_generation/spec_lock_snapshot.md`.",
+            "- Read `<project_path>/parallel_generation/parallel_context.md`.",
+            "- Use only the page contracts embedded below for page scope.",
+            "",
+            "## Assigned Pages",
+            "",
+            *page_lines,
+            "",
+            "## Quality Gate",
+            "",
+            "- After each staged SVG, run:",
+            f"  `python3 {SCRIPT_DIR}/svg_quality_checker.py <staged_svg_file>`",
+            "- Fix any checker `error` before moving to the next page.",
+            "- At completion, write `package_report.json` with keys: "
+            "`status`, `package_id`, `pages`, `generated_files`, `checker_errors`, `notes`.",
+            "- Use `status: \"passed\"` only if all assigned pages exist in staging and have no checker errors.",
+            "",
+            "## Page Contracts",
+            "",
+            "\n\n---\n\n".join(contract_blocks),
+            "",
+        ]
+    )
+
+
+def cmd_prepare_subagents(args: argparse.Namespace) -> int:
+    project = args.project_path.resolve()
+    if not project.exists():
+        print(f"[ERROR] Project path does not exist: {project}")
+        return 1
+    if args.concurrency < 1 or args.concurrency > 8:
+        print("[ERROR] --concurrency must be between 1 and 8")
+        return 1
+
+    try:
+        manifest, _ = _write_plan(project, args.concurrency)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"[ERROR] {exc}")
+        return 1
+
+    run_dir = _run_dir(project, args.run_id)
+    prompts_dir = run_dir / "prompts"
+    prompts_dir.mkdir(parents=True, exist_ok=True)
+
+    subagent_groups: list[dict[str, Any]] = []
+    main_agent_groups: list[dict[str, Any]] = []
+    spawn_snippets: list[str] = []
+
+    for group in manifest.get("groups", []):
+        if group.get("parallel_eligible"):
+            package_id = str(group["id"])
+            work_dir = run_dir / "work" / package_id
+            svg_dir = work_dir / "svg_output"
+            svg_dir.mkdir(parents=True, exist_ok=True)
+            prompt_file = prompts_dir / f"{package_id}.md"
+            prompt_file.write_text(
+                _render_package_prompt(project, run_dir, group, manifest),
+                encoding="utf-8",
+            )
+            raw_task_name = f"ppt_{project.name}_{run_dir.name}_{package_id}"
+            task_name = re.sub(r"[^A-Za-z0-9_]+", "_", raw_task_name).strip("_")
+            spawn_task = f"Read and execute the package prompt at {prompt_file}. Do not work outside that scope."
+            package = {
+                "id": package_id,
+                "kind": group.get("kind", "unknown"),
+                "pages": group.get("pages", []),
+                "task_name": task_name,
+                "prompt_file": str(prompt_file),
+                "work_dir": str(work_dir),
+                "svg_output_dir": str(svg_dir),
+                "package_report": str(work_dir / "package_report.json"),
+                "spawn_request": {
+                    "task": spawn_task,
+                    "taskName": task_name,
+                    "runtime": "subagent",
+                    "mode": "run",
+                    "context": "isolated",
+                    "cleanup": "keep",
+                    "timeoutSeconds": 1800,
+                },
+            }
+            subagent_groups.append(package)
+            spawn_snippets.append(
+                "sessions_spawn({\n"
+                f"  task: \"{spawn_task}\",\n"
+                f"  taskName: \"{task_name}\",\n"
+                "  runtime: \"subagent\",\n"
+                "  mode: \"run\",\n"
+                "  context: \"isolated\",\n"
+                "  cleanup: \"keep\",\n"
+                "  timeoutSeconds: 1800\n"
+                "})"
+            )
+        else:
+            main_agent_groups.append(
+                {
+                    "id": group["id"],
+                    "kind": group.get("kind", "unknown"),
+                    "pages": group.get("pages", []),
+                }
+            )
+
+    run_manifest = {
+        "version": 1,
+        "mode": "openclaw_subagents",
+        "created_at": _utc_now(),
+        "project": project.name,
+        "project_path": str(project),
+        "run_id": run_dir.name,
+        "concurrency": args.concurrency,
+        "source_manifest": str(project / "parallel_generation" / "manifest.json"),
+        "subagent_groups": subagent_groups,
+        "main_agent_groups": main_agent_groups,
+    }
+    (run_dir / "run_manifest.json").write_text(
+        json.dumps(run_manifest, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+    runbook = [
+        "# OpenClaw Sub-Agent Spawn Runbook",
+        "",
+        f"- Project: `{project}`",
+        f"- Run ID: `{run_dir.name}`",
+        f"- Concurrency: `{args.concurrency}`",
+        "",
+        "## Main-Agent Packages",
+        "",
+    ]
+    for group in main_agent_groups:
+        runbook.append(f"- `{group['id']}` ({group['kind']}): {', '.join(group['pages'])}")
+    runbook.extend(["", "## Spawn Commands", ""])
+    runbook.extend(spawn_snippets or ["_No sub-agent eligible groups found._"])
+    if spawn_snippets:
+        runbook.extend(["", "Then wait for the active batch:", "", "```js\nsessions_yield()\n```"])
+    runbook.extend(
+        [
+            "",
+            "## After Yield",
+            "",
+            f"1. Run `python3 {SCRIPT_DIR}/parallel_generation.py merge {project} --run-id {run_dir.name}`.",
+            f"2. Run `python3 {SCRIPT_DIR}/parallel_generation.py validate {project}`.",
+            "",
+        ]
+    )
+    (run_dir / "sessions_spawn_runbook.md").write_text("\n\n".join(runbook), encoding="utf-8")
+
+    print(f"[OK] Prepared OpenClaw sub-agent run: {run_dir}")
+    print(f"[OK] Sub-agent packages: {len(subagent_groups)} | Main-agent packages: {len(main_agent_groups)}")
+    print(f"[OK] Runbook: {run_dir / 'sessions_spawn_runbook.md'}")
+    for package in subagent_groups:
+        print(f"  - {package['id']}: {', '.join(package['pages'])} -> {package['prompt_file']}")
+    return 0
+
+
 def _discover_svg_numbers(svg_dir: Path) -> dict[int, list[Path]]:
     numbers: dict[int, list[Path]] = {}
     for path in sorted(svg_dir.glob("*.svg")):
@@ -403,6 +670,108 @@ def _discover_svg_numbers(svg_dir: Path) -> dict[int, list[Path]]:
             continue
         numbers.setdefault(int(m.group(1)), []).append(path)
     return numbers
+
+
+def _staged_package_errors(package: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    package_id = str(package.get("id", "unknown"))
+    svg_dir = Path(str(package["svg_output_dir"]))
+    report_path = Path(str(package["package_report"]))
+
+    if not report_path.exists():
+        errors.append(f"{package_id}: missing package_report.json")
+    else:
+        try:
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            errors.append(f"{package_id}: invalid package_report.json: {exc}")
+        else:
+            if report.get("status") != "passed":
+                errors.append(f"{package_id}: package_report status is {report.get('status')!r}, expected 'passed'")
+
+    if not svg_dir.exists():
+        errors.append(f"{package_id}: staging svg_output/ not found: {svg_dir}")
+        return errors
+
+    expected = _expected_numbers([str(page) for page in package.get("pages", [])])
+    staged = _discover_svg_numbers(svg_dir)
+    unnumbered = [
+        path.name
+        for path in sorted(svg_dir.glob("*.svg"))
+        if not re.match(r"^(\d{2,3})(?:[_-].*)?\.svg$", path.name)
+    ]
+    if unnumbered:
+        errors.append(f"{package_id}: unnumbered staged SVG file(s): {', '.join(unnumbered)}")
+
+    actual = sorted(staged)
+    for number in sorted(set(expected) - set(actual)):
+        errors.append(f"{package_id}: missing staged SVG for P{number:02d}")
+    for number in sorted(set(actual) - set(expected)):
+        errors.append(f"{package_id}: generated out-of-scope SVG number {number:02d}")
+    for number in expected:
+        if len(staged.get(number, [])) > 1:
+            names = ", ".join(path.name for path in staged[number])
+            errors.append(f"{package_id}: duplicate staged SVGs for P{number:02d}: {names}")
+
+    return errors
+
+
+def cmd_merge(args: argparse.Namespace) -> int:
+    project = args.project_path.resolve()
+    try:
+        run_dir, run_manifest = _load_run_manifest(project, args.run_id)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"[ERROR] {exc}")
+        return 1
+
+    packages = run_manifest.get("subagent_groups") or []
+    if not packages:
+        print("[WARN] No sub-agent packages to merge")
+        return 0
+
+    errors: list[str] = []
+    owner_by_number: dict[int, str] = {}
+    for package in packages:
+        errors.extend(_staged_package_errors(package))
+        for number in _expected_numbers([str(page) for page in package.get("pages", [])]):
+            owner = owner_by_number.get(number)
+            if owner:
+                errors.append(f"P{number:02d}: assigned to both {owner} and {package['id']}")
+            owner_by_number[number] = str(package["id"])
+
+    if errors:
+        print("[ERROR] Staged sub-agent output validation failed:")
+        for error in errors:
+            print(f"  - {error}")
+        return 1
+
+    target_dir = project / "svg_output"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    existing_by_number = _discover_svg_numbers(target_dir)
+    backup_dir = run_dir / "backup" / "svg_output_conflicts"
+
+    for package in packages:
+        staged_by_number = _discover_svg_numbers(Path(str(package["svg_output_dir"])))
+        for number in _expected_numbers([str(page) for page in package.get("pages", [])]):
+            src = staged_by_number[number][0]
+            existing = existing_by_number.get(number, [])
+            if existing and not args.replace_output:
+                names = ", ".join(path.name for path in existing)
+                print(
+                    f"[ERROR] Refusing to merge P{number:02d}; existing svg_output file(s): {names}. "
+                    "Use --replace-output to back up and replace package conflicts."
+                )
+                return 1
+            if existing and args.replace_output:
+                backup_dir.mkdir(parents=True, exist_ok=True)
+                for old in existing:
+                    shutil.move(str(old), str(backup_dir / old.name))
+            shutil.copy2(src, target_dir / src.name)
+
+    print(f"[OK] Merged {len(owner_by_number)} sub-agent SVG(s) into {target_dir}")
+    if backup_dir.exists():
+        print(f"[OK] Backed up replaced package SVG(s) to {backup_dir}")
+    return 0
 
 
 def _validate_structure(project: Path, manifest: dict[str, Any]) -> list[str]:
@@ -530,6 +899,22 @@ def build_parser() -> argparse.ArgumentParser:
     plan.add_argument("project_path", type=Path)
     plan.add_argument("--concurrency", type=int, default=2)
     plan.set_defaults(func=cmd_plan)
+
+    prepare = sub.add_parser("prepare-subagents", help="create OpenClaw sub-agent package prompts and staging dirs")
+    prepare.add_argument("project_path", type=Path)
+    prepare.add_argument("--concurrency", type=int, default=2)
+    prepare.add_argument("--run-id", default=None)
+    prepare.set_defaults(func=cmd_prepare_subagents)
+
+    merge = sub.add_parser("merge", help="merge validated sub-agent staged SVGs into svg_output/")
+    merge.add_argument("project_path", type=Path)
+    merge.add_argument("--run-id", required=True)
+    merge.add_argument(
+        "--replace-output",
+        action="store_true",
+        help="back up and replace conflicting package SVG numbers in svg_output/",
+    )
+    merge.set_defaults(func=cmd_merge)
 
     validate = sub.add_parser("validate", help="validate output after chapter-parallel generation")
     validate.add_argument("project_path", type=Path)

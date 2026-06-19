@@ -15,17 +15,17 @@ description: >
 >
 > ## 🚨 Global Execution Discipline (MANDATORY)
 >
-> **This workflow is a strict serial pipeline. The following rules have the highest priority — violating any one of them constitutes execution failure:**
+> **This workflow is a strict gated pipeline. The following rules have the highest priority — violating any one of them constitutes execution failure:**
 >
-> 1. **SERIAL EXECUTION** — Steps MUST be executed in order; the output of each step is the input for the next. Non-BLOCKING adjacent steps may proceed continuously once prerequisites are met, without waiting for the user to say "continue"
+> 1. **PHASE ORDER IS SERIAL** — Steps MUST be executed in order; the output of each step is the input for the next. Non-BLOCKING adjacent steps may proceed continuously once prerequisites are met, without waiting for the user to say "continue". Executor Step 6 may use controlled chapter-level parallelism only after all upstream gates and context snapshots exist
 > 2. **BLOCKING = HARD STOP** — Steps marked ⛔ BLOCKING require a full stop; the AI MUST wait for an explicit user response before proceeding and MUST NOT make any decisions on behalf of the user
 > 3. **NO CROSS-PHASE BUNDLING** — Cross-phase bundling is FORBIDDEN. (Note: the Eight Confirmations in Step 4 are ⛔ BLOCKING — the AI MUST present recommendations and wait for explicit user confirmation before proceeding. Once the user confirms, all subsequent non-BLOCKING steps — design spec output, SVG generation, speaker notes, and post-processing — may proceed automatically without further user confirmation)
 > 4. **GATE BEFORE ENTRY** — Each Step has prerequisites (🚧 GATE) listed at the top; these MUST be verified before starting that Step
 > 5. **NO SPECULATIVE EXECUTION** — "Pre-preparing" content for subsequent Steps is FORBIDDEN (e.g., writing SVG code during the Strategist phase)
-> 6. **NO SUB-AGENT SVG GENERATION** — Executor Step 6 SVG generation is context-dependent and MUST be completed by the current main agent end-to-end. Delegating page SVG generation to sub-agents is FORBIDDEN, including experimental parallel runs
-> 7. **SERIAL DEFAULT; CHAPTER PARALLEL EXPERIMENTAL** — In Executor Step 6, production/default generation remains sequential page by page in one continuous pass. `generation_mode=chapter_parallel` is an explicit experimental branch-only mode: it may split work by chapter packages after context snapshots are created, but each package still preserves page order internally and MUST pass validation before export
+> 6. **CONTROLLED SUB-AGENT SVG GENERATION ONLY** — Executor Step 6 SVG generation is context-dependent. Sub-agent SVG generation is FORBIDDEN unless `generation_mode=chapter_parallel` and `parallel_runtime=openclaw_subagents` are active, the runtime exposes `sessions_spawn`, each sub-agent receives exactly one package, uses isolated context, writes only to run-local staging, and the main agent merges + validates before export
+> 7. **CHAPTER PARALLEL DEFAULT WITH AUDITED SERIAL FALLBACK** — In Executor Step 6, default generation is `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2`. Executor MUST run the parallel preflight gate before the first SVG. Silent serial fallback is FORBIDDEN: fallback to `generation_mode=serial` only after recording the exact reason (`sessions_spawn` absent, `sessions_yield` absent, spawn failed before package work, or no eligible chapter package). Pages inside each chapter package remain sequential for visual continuity
 > 8. **SPEC_LOCK RE-READ PER PAGE** — Before generating each SVG page, Executor MUST `read_file <project_path>/spec_lock.md`. All colors / fonts / icons / images MUST come from this file — no values from memory or invented on the fly. Executor MUST also look up the current page's `page_rhythm` (`anchor` / `dense` / `breathing`), optional `page_backgrounds` (section-only Viettel background layer, if any), `page_layouts` (which template SVG to inherit, if any), and `page_charts` (which chart template to adapt, if any). Empty / absent entries are intentional Strategist signals; missing `page_backgrounds` means no decorative background for that page — see executor-base.md §2.1. This rule exists to resist context-compression drift on long decks and to break the uniform "every page is a card grid" default
-> 9. **SVG MUST BE HAND-WRITTEN, NOT SCRIPT-GENERATED** — Every SVG page is written by the main agent directly, one page at a time (see rules 6 and 7). Writing or running a Python / Node / shell script that produces the SVG files in batch — looping over pages, templating from data, or emitting them via a generator — is FORBIDDEN, including under "save tokens", "quick draft", or "user is in a hurry" pretexts. The script-generation path was tried on a feature branch and abandoned: cross-page visual consistency depends on per-page authoring with full upstream context, which a generator script cannot reproduce
+> 9. **SVG MUST BE HAND-WRITTEN, NOT SCRIPT-GENERATED** — Every SVG page is written directly by the active package author (main agent in serial mode, or the assigned isolated sub-agent in `openclaw_subagents` mode), one page at a time. Writing or running a Python / Node / shell script that produces the SVG files in batch — looping over pages, templating from data, or emitting them via a generator — is FORBIDDEN, including under "save tokens", "quick draft", or "user is in a hurry" pretexts. The script-generation path was tried on a feature branch and abandoned: cross-page visual consistency depends on per-page authoring with full upstream context, which a generator script cannot reproduce
 
 > [!IMPORTANT]
 >
@@ -69,7 +69,7 @@ description: >
 | `${SKILL_DIR}/scripts/analyze_images.py`           | Image analysis                                                                                                                          |
 | `${SKILL_DIR}/scripts/image_gen.py`                | AI image generation (multi-provider)                                                                                                    |
 | `${SKILL_DIR}/scripts/svg_quality_checker.py`      | SVG quality check                                                                                                                       |
-| `${SKILL_DIR}/scripts/parallel_generation.py`      | Experimental chapter-parallel work-package planner and output validator; does not generate SVG code                                     |
+| `${SKILL_DIR}/scripts/parallel_generation.py`      | Chapter-parallel planner, OpenClaw sub-agent prompt/staging preparer, staged output merger, and validator; does not generate SVG code    |
 | `${SKILL_DIR}/scripts/total_md_split.py`           | Speaker notes splitting                                                                                                                 |
 | `${SKILL_DIR}/scripts/finalize_svg.py`             | SVG post-processing (unified entry)                                                                                                     |
 | `${SKILL_DIR}/scripts/svg_to_pptx.py`              | Export to PPTX                                                                                                                          |
@@ -363,24 +363,71 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 
 **Font-preflight gate (Mandatory for bundled brand fonts)**: before the first SVG page, if `<project_path>/fonts/` exists or `spec_lock.md typography` leads with a non-preinstalled brand font, run `python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>`. If the result is `fallback in use` or `missing`, surface `brand fidelity degraded` and continue only after making that runtime state explicit to the user. Installing from the local bundle is opt-in and requires explicit user approval.
 
-> ⚠️ **Main-agent only**: SVG generation MUST stay in the current main agent — page design depends on full upstream context. Do NOT delegate to sub-agents.
-> ⚠️ **Generation rhythm**: default `generation_mode=serial` generates pages sequentially, one at a time, in the same continuous context. Experimental `generation_mode=chapter_parallel` is opt-in and MUST use `scripts/parallel_generation.py plan` / `validate`; do not treat ad hoc page batches (e.g., 5 per group) as valid parallel mode.
+> ⚠️ **Controlled package authorship**: SVG generation stays in the main agent unless `generation_mode=chapter_parallel` selects `parallel_runtime=openclaw_subagents`. In that mode, sub-agents may author SVG only for their assigned package, in isolated context, into staging output, followed by main-agent merge + validation.
+> ⚠️ **Generation rhythm**: default `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2`. Use OpenClaw `sessions_spawn` only when the runtime exposes it; otherwise fallback to `generation_mode=serial`. Do not treat ad hoc page batches (e.g., 5 per group) as valid parallel mode.
 
 **Generation Mode Selection (Mandatory)**:
 
-- **Default / production**: `generation_mode=serial`.
-- **Experimental branch testing only**: `generation_mode=chapter_parallel`. Before writing any SVG, run:
+- **Default / production**: `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2`.
+- **Fallback**: if `sessions_spawn` / `sessions_yield` are unavailable or fail before package work starts, set `generation_mode=serial` and generate through the existing one-agent path, but only after reporting the exact fallback reason.
+- Before writing any SVG, run the parallel preflight commands:
 
 ```bash
 python3 ${SKILL_DIR}/scripts/parallel_generation.py plan <project_path> --concurrency 2
+python3 ${SKILL_DIR}/scripts/parallel_generation.py prepare-subagents <project_path> --concurrency 2
 ```
 
-Use the generated `parallel_generation/` work packages as the chapter-level contract. Cover / TOC / ending packages remain standalone; chapter packages may run concurrently only when the host runtime supports separate worker sessions. SVG files are still hand-written from the package context, never script-generated.
+**Parallel Runtime Preflight Gate (Mandatory before the first SVG)**:
+
+Report this checkpoint before generating any SVG:
+
+```markdown
+## Parallel Runtime Decision
+- generation_mode: chapter_parallel
+- parallel_runtime: openclaw_subagents | serial_fallback
+- concurrency: 2
+- run_id: <run_id or n/a>
+- subagent_packages: <count>
+- main_agent_packages: <count>
+- fallback_reason: <none or exact reason>
+```
+
+- If `sessions_spawn` and `sessions_yield` are available and `subagent_packages > 0`, `parallel_runtime` MUST be `openclaw_subagents`.
+- If either tool is unavailable, state exactly: `fallback_reason: sessions_spawn/sessions_yield unavailable in active runtime`.
+- If a spawn call fails before package work starts, state the exact tool error and fallback to serial.
+- Do not begin SVG generation in the main agent until this checkpoint is printed.
+
+Use the generated `parallel_generation/` work packages as the chapter-level contract. Cover / TOC / ending packages remain main-agent packages. Chapter packages may run concurrently through `sessions_spawn`; pages inside one package stay serial. SVG files are still hand-written from the package context, never script-generated.
+
+**OpenClaw Sub-Agent Spawn Pattern**:
+
+- Spawn only groups listed in `<project_path>/parallel_generation/runs/<run_id>/run_manifest.json` under `subagent_groups`.
+- Use isolated context and keep cleanup artifacts for debugging:
+
+```js
+sessions_spawn({
+  task: "Read and execute the package prompt at <prompt_file>. Do not work outside that scope.",
+  taskName: "<task_name>",
+  runtime: "subagent",
+  mode: "run",
+  context: "isolated",
+  cleanup: "keep",
+  timeoutSeconds: 1800
+})
+```
+
+- Spawn up to `concurrency=2`, then call `sessions_yield()`.
+- After all sub-agents finish, merge staged package SVGs:
+
+```bash
+python3 ${SKILL_DIR}/scripts/parallel_generation.py merge <project_path> --run-id <run_id>
+```
 
 **Visual Construction Phase**:
 
 - `serial`: generate SVG pages sequentially, one at a time, in one continuous pass → `<project_path>/svg_output/`
-- `chapter_parallel`: generate each package's pages in order; do not delegate SVG authorship to sub-agents; write outputs to the normal `<project_path>/svg_output/` filenames only after package-local checks pass.
+- `chapter_parallel` without sub-agent tools: generate packages in order in the main agent → `<project_path>/svg_output/`
+- `chapter_parallel` with `openclaw_subagents`: main agent generates standalone packages to `<project_path>/svg_output/`; each sub-agent generates only its package to `<project_path>/parallel_generation/runs/<run_id>/work/<group_id>/svg_output/`; main agent merges after package reports pass.
 
 **Per-page Quality Check Gate (Mandatory)** — after each SVG page is written, before generating the next page in the same serial/package stream:
 
@@ -400,7 +447,7 @@ python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
 - Any `error` (banned SVG features, viewBox mismatch, spec_lock drift, text overflow, title-zone content intrusion, etc.) MUST be fixed before proceeding — return to Visual Construction, regenerate that page, re-run check.
 - `warning` entries (low-res image, non-PPT-safe font tail, long text without a wrap contract, etc.): fix when straightforward, otherwise acknowledge and release.
 - Run against `svg_output/` (not after `finalize_svg.py` — finalize rewrites SVG and masks violations).
-- For `generation_mode=chapter_parallel`, also run `python3 ${SKILL_DIR}/scripts/parallel_generation.py validate <project_path>` and fix any missing/duplicate/out-of-order slide or spec snapshot failure before export.
+- For `generation_mode=chapter_parallel`, merge staged package output first if using sub-agents, then run `python3 ${SKILL_DIR}/scripts/parallel_generation.py validate <project_path>` and fix any missing/duplicate/out-of-order slide or spec snapshot failure before export.
 
 **Logic Construction Phase**: generate speaker notes → `<project_path>/notes/total.md`
 
