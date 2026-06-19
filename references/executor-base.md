@@ -12,16 +12,17 @@
 
 **Hard rule**: Before the first SVG page, batch-read every template SVG this deck will reference. Read once up front, never re-read during generation.
 
-| Source list | Read path |
-|---|---|
-| Chosen template's `design_spec.md` (read frontmatter to detect `replication_mode`) | `templates/<chosen_template>/design_spec.md` |
-| Every distinct `<basename>` in `spec_lock.md page_layouts` | `templates/<chosen_template>/<basename>.svg` |
-| `page_backgrounds` exists | `templates/backgrounds/backgrounds_index.json` |
-| Every distinct background id in `spec_lock.md page_backgrounds` | `templates/backgrounds/<background_id>.svg` |
-| Every distinct chart name in `spec_lock.md page_charts` | `templates/charts/<chart_name>.svg` |
-| Chart types in `design_spec.md §VII` not covered above | `templates/charts/<chart_name>.svg` |
+| Source list                                                                        | Read path                                      |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Chosen template's `design_spec.md` (read frontmatter to detect `replication_mode`) | `templates/<chosen_template>/design_spec.md`   |
+| Every distinct `<basename>` in `spec_lock.md page_layouts`                         | `templates/<chosen_template>/<basename>.svg`   |
+| `page_backgrounds` exists                                                          | `templates/backgrounds/backgrounds_index.json` |
+| Every distinct background id in `spec_lock.md page_backgrounds`                    | `templates/backgrounds/<background_id>.svg`    |
+| Every distinct chart name in `spec_lock.md page_charts`                            | `templates/charts/<chart_name>.svg`            |
+| Chart types in `design_spec.md §VII` not covered above                             | `templates/charts/<chart_name>.svg`            |
 
 **Forbidden — re-reading during generation**:
+
 - Layout SVG already loaded in this batch
 - Background SVG already loaded in this batch
 - Chart SVG already loaded in this batch
@@ -54,7 +55,7 @@ When the project's chosen template is a `mirror` template (`design_spec.md` fron
 4. **What you must not touch** — element positions, sizes, fonts, colors, fills, strokes, gradients, image hrefs, `<g>` grouping, sprite-sheet `<svg viewBox>` wrappers, decorative `<rect>` / `<path>` / `<circle>` / `<polygon>` shapes, `<use data-icon="...">` markers, embedded chart data structures. Mirror's value is preserving the source deck's visual identity — any geometric / decorative drift defeats the purpose.
 5. **Content fit** — the mirror page was chosen by Strategist because its layout matches the content slot. If the project's content for `P<NN>` legitimately needs more / fewer items than the mirror page provides (e.g. mirror shows 3 KPI cards, project has 4 metrics), keep the mirror page's visual rhythm and either drop one metric to fit or split across two pages — do **not** restructure the mirror page's grid. If neither works, surface a `warning: P<NN> content does not fit mirror reference <basename>; suggest different reference page` and proceed with the closest-fit edit.
 6. **No `{{}}` substitution** — mirror SVGs do not contain placeholder markers. Do not search for `{{TITLE}}` / `{{CONTENT_AREA}}` etc.; do not invent placeholders. The whole mirror contract is "verbatim source + in-place text edit".
-7. **Output filename** — follow the standard project SVG naming convention (`<NN>_<page_name>.svg` where `<NN>` matches the project page index, not the mirror source index). The mirror filename is the *reference*, not the *output*.
+7. **Output filename** — follow the standard project SVG naming convention (`<NN>_<page_name>.svg` where `<NN>` matches the project page index, not the mirror source index). The mirror filename is the _reference_, not the _output_.
 
 **Detecting mirror mode**: read the chosen template's `design_spec.md` frontmatter once during §1.0 batch read. If `replication_mode: mirror`, every page that hits `page_layouts` follows §1.1 above; pages without a `page_layouts` entry follow resolution rule 3 above.
 
@@ -62,13 +63,13 @@ When the project's chosen template is a `mirror` template (`design_spec.md` fron
 
 **Legacy fallback table** (used only when `page_layouts` is absent):
 
-| Page Type | Corresponding Template | Adherence Rules |
-|-----------|----------------------|-----------------|
-| Cover | `01_cover.svg` | Inherit background, decorative elements, layout structure; replace placeholder content |
-| Chapter | `02_chapter.svg` | Inherit numbering style, title position, decorative elements |
-| Content | `03_content.svg` | Inherit header/footer styles; **content area may be freely laid out** |
-| Ending | `04_ending.svg` | Inherit background, thank-you message position, contact info layout |
-| TOC | `02_toc.svg` | **Optional**: Inherit TOC title, list styles |
+| Page Type | Corresponding Template | Adherence Rules                                                                        |
+| --------- | ---------------------- | -------------------------------------------------------------------------------------- |
+| Cover     | `01_cover.svg`         | Inherit background, decorative elements, layout structure; replace placeholder content |
+| Chapter   | `02_chapter.svg`       | Inherit numbering style, title position, decorative elements                           |
+| Content   | `03_content.svg`       | Inherit header/footer styles; **content area may be freely laid out**                  |
+| Ending    | `04_ending.svg`        | Inherit background, thank-you message position, contact info layout                    |
+| TOC       | `02_toc.svg`           | **Optional**: Inherit TOC title, list styles                                           |
 
 ### Page-Template Mapping Declaration (Required Output)
 
@@ -131,10 +132,10 @@ If a page needs a value not in `spec_lock.md`, surface it — do not silently in
 
 Before drawing each page, look up its entry in `page_rhythm` (key format `P<NN>` matching the page index in §IX of `design_spec.md`) and apply the corresponding layout discipline:
 
-| Tag | Layout discipline |
-|-----|-------------------|
-| `anchor` | Structural page (cover / chapter / TOC / ending). Follow the matching template verbatim. |
-| `dense` | Information-heavy. Card grids, multi-column layouts, KPI dashboards, tables, and charts are all permitted. This is the baseline behavior. |
+| Tag         | Layout discipline                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `anchor`    | Structural page (cover / chapter / TOC / ending). Follow the matching template verbatim.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `dense`     | Information-heavy. Card grids, multi-column layouts, KPI dashboards, tables, and charts are all permitted. This is the baseline behavior.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `breathing` | Low-density impact page. Avoid **multi-card grid layouts** — do not organize content as multiple parallel rounded containers (3-card row, 4-card KPI grid, 2×2 matrix rendered as cards). Use naked text blocks, dividers, whitespace, or full-bleed imagery as the content structure. Single rounded visual elements (hero image corners, callouts, tags, one emphasis block) are fine — the rule is about grid structure, not about the `rx` attribute. Proportions follow information weight (not a preset ratio). Typical forms: hero quote, single large number with one-line interpretation, full-bleed image with floating caption, section transition. |
 
 > Without rhythm variation, every page defaults to card grids (the "AI-generated" look). `page_rhythm` is the only narrative lever that survives context compression.
@@ -221,8 +222,8 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
 - **Viettel logo clearance**: the fixed logo reserves `x=1060-1224, y=20-82`. Header/title text, subtitles, chart labels, and callouts MUST NOT enter this slot. Content-page titles should use `data-box="88,36,960,58" data-wrap="true"` or manual line breaks so long titles wrap before the logo.
 - **Viettel page number ownership**: each slide has exactly one page-number treatment. If a page inherits a Viettel shell, do not draw an additional bottom-right slide number; post-processing adds page numbers only to pages that do not already contain the shell footer/page-number treatment.
 - **Brand font runtime honesty**: if font preflight reports that the lead brand font is missing, keep the declared stack in the SVG/PPTX source but tell the user `brand fidelity degraded`. Do not rewrite the deck to hide the fallback state.
-- **Controlled package ownership**: SVG generation runs in the main agent unless `generation_mode=chapter_parallel` selects `parallel_runtime=openclaw_subagents`. In that mode, sub-agent SVG authorship is allowed only for a single assigned package, with isolated context, staging output, package report, and main-agent merge + validation.
-- **Generation rhythm**: lock global design context first. Default production mode is `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2`. Executor MUST run the parallel preflight gate before the first SVG. If OpenClaw `sessions_spawn` / `sessions_yield` are unavailable or fail before package work starts, fallback to `generation_mode=serial` only after reporting the exact fallback reason. Silent serial fallback is forbidden. Ad hoc batches (e.g., 5 at a time) are still forbidden.
+- **Controlled package ownership**: SVG generation runs in the main agent only for main-agent packages or for an audited serial fallback. When `generation_mode=chapter_parallel` selects `parallel_runtime=openclaw_subagents`, sub-agent SVG authorship is allowed only for a single assigned package, with isolated context, staging output, package report, and main-agent merge + validation.
+- **Generation rhythm**: lock global design context first. Read `spec_lock.md ## generation` before SVG authoring. Default production mode is `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2`; an explicit `mode: serial` from the ninth confirmation is the only planned legacy override. Executor MUST run the parallel preflight gate before the first SVG unless `mode: serial` is present. If OpenClaw `sessions_spawn` / `sessions_yield` are unavailable or fail before package work starts, fallback to `generation_mode=serial` only after reporting the exact fallback reason. Do not infer fallback from deck size, prompt brevity, convenience, or perceived speed. Silent serial fallback is forbidden. Ad hoc batches (e.g., 5 at a time) are still forbidden.
 - **Phased batch generation** (recommended):
   1. **Visual Construction Phase**: use `chapter_parallel` by default when the runtime can support it; otherwise generate all SVG pages sequentially for visual consistency. Use layout judgment for chart marks during the draft. **MUST embed plot-area markers** per §3.1 below on every chart page — coordinate calibration is a post-generation step (see [`workflows/verify-charts.md`](../workflows/verify-charts.md)) that depends on these markers.
   2. **Per-page Quality Gate**: immediately after each SVG page is written, run `python3 scripts/svg_quality_checker.py <project_path>/svg_output/<page_file>.svg`. Any `error` MUST be fixed on that page before the current serial/package stream advances.
@@ -230,24 +231,26 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
   4. **Parallel Output Gate**: only for `generation_mode=chapter_parallel`, merge staged sub-agent output first if applicable, then run `python3 scripts/parallel_generation.py validate <project_path>` after all package outputs exist. Missing slides, duplicate slide numbers, out-of-order output, spec snapshot drift, or SVG quality errors block export.
   5. **Logic Construction Phase**: after SVGs pass the quality check, batch-generate speaker notes for narrative continuity.
 
-### 3.0A Experimental Chapter-Parallel Contract
+### 3.0A Chapter-Parallel Contract
 
 Use this for default production runs when OpenClaw sub-agent tools are available, or as the package/validation contract for main-agent fallback runs.
 
-1. Run `python3 scripts/parallel_generation.py plan <project_path> --concurrency 2` after `design_spec.md`, `spec_lock.md`, and template/chart/background batch reads are complete.
-2. Treat `<project_path>/parallel_generation/spec_lock_snapshot.md`, `parallel_context.md`, `manifest.json`, and `page_contracts/Pxx.md` as the immutable generation packet.
-3. Package split:
+1. Read `spec_lock.md ## generation`. If it declares `mode: serial`, skip sub-agent planning and report `fallback_reason: user_confirmed_serial`.
+2. Run `python3 scripts/parallel_generation.py plan <project_path> --concurrency 2` after `design_spec.md`, `spec_lock.md`, and template/chart/background batch reads are complete.
+3. Treat `<project_path>/parallel_generation/spec_lock_snapshot.md`, `parallel_context.md`, `manifest.json`, and `page_contracts/Pxx.md` as the immutable generation packet.
+4. Package split:
    - Cover, TOC/agenda, and ending pages are standalone packages.
    - A chapter/section-divider page starts a chapter package.
    - Content pages after a chapter opener stay inside that chapter package.
    - Pages inside one package are generated sequentially; only separate packages may run concurrently.
-4. Each package must re-read the current `spec_lock.md` before writing its page and must cross-check against the snapshot. Any conflict means stop and regenerate the package plan.
-5. Do not script-generate SVG pages. The planner creates contracts only; SVG authoring remains hand-written.
-6. Run `python3 scripts/parallel_generation.py prepare-subagents <project_path> --concurrency 2` before the first SVG. This creates run metadata, package prompts, staging dirs, and a `sessions_spawn` runbook.
-7. Print a `Parallel Runtime Decision` checkpoint before SVG authoring. It must include generation mode, runtime (`openclaw_subagents` or `serial_fallback`), run id, sub-agent package count, main-agent package count, and fallback reason.
-8. If `sessions_spawn` and `sessions_yield` are available and the run manifest has `subagent_groups`, spawn only those groups. Main-agent packages remain in the main agent. If either tool is unavailable, report `fallback_reason: sessions_spawn/sessions_yield unavailable in active runtime` before serial fallback.
-9. Spawn package agents with `runtime: "subagent"`, `mode: "run"`, `context: "isolated"`, `cleanup: "keep"`, and `timeoutSeconds: 1800`. Each agent must read its package prompt, write SVGs only into its staging directory, run per-page checker on staged SVGs, and write `package_report.json`.
-10. After `sessions_yield()`, run `python3 scripts/parallel_generation.py merge <project_path> --run-id <run_id>`, then run `python3 scripts/parallel_generation.py validate <project_path>`.
+5. Each package must re-read the current `spec_lock.md` before writing its page and must cross-check against the snapshot. Any conflict means stop and regenerate the package plan.
+6. Do not script-generate SVG pages. The planner creates contracts only; SVG authoring remains hand-written.
+7. Run `python3 scripts/parallel_generation.py prepare-subagents <project_path> --concurrency 2` before the first SVG. This creates run metadata, package prompts, staging dirs, and a `sessions_spawn` runbook.
+8. Print a `Parallel Runtime Decision` checkpoint before SVG authoring. It must include generation mode, runtime (`openclaw_subagents` or `serial_fallback`), run id, sub-agent package count, main-agent package count, and fallback reason.
+9. If `sessions_spawn` and `sessions_yield` are available and the run manifest has `subagent_groups`, spawn only those groups. Main-agent packages remain in the main agent. If either tool is unavailable, report `fallback_reason: sessions_spawn/sessions_yield unavailable in active runtime` before serial fallback. A fallback claim is invalid unless the preflight gate was run and the runtime decision was printed.
+10. Spawn package agents with `runtime: "subagent"`, `mode: "run"`, `context: "isolated"`, `cleanup: "keep"`, and `timeoutSeconds: 1800`. Each agent must read its package prompt, write SVGs only into its staging directory, run per-page checker on staged SVGs, and write `package_report.json`.
+11. The main agent must not author slides assigned to `subagent_groups` while `parallel_runtime=openclaw_subagents`; it may only author standalone `main_agent_groups` while sub-agents run.
+12. After `sessions_yield()`, run `python3 scripts/parallel_generation.py merge <project_path> --run-id <run_id>`, then run `python3 scripts/parallel_generation.py validate <project_path>`.
 
 ### 3.1 Chart Plot-Area Marker (MANDATORY on every chart page)
 
@@ -271,14 +274,14 @@ Every SVG page that contains a data visualization chart MUST include a plot-area
 
 **How to determine coordinate values**:
 
-| Value | Derivation |
-|-------|------------|
-| `x_min` | X coordinate of the Y-axis line (leftmost data boundary) |
-| `y_min` | Y coordinate of the topmost grid line (highest data boundary) |
-| `x_max` | X coordinate of the rightmost axis endpoint or grid line |
-| `y_max` | Y coordinate of the X-axis baseline |
+| Value    | Derivation                                                                 |
+| -------- | -------------------------------------------------------------------------- |
+| `x_min`  | X coordinate of the Y-axis line (leftmost data boundary)                   |
+| `y_min`  | Y coordinate of the topmost grid line (highest data boundary)              |
+| `x_max`  | X coordinate of the rightmost axis endpoint or grid line                   |
+| `y_max`  | Y coordinate of the X-axis baseline                                        |
 | `cx, cy` | Center point of pie/donut/radar (accounting for `transform="translate()"`) |
-| `r` | Outer radius of the chart |
+| `r`      | Outer radius of the chart                                                  |
 
 **Per-page verification** — after writing each chart SVG, confirm the marker exists:
 
@@ -287,6 +290,7 @@ grep "chart-plot-area" <project_path>/svg_output/<current_page>.svg
 ```
 
 > All chart templates in `templates/charts/` include this marker as a reference. If you are drawing a chart and the marker is absent, you have a bug.
+
 - **Technical specs**: see [shared-standards.md](shared-standards.md) for SVG/PPT constraints
 - **Card containers — use the documented patterns**: when a content page needs section cards (4 quadrants, parallel aspects, capability blocks, info cards), use the patterns codified in [`templates/charts/CHART_STYLE_GUIDE.md`](../templates/charts/CHART_STYLE_GUIDE.md) §11 — half-rounded section tab (§11.1), nested card border without stroke (§11.2), card-grid skeletons (§11.3), diagonal dashed connector for cross-quadrant relationships (§11.5), ground-anchor ellipse as a non-filter depth marker (§11.6), bidirectional interaction arrows for paired protocols (§11.7). Do not reinvent the "tinted full-rounded rect + white cover-rect to hide the bottom corners" hack; it survives in older templates but breaks SVG→PPTX color editing. Reference templates: [`labeled_card.svg`](../templates/charts/labeled_card.svg), [`quadrant_text_bullets.svg`](../templates/charts/quadrant_text_bullets.svg), [`kpi_cards.svg`](../templates/charts/kpi_cards.svg), [`matrix_2x2.svg`](../templates/charts/matrix_2x2.svg), [`team_roster.svg`](../templates/charts/team_roster.svg), [`client_server_flow.svg`](../templates/charts/client_server_flow.svg).
 - **Semantic shapes over preset stacks**: when a slide needs to express "ascending / converging / breaking through / stacking" — i.e., a relationship that goes beyond a generic arrow — prefer a single custom `<polygon>` or `<path>` that encodes the semantics geometrically, rather than stacking multiple preset arrows. A converging-tip path or a podium polygon reads faster than three arrows pointing at a label. Examples of this technique appear in many imported corporate decks; see `projects/01_template_import/svg_output/slide_01.svg` shape-158 for a reference (gradient-filled inward-pointing arrow). Do not codify these as templates — they are page-specific; the rule is just "consider polygon before stacking presets."
@@ -334,6 +338,7 @@ Strategist chooses the library and inventory; Executor only implements. Library 
 > Icons are auto-embedded by `finalize_svg.py` — no need to run `embed_icons.py` manually.
 
 **Searching for icons** — use terminal, zero token cost:
+
 ```bash
 ls skills/viettel-ppt-master/templates/icons/chunk-filled/ | grep home
 ls skills/viettel-ppt-master/templates/icons/tabler-filled/ | grep home
@@ -344,28 +349,28 @@ ls skills/viettel-ppt-master/templates/icons/simple-icons/ | grep github
 
 **Abstract concept → icon name** (names for `chunk-filled`; tabler libraries use their own equivalents — verify with `ls | grep`):
 
-| Concept | chunk-filled | tabler-filled / tabler-outline |
-|---------|-------|-------------------------------|
-| Growth / Increase | `arrow-trend-up` | same |
-| Decline / Decrease | `arrow-trend-down` | same |
-| Success / Complete | `circle-checkmark` | `circle-check` |
-| Warning / Risk | `triangle-exclamation` | `alert-triangle` |
-| Innovation / Idea | `lightbulb` | `bulb` |
-| Strategy / Goal | `target` | same |
-| Efficiency / Speed | `bolt` | same |
-| Collaboration / Team | `users` | same |
-| Settings / Config | `cog` | `settings` |
-| Security / Trust | `shield` | same |
-| Money / Finance | `dollar` | `currency-dollar` |
-| Time / Deadline | `clock` | same |
-| Location / Region | `map-pin` | same |
-| Communication | `comment` | `message` |
-| Analysis / Data | `chart-bar` | same |
-| Process / Flow | `arrows-rotate-clockwise` | `refresh` |
-| Global / World | `globe` | `world` |
-| Excellence / Award | `star` | same |
-| Expand / Scale | `maximize` | same |
-| Problem / Issue | `bug` | same |
+| Concept              | chunk-filled              | tabler-filled / tabler-outline |
+| -------------------- | ------------------------- | ------------------------------ |
+| Growth / Increase    | `arrow-trend-up`          | same                           |
+| Decline / Decrease   | `arrow-trend-down`        | same                           |
+| Success / Complete   | `circle-checkmark`        | `circle-check`                 |
+| Warning / Risk       | `triangle-exclamation`    | `alert-triangle`               |
+| Innovation / Idea    | `lightbulb`               | `bulb`                         |
+| Strategy / Goal      | `target`                  | same                           |
+| Efficiency / Speed   | `bolt`                    | same                           |
+| Collaboration / Team | `users`                   | same                           |
+| Settings / Config    | `cog`                     | `settings`                     |
+| Security / Trust     | `shield`                  | same                           |
+| Money / Finance      | `dollar`                  | `currency-dollar`              |
+| Time / Deadline      | `clock`                   | same                           |
+| Location / Region    | `map-pin`                 | same                           |
+| Communication        | `comment`                 | `message`                      |
+| Analysis / Data      | `chart-bar`               | same                           |
+| Process / Flow       | `arrows-rotate-clockwise` | `refresh`                      |
+| Global / World       | `globe`                   | `world`                        |
+| Excellence / Award   | `star`                    | same                           |
+| Expand / Scale       | `maximize`                | same                           |
+| Problem / Issue      | `bug`                     | same                           |
 
 > For self-evident names (home, user, file, search, arrow, etc.) — just `grep chunk-filled/` directly without consulting the table.
 
@@ -380,6 +385,7 @@ Chart SVGs referenced in **VII. Visualization Reference List** are loaded once v
 **Hard rule**: adapt the loaded chart SVG; do not improvise from memory and do not replicate verbatim. Apply project colors, typography, content; preserve visualization type.
 
 **Adaptation rules**:
+
 - **Preserve**: visualization type (bar/line/pie/timeline/process/framework…) as specified
 - **Adapt**: data, labels, colors (project scheme), dimensions
 - **Freely adjust**: composition, axis ranges, grid, legend, spacing, decoration — as long as the chart stays accurate and readable
@@ -401,13 +407,13 @@ The executor's only obligation here is upstream: embed the `<!-- chart-plot-area
 
 Handle images by their status in the Design Spec's Image Resource List. Status enum and lifecycle: [`svg-image-embedding.md`](svg-image-embedding.md).
 
-| Status | Source | Handling |
-|--------|--------|----------|
-| **Existing** | User-provided | Reference images directly from `../images/` directory |
-| **Generated** | Generated by Image_Generator | Reference images directly from `../images/` directory |
-| **Sourced** | Web-acquired by Image_Searcher | Reference from `../images/`. **Read [`image_sources.json`](image-searcher.md) to decide attribution** — see §6.1 below. |
-| **Needs-Manual** | Acquisition failed and file is absent | Use dashed border placeholder unless the expected file exists |
-| **Placeholder** | Not yet prepared | Use dashed border placeholder |
+| Status           | Source                                | Handling                                                                                                                |
+| ---------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Existing**     | User-provided                         | Reference images directly from `../images/` directory                                                                   |
+| **Generated**    | Generated by Image_Generator          | Reference images directly from `../images/` directory                                                                   |
+| **Sourced**      | Web-acquired by Image_Searcher        | Reference from `../images/`. **Read [`image_sources.json`](image-searcher.md) to decide attribution** — see §6.1 below. |
+| **Needs-Manual** | Acquisition failed and file is absent | Use dashed border placeholder unless the expected file exists                                                           |
+| **Placeholder**  | Not yet prepared                      | Use dashed border placeholder                                                                                           |
 
 **Reference syntax**: see [`svg-image-embedding.md`](svg-image-embedding.md).
 
@@ -419,9 +425,9 @@ Handle images by their status in the Design Spec's Image Resource List. Status e
 
 Whenever the slide uses an image with `Status: Sourced`, look up the corresponding entry in `project/images/image_sources.json` and act on `license_tier`:
 
-| `license_tier` | Action on this slide |
-|---|---|
-| `no-attribution` | Embed the `<image>` element only. **No credit element needed.** |
+| `license_tier`         | Action on this slide                                                                                                                            |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `no-attribution`       | Embed the `<image>` element only. **No credit element needed.**                                                                                 |
 | `attribution-required` | Embed the `<image>` element **plus** a small inline `<text>` credit element per the visual spec in [image-searcher.md §7](./image-searcher.md). |
 
 The credit text is **not** rendered by post-processing or export — it must be present in the SVG you produce. The shape of the credit element (size, position, color, multi-image source line, hero gradient overlay) is specified in [image-searcher.md §7](./image-searcher.md). Do not invent a different style.
@@ -479,6 +485,7 @@ Having framed the industry backdrop, let's look at the actual market landscape. 
 **Number readability**: TTS reads digits and symbols literally. Prefer fully-spelled forms in the language being spoken when literal pronunciation would be awkward (e.g. Chinese "百分之六十八" reads better than "68%"; "1-2分钟" reads as "一减二分钟"). Plain integers and percentages in English are fine as-is.
 
 **Common mistakes to avoid**:
+
 - Leaving any bracketed stage marker (`[过渡]` / `[Transition]` / `[Pause]` / `[Data]` / `[Scan Room]` / `[Interactive]` / `[Benchmark]` etc.) in the text — they will be read aloud literally.
 - Adding `要点：① …` / `Key points: (1) …` / `时长：2分钟` / `Duration: 2 minutes` / `Flex: …` lines — TTS will speak "要点 一 …".
 - Mixing languages within one deck's notes.

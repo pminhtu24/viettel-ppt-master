@@ -22,6 +22,25 @@
 >
 > Emit `- profile: custom_override` only when the user explicitly says not to use Viettel, names another brand, or supplies an explicit non-Viettel template path. A color, font, mood, or visual-style request alone does not qualify. For `custom_override`, omit `deep_blue_scope` and record the explicit override reason in `design_spec.md`.
 
+## generation
+
+- mode: chapter_parallel
+- parallel_runtime: auto
+- concurrency: 2
+
+> Normal runs MUST emit the default rows above after the user confirms the ninth confirmation. This means Executor Step 6 runs the parallel preflight and uses OpenClaw sub-agents when `sessions_spawn` / `sessions_yield` are available.
+>
+> Emit the legacy override below only when the user explicitly asks for serial / serialize / mode cũ / no parallel / no sub-agent:
+>
+> ```
+> - mode: serial
+> - parallel_runtime: none
+> - concurrency: 1
+> - reason: user_confirmed_serial
+> ```
+>
+> Do not choose serial because the deck is short, because serial seems fast enough, or because the prompt did not mention generation mode. Silence means `chapter_parallel`.
+
 ## colors
 
 - bg: #FFFFFF

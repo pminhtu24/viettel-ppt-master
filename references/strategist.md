@@ -8,7 +8,7 @@ As a top-tier AI presentation strategist, receive source documents, perform cont
 
 | Previous Step | Current | Next Step |
 |--------------|---------|-----------|
-| Project creation + brand profile confirmed | **Strategist**: Eight Confirmations + Design Spec | Image_Generator or Executor |
+| Project creation + brand profile confirmed | **Strategist**: Nine Confirmations + Design Spec | Image_Generator or Executor |
 
 > **Viettel default brand gate (HARD rule)**: every normal run uses `brand.profile: viettel_default` on PPT 16:9. Keep Viettel logo/chrome, the locked Viettel font stack, Viettel red, white/approved-gray surfaces, and dark-neutral text. Deep blue `#12436D` is restricted to chart, diagram/infographic, and icon marks. Use `brand.profile: custom_override` only when the user explicitly says not to use Viettel, names another brand, or supplies an explicit non-Viettel template path. A color, font, mood, or visual-style request alone does not override Viettel.
 
@@ -20,11 +20,11 @@ As a top-tier AI presentation strategist, receive source documents, perform cont
 
 ---
 
-## 1. Eight Confirmations Process
+## 1. Nine Confirmations Process
 
 🚧 **GATE — Mandatory read first**: `read_file templates/design_spec_reference.md` before any analysis or writing. The design_spec.md output MUST follow that template's 11-section structure exactly. After writing, self-check each section is present: I Project Info → II Canvas → III Visual Theme → IV Typography → V Layout → VI Icon → VII Visualization → VIII Image → IX Outline → X Speaker Notes → XI Tech Constraints.
 
-⛔ **BLOCKING**: After the read, present professional recommendations for the eight items below as a bundled package and wait for explicit user confirmation.
+⛔ **BLOCKING**: After the read, present professional recommendations for the nine items below as a bundled package and wait for explicit user confirmation.
 
 > **Execution discipline**: This is the last BLOCKING checkpoint in the pipeline. After confirmation, complete the Design Spec and proceed to image generation / SVG / post-processing without further pauses.
 
@@ -120,7 +120,7 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 
 > **Mandatory rules when choosing C**:
 >
-> **At the eight-confirmation stage — decide the library only. Do NOT run `ls | grep` yet.**
+> **At the nine-confirmation stage — decide the library only. Do NOT run `ls | grep` yet.**
 >
 > 1. **Pick exactly one stylistic library** — read the source material, then choose the library whose visual character best serves the deck:
 >    - **`chunk-filled`** — fill, straight-line geometry (M/L/H/V/Z only); sharp right angles; heavy, solid, architectural
@@ -131,7 +131,7 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 >    - **Brand-logo exception**: `simple-icons` is NOT a stylistic library. Add it to the deck's icon inventory **only when** the deck genuinely contains real company / product / service brand marks (customer logos, tech-stack icons, social handles). Never substitute it for a missing generic icon.
 > 2. **Stroke weight lock (stroke-style libraries only)** — for stroke-based libraries (currently `tabler-outline`), pick one deck-wide value from `{1.5, 2, 3}` (default `2`). For heavier presence, switch library instead of going above `3`.
 >
-> **After all eight confirmations are approved — when writing `design_spec.md` §VI / `spec_lock.md`**, then materialize the icon inventory:
+> **After all nine confirmations are approved — when writing `design_spec.md` §VI / `spec_lock.md`**, then materialize the icon inventory:
 >
 > 3. Enumerate the concepts the deck actually needs (home, chart, users, …) based on the confirmed outline.
 > 4. Search for each concept's filename in the chosen library: `ls skills/viettel-ppt-master/templates/icons/<chosen-library>/ | grep <keyword>`
@@ -144,7 +144,7 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 
 #### Font Combinations
 
-> **Viettel typography default (HARD rule for this skill).** Unless the user explicitly requests a non-Viettel brand override, typography is locked to the single family `"FS Magistral"`. During Eight Confirmations, state this fixed rule for visibility but do NOT ask the user to choose or approve a typeface. Do NOT propose alternative font combinations or substitute generic PPT-safe stacks. If the host lacks FS Magistral, runtime preflight handles it as `brand fidelity degraded`; the design decision remains unchanged.
+> **Viettel typography default (HARD rule for this skill).** Unless the user explicitly requests a non-Viettel brand override, typography is locked to the single family `"FS Magistral"`. During Nine Confirmations, state this fixed rule for visibility but do NOT ask the user to choose or approve a typeface. Do NOT propose alternative font combinations or substitute generic PPT-safe stacks. If the host lacks FS Magistral, runtime preflight handles it as `brand fidelity degraded`; the design decision remains unchanged.
 >
 > **Viettel weight lock (HARD rule).** Use FS Magistral Bold (`700`) for cover/chapter/page titles, section headers, card headers, KPI/hero numbers, callouts, highlighted labels, and any text intended to stand out. Use Book/Regular (`400`) for body copy, descriptions, captions, sources, footers, and ordinary chart labels. Use Medium (`500`) only for secondary subtitles or labels. Do not use `600`, `800`, or `900` in normal Viettel runs; the target display face is Bold, not ExtraBold.
 
@@ -503,6 +503,51 @@ Side-by-side only: container ratio must match image ratio. Hero / atmosphere / a
 
 > **Pipeline handoff**: When C) AI generation is selected, Image_Generator consumes `Pending` rows and updates them to `Generated` or `Needs-Manual` before Executor proceeds. Status names are defined in [`svg-image-embedding.md`](svg-image-embedding.md).
 
+### i. Generation Mode Confirmation
+
+Default recommendation for this skill:
+
+```text
+generation_mode=chapter_parallel
+parallel_runtime=auto
+concurrency=2
+```
+
+Present this as the default ninth confirmation. Explain briefly that the skill will split the deck into chapter/package work units; when OpenClaw exposes `sessions_spawn` / `sessions_yield`, eligible chapter packages run in isolated sub-agent sessions, while pages inside each package remain sequential for visual continuity. Cover / TOC / ending stay under the main agent unless the package planner marks otherwise.
+
+The user may explicitly choose the legacy mode:
+
+```text
+generation_mode=serial
+```
+
+Use serial only when the user asks for "serialize", "serial", "mode cũ", "không dùng parallel", "không spawn sub-agent", or equivalent. Do not default to serial because the deck is short, because serial seems fast enough, or because the user prompt did not mention parallel.
+
+**Recording the lock** — after the nine confirmations are approved, write to `spec_lock.md`:
+
+Default:
+
+```text
+## generation
+
+- mode: chapter_parallel
+- parallel_runtime: auto
+- concurrency: 2
+```
+
+Explicit legacy override:
+
+```text
+## generation
+
+- mode: serial
+- parallel_runtime: none
+- concurrency: 1
+- reason: user_confirmed_serial
+```
+
+Executor Step 6 reads this section before SVG authoring. If it says `serial`, Executor uses the legacy one-agent path and reports `fallback_reason: user_confirmed_serial`. Otherwise, Executor must run the parallel preflight and attempt OpenClaw sub-agent spawning when the runtime exposes the tools.
+
 ### Template Match — Visualization + Structural Patterns (Non-blocking — Strategist recommends, no user confirmation needed)
 
 The catalog covers **both data charts and structural information designs**. A "match" is not limited to numeric pages — any page whose content shape matches a `Pick for ...` clause is a candidate:
@@ -513,7 +558,7 @@ The catalog covers **both data charts and structural information designs**. A "m
 The most common Strategist failure mode is missing the structural half — treating "chart" as "numeric chart only" and leaving team / agenda / principles / journey pages as text-only when a template would fit. Read the catalog with both lenses.
 
 > **Reading is mandatory; the catalog is a starting point, not a copy target.**
-> - Fully read `templates/charts/charts_index.json` **before drafting the Eight Confirmations** — the read happens up front, not when you sit down to write Section VII. The file contains `meta` + `charts.<key>.summary` only; each `summary` is a selection rule (`"Pick for … Skip if …"`), not a description. There is **no category, quickLookup, or keyword index** — selection is done by semantically matching each page's content shape against all 71 summaries in one pass.
+> - Fully read `templates/charts/charts_index.json` **before drafting the Nine Confirmations** — the read happens up front, not when you sit down to write Section VII. The file contains `meta` + `charts.<key>.summary` only; each `summary` is a selection rule (`"Pick for … Skip if …"`), not a description. There is **no category, quickLookup, or keyword index** — selection is done by semantically matching each page's content shape against all 71 summaries in one pass.
 > - Not every page needs a chart. When a page's information structure matches a catalog entry, **use that template as a structural starting point** — keep the visualization type and core layout logic, then adapt composition, density, color, decoration, and accompanying elements to fit this deck's content and visual tone. Free adjustment is encouraged; what is forbidden is (a) generating without reading the catalog, and (b) blind verbatim mimicry that ignores the page's actual content weight.
 >
 > **Workflow**:
@@ -717,8 +762,9 @@ Divider rules:
 1. Read reference template: `templates/design_spec_reference.md`
 2. Generate complete spec from scratch based on analysis
 3. Save to: `projects/<project_name>.../design_spec.md`
-4. **Generate execution lock**: read `templates/spec_lock_reference.md` and produce `projects/<project_name>.../spec_lock.md` — a distilled, machine-readable short form of the brand / color / typography / icon / image / **page_rhythm** / optional **page_backgrounds** / **page_layouts** / **page_charts** decisions above. This file is what the Executor re-reads before every page (see [executor-base.md](executor-base.md) §2.1). The values in `spec_lock.md` MUST exactly match the decisions recorded in `design_spec.md`; if they ever diverge, `spec_lock.md` wins and `design_spec.md` should be treated as historical narrative.
+4. **Generate execution lock**: read `templates/spec_lock_reference.md` and produce `projects/<project_name>.../spec_lock.md` — a distilled, machine-readable short form of the brand / generation mode / color / typography / icon / image / **page_rhythm** / optional **page_backgrounds** / **page_layouts** / **page_charts** decisions above. This file is what the Executor re-reads before every page (see [executor-base.md](executor-base.md) §2.1). The values in `spec_lock.md` MUST exactly match the decisions recorded in `design_spec.md`; if they ever diverge, `spec_lock.md` wins and `design_spec.md` should be treated as historical narrative.
    - **brand is mandatory**: normal runs write `profile: viettel_default` and `deep_blue_scope: chart_diagram_icon_only`. Write `profile: custom_override` only after an explicit hard non-Viettel request and record the reason in `design_spec.md`.
+   - **generation is mandatory**: normal runs write `mode: chapter_parallel`, `parallel_runtime: auto`, and `concurrency: 2`. Write `mode: serial`, `parallel_runtime: none`, `concurrency: 1`, and `reason: user_confirmed_serial` only when the ninth confirmation explicitly selected legacy serial mode.
    - **page_rhythm is mandatory**: Based on the page list in §IX Content Outline, assign each page one of `anchor` / `dense` / `breathing` (see `spec_lock_reference.md` for the full vocabulary). This is what breaks the uniform "every page is a card grid" feel — without it the Executor defaults all pages to `dense`.
    - **Rhythm follows narrative, not quota**: `breathing` pages mark natural pauses — chapter transitions, standalone emphasis (hero quote / big number), SCQA bridges. For Viettel decks with clear major headings or 8+ slides, proactively create meaningful section dividers from the source structure (see §5.1). Dense decks may still be all `dense` only when the source has no real narrative break. **Do NOT invent filler pages** ("Thank you", empty dividers) to pad rhythm — every `breathing` page must say something independent.
    - **page_backgrounds is section-only for Viettel**: For `brand.profile: viettel_default`, read `templates/backgrounds/backgrounds_index.json` and assign background ids only to cover, chapter, section-divider, ending, and low-content `breathing` pages in §IX. Dense content, chart, KPI, and table pages MUST NOT appear in `page_backgrounds`; they use the clean Viettel shell.

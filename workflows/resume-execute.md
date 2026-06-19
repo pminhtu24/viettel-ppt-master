@@ -6,7 +6,7 @@ description: Phase B entry — resume PPT execution in a fresh chat after Phase 
 
 > Standalone Phase-B entry. Run when Phase A (SKILL.md Step 1–5) completed in a previous session and the user wants to continue with SVG generation + export. Loads project state from disk and runs Step 6 + Step 7 in a clean session.
 
-This workflow is **independent**: it owns Phase B starting from a fresh chat — no upstream conversation context required. By isolating SVG generation in its own session, the model gains 20–40K context headroom by not carrying Phase A's eight-confirmation dialogue, image search/fetch results, or Strategist references.
+This workflow is **independent**: it owns Phase B starting from a fresh chat — no upstream conversation context required. By isolating SVG generation in its own session, the model gains 20–40K context headroom by not carrying Phase A's nine-confirmation dialogue, image search/fetch results, or Strategist references.
 
 ## When to Run
 
@@ -47,9 +47,12 @@ Then jump to `### Step 6: Executor Phase` and run the documented pipeline:
 
 - Read references (executor-base + shared-standards + chosen style file + image-layout-spec + svg-image-embedding)
 - Design Parameter Confirmation
+- Executor Startup Order / Parallel Runtime Preflight (`chapter_parallel` default, `parallel_runtime=auto`, `concurrency=2`)
+- If OpenClaw exposes `sessions_spawn` / `sessions_yield`, spawn eligible chapter packages as isolated sub-agents before SVG authoring for those packages
 - Pre-generation Batch Read (every layout / chart SVG referenced in `spec_lock`)
-- Per-page `spec_lock` re-read + sequential page generation
+- Per-page `spec_lock` re-read + package-scoped SVG generation (sequential inside each package; chapter packages may run in parallel through sub-agents)
 - Quality Check Gate
+- Parallel merge + `parallel_generation.py validate` when `chapter_parallel` was used
 - Speaker notes generation
 - Step 7: Post-processing & Export (`total_md_split` → `finalize_svg` → `svg_to_pptx`)
 

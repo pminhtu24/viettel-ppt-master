@@ -2,7 +2,7 @@
 name: viettel-ppt-master
 description: >
   Viettel-branded presentation generation workflow that turns source materials
-  (PDF, DOCX, URLs, Markdown) into polished SVG slides and PPTX decks through multi-role collaboration,prioritizing corporate-grade design, Viettel brand consistency, clean layouts,data storytelling, and executive-ready slide visuals. Use when user asks to "create PPT", "make presentation", "PPT", "deck slide", or mentions "viettel-ppt-master".
+  (PDF, DOCX, URLs, Markdown) into polished SVG slides and PPTX decks through multi-role collaboration,prioritizing corporate-grade design, Viettel brand consistency, clean layouts,data storytelling, and executive-ready slide visuals. Use when user asks to "create PPT", "make presentation", "tạo slide", "powerpoint", "tạo bản thuyết trình" ,"PPT", "deck slide", or mentions "viettel-ppt-master", "viettel slides".
 ---
 
 # PPT Master Skill
@@ -19,11 +19,11 @@ description: >
 >
 > 1. **PHASE ORDER IS SERIAL** — Steps MUST be executed in order; the output of each step is the input for the next. Non-BLOCKING adjacent steps may proceed continuously once prerequisites are met, without waiting for the user to say "continue". Executor Step 6 may use controlled chapter-level parallelism only after all upstream gates and context snapshots exist
 > 2. **BLOCKING = HARD STOP** — Steps marked ⛔ BLOCKING require a full stop; the AI MUST wait for an explicit user response before proceeding and MUST NOT make any decisions on behalf of the user
-> 3. **NO CROSS-PHASE BUNDLING** — Cross-phase bundling is FORBIDDEN. (Note: the Eight Confirmations in Step 4 are ⛔ BLOCKING — the AI MUST present recommendations and wait for explicit user confirmation before proceeding. Once the user confirms, all subsequent non-BLOCKING steps — design spec output, SVG generation, speaker notes, and post-processing — may proceed automatically without further user confirmation)
+> 3. **NO CROSS-PHASE BUNDLING** — Cross-phase bundling is FORBIDDEN. (Note: the Nine Confirmations in Step 4 are ⛔ BLOCKING — the AI MUST present recommendations and wait for explicit user confirmation before proceeding. Once the user confirms, all subsequent non-BLOCKING steps — design spec output, SVG generation, speaker notes, and post-processing — may proceed automatically without further user confirmation)
 > 4. **GATE BEFORE ENTRY** — Each Step has prerequisites (🚧 GATE) listed at the top; these MUST be verified before starting that Step
 > 5. **NO SPECULATIVE EXECUTION** — "Pre-preparing" content for subsequent Steps is FORBIDDEN (e.g., writing SVG code during the Strategist phase)
 > 6. **CONTROLLED SUB-AGENT SVG GENERATION ONLY** — Executor Step 6 SVG generation is context-dependent. Sub-agent SVG generation is FORBIDDEN unless `generation_mode=chapter_parallel` and `parallel_runtime=openclaw_subagents` are active, the runtime exposes `sessions_spawn`, each sub-agent receives exactly one package, uses isolated context, writes only to run-local staging, and the main agent merges + validates before export
-> 7. **CHAPTER PARALLEL DEFAULT WITH AUDITED SERIAL FALLBACK** — In Executor Step 6, default generation is `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2`. Executor MUST run the parallel preflight gate before the first SVG. Silent serial fallback is FORBIDDEN: fallback to `generation_mode=serial` only after recording the exact reason (`sessions_spawn` absent, `sessions_yield` absent, spawn failed before package work, or no eligible chapter package). Pages inside each chapter package remain sequential for visual continuity
+> 7. **CHAPTER PARALLEL DEFAULT WITH AUDITED SERIAL FALLBACK** — In Executor Step 6, default generation is `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2`. Executor MUST run the parallel preflight gate before the first SVG unless the user explicitly confirmed `generation_mode=serial` in the ninth confirmation. Silent serial fallback is FORBIDDEN: fallback to `generation_mode=serial` only after recording the exact reason (`user_confirmed_serial`, `sessions_spawn` absent, `sessions_yield` absent, spawn failed before package work, or no eligible chapter package). Do not infer fallback from deck size, user prompt brevity, convenience, or a belief that serial will be "fast enough"; if sub-agent tools are exposed and the user did not choose serial, Executor must attempt to spawn eligible packages on the first run, not only after the user asks to rerun. Pages inside each chapter package remain sequential for visual continuity
 > 8. **SPEC_LOCK RE-READ PER PAGE** — Before generating each SVG page, Executor MUST `read_file <project_path>/spec_lock.md`. All colors / fonts / icons / images MUST come from this file — no values from memory or invented on the fly. Executor MUST also look up the current page's `page_rhythm` (`anchor` / `dense` / `breathing`), optional `page_backgrounds` (section-only Viettel background layer, if any), `page_layouts` (which template SVG to inherit, if any), and `page_charts` (which chart template to adapt, if any). Empty / absent entries are intentional Strategist signals; missing `page_backgrounds` means no decorative background for that page — see executor-base.md §2.1. This rule exists to resist context-compression drift on long decks and to break the uniform "every page is a card grid" default
 > 9. **SVG MUST BE HAND-WRITTEN, NOT SCRIPT-GENERATED** — Every SVG page is written directly by the active package author (main agent in serial mode, or the assigned isolated sub-agent in `openclaw_subagents` mode), one page at a time. Writing or running a Python / Node / shell script that produces the SVG files in batch — looping over pages, templating from data, or emitting them via a generator — is FORBIDDEN, including under "save tokens", "quick draft", or "user is in a hurry" pretexts. The script-generation path was tried on a feature branch and abandoned: cross-page visual consistency depends on per-page authoring with full upstream context, which a generator script cannot reproduce
 
@@ -50,7 +50,7 @@ description: >
 > - Every normal run of this skill is a Viettel-branded PPT 16:9 run. Initialize with `--brand-profile viettel_default`; do not wait for a Viettel keyword.
 > - Use `--brand-profile custom_override` only when the user explicitly says not to use Viettel, names another brand, or supplies an explicit non-Viettel template path. A color/font request alone is not an override.
 > - This skill's typography is locked to the single family `"FS Magistral"` for every normal run.
-> - During Eight Confirmations, state the typography lock for visibility; do not ask the user to choose or approve a typeface.
+> - During Nine Confirmations, state the typography lock for visibility; do not ask the user to choose or approve a typeface.
 > - Use FS Magistral Bold (`font-weight="700"`) for cover/chapter/page titles, section and card headers, KPI/hero numbers, callouts, and highlighted text. Use Book/Regular (`400`) for body, descriptions, captions, sources, and footers; Medium (`500`) is reserved for secondary subtitles/labels.
 > - Viettel red `#EE0033` is the brand accent. Deep blue `#12436D` is restricted to chart, diagram/infographic, and icon marks; never use it for text, backgrounds, cards, rails, footer, dividers, or decoration.
 > - Do NOT propose alternative brand colors, font combinations, typefaces, or competing templates unless the run is an explicit `custom_override`.
@@ -69,7 +69,7 @@ description: >
 | `${SKILL_DIR}/scripts/analyze_images.py`           | Image analysis                                                                                                                          |
 | `${SKILL_DIR}/scripts/image_gen.py`                | AI image generation (multi-provider)                                                                                                    |
 | `${SKILL_DIR}/scripts/svg_quality_checker.py`      | SVG quality check                                                                                                                       |
-| `${SKILL_DIR}/scripts/parallel_generation.py`      | Chapter-parallel planner, OpenClaw sub-agent prompt/staging preparer, staged output merger, and validator; does not generate SVG code    |
+| `${SKILL_DIR}/scripts/parallel_generation.py`      | Chapter-parallel planner, OpenClaw sub-agent prompt/staging preparer, staged output merger, and validator; does not generate SVG code   |
 | `${SKILL_DIR}/scripts/total_md_split.py`           | Speaker notes splitting                                                                                                                 |
 | `${SKILL_DIR}/scripts/finalize_svg.py`             | SVG post-processing (unified entry)                                                                                                     |
 | `${SKILL_DIR}/scripts/svg_to_pptx.py`              | Export to PPTX                                                                                                                          |
@@ -168,10 +168,11 @@ Import source content (choose based on the situation):
 | User provided text directly in conversation | No import needed — content is already in conversation context; subsequent steps can reference it directly |
 
 > ℹ️ `import-sources` automatically selects the safe transfer mode — **no flag needed**:
+>
 > - **Binary source files** (PDF, DOCX, PPTX, images) outside the repo are **copied** into `sources/` — the original at `~/Downloads/` or elsewhere is never deleted.
 > - **Derived `.md` files** (generated by Step 1 converters) are always **moved** into `sources/` regardless of location — they are temp artifacts, not originals.
 > - Any file already inside the repo is moved to avoid accidental commits.
-> Intermediate companion directories (e.g., `<stem>_files/`) are handled automatically.
+>   Intermediate companion directories (e.g., `<stem>_files/`) are handled automatically.
 
 **✅ Checkpoint — Confirm project structure created successfully, `sources/` contains all source files, converted materials are ready. Proceed to Step 3.**
 
@@ -205,9 +206,9 @@ Read references/strategist.md
 
 > ⚠️ **Mandatory gate**: before writing `design_spec.md`, Strategist MUST `read_file templates/design_spec_reference.md` and follow its full I–XI section structure. See `strategist.md` Section 1.
 
-**Eight Confirmations** (full template: `templates/design_spec_reference.md`):
+**Nine Confirmations** (full template: `templates/design_spec_reference.md`):
 
-⛔ **BLOCKING**: present the Eight Confirmations as a single bundled recommendation set and **wait for explicit user confirmation or modification** before outputting Design Specification & Content Outline. This is the single core confirmation point — once confirmed, all subsequent steps proceed automatically.
+⛔ **BLOCKING**: present the Nine Confirmations as a single bundled recommendation set and **wait for explicit user confirmation or modification** before outputting Design Specification & Content Outline. This is the single core confirmation point — once confirmed, all subsequent steps proceed automatically.
 
 1. Canvas format
 2. Page count range
@@ -217,6 +218,7 @@ Read references/strategist.md
 6. Icon usage approach
 7. Typography plan (fixed FS Magistral family and weight rules; informational, not a font choice)
 8. Image usage approach
+9. Generation mode: default `chapter_parallel` with OpenClaw sub-agents when available; user may explicitly choose legacy `serial`
 
 **Viettel brand lock**: for every normal run, present PPT 16:9, Viettel red `#EE0033`, white/approved-gray reporting surfaces, dark-neutral text, the locked family `"FS Magistral"` and its fixed weight roles, top-right logo slot, footer/page-number treatment, and content safe area as fixed decisions. Typography is informational in the confirmation set, not a user choice. Deep blue `#12436D` is chart/diagram/icon-only. `spec_lock.md` MUST record `brand.profile: viettel_default` and these values exactly. Only an explicit hard non-Viettel request may record `brand.profile: custom_override`.
 
@@ -231,14 +233,14 @@ python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>
 - local bundle present in `<project_path>/fonts/` → tell the user the font is installable from the local bundle and ask explicit permission before attempting host installation
 - default policy: do **not** auto-install fonts
 
-**Mandatory — split-mode note** (not a ninth confirmation): after listing the eight confirmation details, you MUST append exactly one short line (rendered in the user's language, prefixed with 💡) about generation mode. Pick the variant by qualitative read of Phase A signals — recommended page count, source-material bulk, whether `topic-research` ran with substantial web-fetch accumulation:
+**Mandatory — split-mode note** (not part of the nine confirmations): after listing the nine confirmation details, you MUST append exactly one short line (rendered in the user's language, prefixed with 💡) about split mode. Pick the variant by qualitative read of Phase A signals — recommended page count, source-material bulk, whether `topic-research` ran with substantial web-fetch accumulation:
 
 | Signal read                                                            | Line content                                                                                                                                                                                                                                                                                                                   |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Heavy (long page count / bulky sources / heavy web-fetch accumulation) | State estimated page count and large source size; recommend switching to [split mode](workflows/resume-execute.md) after Step 5 — stop this chat, open a fresh window and input `continue generation projects/<project_name>` to enter Phase B (SVG generation + export); no response or "continue" = default continuous mode. |
 | Normal (default)                                                       | State scale is moderate, default continuous mode generates in one go; if mid-way window switch is desired, input `continue generation projects/<project_name>` after Step 5 to switch to [split mode](workflows/resume-execute.md).                                                                                            |
 
-This line is required output every run — the user must always see the mode choice exists. Whether to act on it is the user's call.
+This line is required output every run — the user must always see the split-mode choice exists. Whether to act on it is the user's call.
 
 If `<project_path>/images` contains any existing images, including assets extracted
 from source documents, run analysis **before outputting the design spec**, unless the
@@ -263,8 +265,8 @@ python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
 ```markdown
 ## ✅ Strategist Phase Complete
 
-- [x] Eight Confirmations completed (user confirmed)
-- [x] Split-mode note appended below the eight items (heavy or normal variant)
+- [x] Nine Confirmations completed (user confirmed)
+- [x] Split-mode note appended below the nine items (heavy or normal variant)
 - [x] Design Specification & Content Outline generated
 - [x] Execution lock (spec_lock.md) generated
 - [ ] **Next**: Auto-proceed to [Image_Generator / Executor] phase
@@ -363,14 +365,31 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 
 **Font-preflight gate (Mandatory for bundled brand fonts)**: before the first SVG page, if `<project_path>/fonts/` exists or `spec_lock.md typography` leads with a non-preinstalled brand font, run `python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>`. If the result is `fallback in use` or `missing`, surface `brand fidelity degraded` and continue only after making that runtime state explicit to the user. Installing from the local bundle is opt-in and requires explicit user approval.
 
+**Executor Startup Order (Hard Gate — no SVG before this completes)**:
+
+1. Read `<project_path>/spec_lock.md ## generation` if present.
+2. If it says `mode: serial`, print `## Parallel Runtime Decision` with `generation_mode: serial`, `parallel_runtime: serial_fallback`, and `fallback_reason: user_confirmed_serial`, then generate through the legacy serial path.
+3. Otherwise, run `parallel_generation.py plan`.
+4. Run `parallel_generation.py prepare-subagents`.
+5. Read the generated run manifest and count `subagent_groups` / `main_agent_groups`.
+6. Decide runtime by tool availability:
+   - if `sessions_spawn` and `sessions_yield` are callable and `subagent_groups > 0`, set `parallel_runtime=openclaw_subagents`;
+   - if either tool is not callable, set `parallel_runtime=serial_fallback` and print the exact missing-tool reason;
+   - if `subagent_groups == 0`, set `parallel_runtime=serial_fallback` and print `fallback_reason: no eligible chapter package`.
+7. Print `## Parallel Runtime Decision`.
+8. If `parallel_runtime=openclaw_subagents`, call `sessions_spawn` for the eligible package prompts before authoring any SVG assigned to those packages. The main agent may generate only main-agent packages while sub-agents run.
+
+Serial generation of chapter/package slides without this startup gate is a workflow violation. If this gate was skipped, stop and run it immediately; do not finish serial generation and ask the user to rerun.
+
 > ⚠️ **Controlled package authorship**: SVG generation stays in the main agent unless `generation_mode=chapter_parallel` selects `parallel_runtime=openclaw_subagents`. In that mode, sub-agents may author SVG only for their assigned package, in isolated context, into staging output, followed by main-agent merge + validation.
 > ⚠️ **Generation rhythm**: default `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2`. Use OpenClaw `sessions_spawn` only when the runtime exposes it; otherwise fallback to `generation_mode=serial`. Do not treat ad hoc page batches (e.g., 5 per group) as valid parallel mode.
 
 **Generation Mode Selection (Mandatory)**:
 
 - **Default / production**: `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2`.
+- **User override**: if the ninth confirmation explicitly selected `generation_mode=serial`, generate through the existing one-agent path and report `fallback_reason: user_confirmed_serial`.
 - **Fallback**: if `sessions_spawn` / `sessions_yield` are unavailable or fail before package work starts, set `generation_mode=serial` and generate through the existing one-agent path, but only after reporting the exact fallback reason.
-- Before writing any SVG, run the parallel preflight commands:
+- Before writing any SVG, run the parallel preflight commands unless the ninth confirmation explicitly selected `generation_mode=serial`:
 
 ```bash
 python3 ${SKILL_DIR}/scripts/parallel_generation.py plan <project_path> --concurrency 2
@@ -383,25 +402,28 @@ Report this checkpoint before generating any SVG:
 
 ```markdown
 ## Parallel Runtime Decision
-- generation_mode: chapter_parallel
+
+- generation_mode: chapter_parallel | serial
 - parallel_runtime: openclaw_subagents | serial_fallback
 - concurrency: 2
 - run_id: <run_id or n/a>
 - subagent_packages: <count>
 - main_agent_packages: <count>
-- fallback_reason: <none or exact reason>
+- fallback_reason: <none | user_confirmed_serial | exact fallback reason>
 ```
 
 - If `sessions_spawn` and `sessions_yield` are available and `subagent_packages > 0`, `parallel_runtime` MUST be `openclaw_subagents`.
 - If either tool is unavailable, state exactly: `fallback_reason: sessions_spawn/sessions_yield unavailable in active runtime`.
 - If a spawn call fails before package work starts, state the exact tool error and fallback to serial.
 - Do not begin SVG generation in the main agent until this checkpoint is printed.
+- Do not claim runtime fallback unless the startup gate above was actually attempted. The only serial path that skips parallel planning is `fallback_reason: user_confirmed_serial`. User prompt brevity, page count, or perceived speed is not a valid fallback reason.
 
 Use the generated `parallel_generation/` work packages as the chapter-level contract. Cover / TOC / ending packages remain main-agent packages. Chapter packages may run concurrently through `sessions_spawn`; pages inside one package stay serial. SVG files are still hand-written from the package context, never script-generated.
 
 **OpenClaw Sub-Agent Spawn Pattern**:
 
 - Spawn only groups listed in `<project_path>/parallel_generation/runs/<run_id>/run_manifest.json` under `subagent_groups`.
+- Prefer the manifest's per-package `spawn_request` fields when present; they contain the exact `task`, `taskName`, prompt path, and staging path for each package.
 - Use isolated context and keep cleanup artifacts for debugging:
 
 ```js
@@ -412,8 +434,8 @@ sessions_spawn({
   mode: "run",
   context: "isolated",
   cleanup: "keep",
-  timeoutSeconds: 1800
-})
+  timeoutSeconds: 1800,
+});
 ```
 
 - Spawn up to `concurrency=2`, then call `sessions_yield()`.

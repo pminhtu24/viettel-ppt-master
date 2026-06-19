@@ -2,7 +2,7 @@
 
 > Human-readable design narrative — rationale, audience, style, color choices, content outline. Read once by downstream roles for context.
 >
-> Machine-readable execution contract: `spec_lock.md` (color / typography / icon / image short form). Executor re-reads `spec_lock.md` before every SVG page to resist context-compression drift. Keep both in sync; on divergence, `spec_lock.md` wins.
+> Machine-readable execution contract: `spec_lock.md` (generation mode / color / typography / icon / image short form). Executor re-reads `spec_lock.md` before every SVG page to resist context-compression drift. Keep both in sync; on divergence, `spec_lock.md` wins.
 >
 > **Viettel default brand contract**: every normal run uses PPT 16:9 and `brand.profile: viettel_default`. Keep the Viettel logo/chrome, locked font stack, Viettel red, white/approved-gray surfaces, and dark-neutral text on every page. Deep blue `#12436D` is chart/diagram/icon-only and every such mark must be inside `<g data-viettel-blue-scope="chart|diagram|icon">`. Use `brand.profile: custom_override` only for an explicit hard non-Viettel request; color/font/style requests alone do not unlock the brand.
 
@@ -13,6 +13,7 @@
 | **Project Name** | {project_name} |
 | **Canvas Format** | {canvas_info['name']} ({canvas_info['dimensions']}) |
 | **Page Count** | [Filled by Strategist] |
+| **Generation Mode** | chapter_parallel by default; serial only if user explicitly requests legacy mode |
 | **Design Style** | {design_style} |
 | **Target Audience** | [Filled by Strategist] |
 | **Use Case** | [Filled by Strategist] |
