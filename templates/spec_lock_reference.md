@@ -24,22 +24,21 @@
 
 ## generation
 
-- mode: chapter_parallel
-- parallel_runtime: auto
-- concurrency: 2
+- mode: serial
+- parallel_runtime: none
+- concurrency: 1
 
-> Normal runs MUST emit the default rows above after the user confirms the ninth confirmation. This means Executor Step 6 runs the parallel preflight and uses OpenClaw sub-agents when `sessions_spawn` / `sessions_yield` are available.
+> Normal runs of 15 confirmed slides or fewer MUST emit the default serial rows above after the user confirms the ninth confirmation. This avoids sub-agent startup overhead on short decks.
 >
-> Emit the legacy override below only when the user explicitly asks for serial / serialize / mode cũ / no parallel / no sub-agent:
+> Emit the parallel override below when the confirmed page count is greater than 15, or when the user explicitly asks for parallel / spawn / sub-agent / chạy song song:
 >
 > ```
-> - mode: serial
-> - parallel_runtime: none
-> - concurrency: 1
-> - reason: user_confirmed_serial
+> - mode: chapter_parallel
+> - parallel_runtime: auto
+> - concurrency: 2
 > ```
 >
-> Do not choose serial because the deck is short, because serial seems fast enough, or because the prompt did not mention generation mode. Silence means `chapter_parallel`.
+> User override wins: explicit serial / tuần tự / no parallel / no sub-agent keeps `mode: serial` even above 15 slides; explicit parallel keeps `mode: chapter_parallel` even at 15 slides or fewer. If page count was a range, use the final confirmed/recommended slide count, not the range endpoints.
 
 ## colors
 

@@ -505,7 +505,15 @@ Side-by-side only: container ratio must match image ratio. Hero / atmosphere / a
 
 ### i. Generation Mode Confirmation
 
-Default recommendation for this skill:
+Default recommendation for decks with a confirmed page count of 15 or fewer:
+
+```text
+generation_mode=serial
+parallel_runtime=none
+concurrency=1
+```
+
+Auto-recommend parallel only when the confirmed page count is greater than 15:
 
 ```text
 generation_mode=chapter_parallel
@@ -513,19 +521,30 @@ parallel_runtime=auto
 concurrency=2
 ```
 
-Present this as the default ninth confirmation. Explain briefly that the skill will split the deck into chapter/package work units; when OpenClaw exposes `sessions_spawn` / `sessions_yield`, eligible chapter packages run in isolated sub-agent sessions, while pages inside each package remain sequential for visual continuity. Cover / TOC / ending stay under the main agent unless the package planner marks otherwise.
+Present this as the ninth confirmation. Explain briefly that serial avoids sub-agent startup overhead on short decks, while `chapter_parallel` splits the deck into work packages for longer decks; when OpenClaw exposes `sessions_spawn` / `sessions_yield`, packages listed in `run_manifest.subagent_groups` run in isolated sub-agent sessions, while pages inside each package remain sequential for visual continuity. Cover / TOC / ending stay under the main agent unless the package planner marks otherwise.
 
-The user may explicitly choose the legacy mode:
+User override wins over the page-count rule:
 
 ```text
 generation_mode=serial
+generation_mode=chapter_parallel
 ```
 
-Use serial only when the user asks for "serialize", "serial", "mode cũ", "không dùng parallel", "không spawn sub-agent", or equivalent. Do not default to serial because the deck is short, because serial seems fast enough, or because the user prompt did not mention parallel.
+Use `serial` when the user asks for "serialize", "serial", "tuần tự", "mode cũ", "không dùng parallel", "không spawn sub-agent", or equivalent. Use `chapter_parallel` when the user asks for "parallel", "spawn", "sub-agent", "chạy song song", or equivalent. If page count was a range, use the final confirmed/recommended slide count from the ninth confirmation decision, not the range endpoints.
 
 **Recording the lock** — after the nine confirmations are approved, write to `spec_lock.md`:
 
-Default:
+Default for 15 slides or fewer:
+
+```text
+## generation
+
+- mode: serial
+- parallel_runtime: none
+- concurrency: 1
+```
+
+Auto parallel for more than 15 slides, or explicit parallel override:
 
 ```text
 ## generation
@@ -535,7 +554,7 @@ Default:
 - concurrency: 2
 ```
 
-Explicit legacy override:
+Explicit serial override:
 
 ```text
 ## generation
@@ -546,7 +565,7 @@ Explicit legacy override:
 - reason: user_confirmed_serial
 ```
 
-Executor Step 6 reads this section before SVG authoring. If it says `serial`, Executor uses the legacy one-agent path and reports `fallback_reason: user_confirmed_serial`. Otherwise, Executor must run the parallel preflight and attempt OpenClaw sub-agent spawning when the runtime exposes the tools.
+Executor Step 6 reads this section before SVG authoring. If it says `serial`, Executor uses the legacy one-agent path, skips parallel preflight, and reports `parallel_runtime: none`. If it says `chapter_parallel`, Executor must run the parallel preflight and attempt OpenClaw sub-agent spawning when the runtime exposes the tools. If sub-agent tools are unavailable, Executor keeps `mode: chapter_parallel` and falls back only at `parallel_runtime=main_agent_packages`.
 
 ### Template Match — Visualization + Structural Patterns (Non-blocking — Strategist recommends, no user confirmation needed)
 
@@ -764,7 +783,7 @@ Divider rules:
 3. Save to: `projects/<project_name>.../design_spec.md`
 4. **Generate execution lock**: read `templates/spec_lock_reference.md` and produce `projects/<project_name>.../spec_lock.md` — a distilled, machine-readable short form of the brand / generation mode / color / typography / icon / image / **page_rhythm** / optional **page_backgrounds** / **page_layouts** / **page_charts** decisions above. This file is what the Executor re-reads before every page (see [executor-base.md](executor-base.md) §2.1). The values in `spec_lock.md` MUST exactly match the decisions recorded in `design_spec.md`; if they ever diverge, `spec_lock.md` wins and `design_spec.md` should be treated as historical narrative.
    - **brand is mandatory**: normal runs write `profile: viettel_default` and `deep_blue_scope: chart_diagram_icon_only`. Write `profile: custom_override` only after an explicit hard non-Viettel request and record the reason in `design_spec.md`.
-   - **generation is mandatory**: normal runs write `mode: chapter_parallel`, `parallel_runtime: auto`, and `concurrency: 2`. Write `mode: serial`, `parallel_runtime: none`, `concurrency: 1`, and `reason: user_confirmed_serial` only when the ninth confirmation explicitly selected legacy serial mode.
+   - **generation is mandatory**: normal runs of 15 confirmed slides or fewer write `mode: serial`, `parallel_runtime: none`, and `concurrency: 1`. Write `mode: chapter_parallel`, `parallel_runtime: auto`, and `concurrency: 2` only when the confirmed page count is greater than 15 or the user explicitly selected parallel / spawn / sub-agent execution.
    - **page_rhythm is mandatory**: Based on the page list in §IX Content Outline, assign each page one of `anchor` / `dense` / `breathing` (see `spec_lock_reference.md` for the full vocabulary). This is what breaks the uniform "every page is a card grid" feel — without it the Executor defaults all pages to `dense`.
    - **Rhythm follows narrative, not quota**: `breathing` pages mark natural pauses — chapter transitions, standalone emphasis (hero quote / big number), SCQA bridges. For Viettel decks with clear major headings or 8+ slides, proactively create meaningful section dividers from the source structure (see §5.1). Dense decks may still be all `dense` only when the source has no real narrative break. **Do NOT invent filler pages** ("Thank you", empty dividers) to pad rhythm — every `breathing` page must say something independent.
    - **page_backgrounds is section-only for Viettel**: For `brand.profile: viettel_default`, read `templates/backgrounds/backgrounds_index.json` and assign background ids only to cover, chapter, section-divider, ending, and low-content `breathing` pages in §IX. Dense content, chart, KPI, and table pages MUST NOT appear in `page_backgrounds`; they use the clean Viettel shell.

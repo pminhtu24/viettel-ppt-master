@@ -302,7 +302,7 @@ def _write_context(
         f"- Concurrency: `{manifest['concurrency']}`",
         "- SVG generation remains hand-written; this planner only splits work.",
         "- Cover, TOC/agenda, and ending packages are standalone.",
-        "- Chapter packages may run concurrently; pages inside one package stay serial.",
+        "- Sub-agent work packages may run concurrently; pages inside one package stay serial.",
         "",
         "## Groups",
         "",
@@ -485,9 +485,9 @@ def _render_package_prompt(
 
     return "\n".join(
         [
-            "# Viettel PPT Chapter Package Task",
+            "# Viettel PPT Work Package Task",
             "",
-            "You are an isolated OpenClaw sub-agent assigned to one chapter package.",
+            "You are an isolated OpenClaw sub-agent assigned to one work package from run_manifest.subagent_groups.",
             "Generate only the SVG pages listed in this prompt.",
             "",
             "## Scope",
@@ -655,7 +655,7 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
     (run_dir / "sessions_spawn_runbook.md").write_text("\n\n".join(runbook), encoding="utf-8")
 
     print(f"[OK] Prepared OpenClaw sub-agent run: {run_dir}")
-    print(f"[OK] Sub-agent packages: {len(subagent_groups)} | Main-agent packages: {len(main_agent_groups)}")
+    print(f"[OK] Sub-agent work packages: {len(subagent_groups)} | Main-agent packages: {len(main_agent_groups)}")
     print(f"[OK] Runbook: {run_dir / 'sessions_spawn_runbook.md'}")
     for package in subagent_groups:
         print(f"  - {package['id']}: {', '.join(package['pages'])} -> {package['prompt_file']}")

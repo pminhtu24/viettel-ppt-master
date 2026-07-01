@@ -139,7 +139,7 @@ Behavior:
 - `parallel_generation.py plan` writes immutable package context under `<project_path>/parallel_generation/`.
 - `prepare-subagents` writes OpenClaw package prompts, staging directories, and a `sessions_spawn` runbook under `<project_path>/parallel_generation/runs/<run_id>/`.
 - `merge` checks package reports, missing/duplicate/out-of-scope staged SVGs, and copies staged package output into `<project_path>/svg_output/`.
-- Chapter packages may be generated separately, but pages inside one package remain serial for continuity.
+- Work packages may be generated separately through `run_manifest.subagent_groups`; pages inside one package remain serial for continuity.
 - `parallel_generation.py validate` checks missing/duplicate/out-of-order slides, spec snapshot drift, and SVG quality before export.
 
 ## `svg_position_calculator.py`
