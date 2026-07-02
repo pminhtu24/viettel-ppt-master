@@ -740,7 +740,9 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
             "",
             "## Spawn Commands",
             "",
+            "Use these generated package prompts only. Do not write direct ad hoc `sessions_spawn` prompts.",
             "Call one `sessions_spawn` per package. Do not combine multiple package prompts in one sub-agent.",
+            "Each sub-agent must write only to its package `svg_output_dir` under this run's `work/<package_id>/` staging directory.",
             "",
         ]
     )

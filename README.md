@@ -95,7 +95,7 @@ Flow parallel:
 
 1. Tạo work packages bằng `python3 scripts/parallel_generation.py plan <project_path>`.
 2. Chuẩn bị prompt và staging bằng `python3 scripts/parallel_generation.py prepare-subagents <project_path>`.
-3. Nếu OpenClaw có `sessions_spawn` / `sessions_yield`, mỗi sub-agent nhận đúng một work package từ `run_manifest.subagent_groups` và ghi SVG vào staging riêng: `parallel_generation/runs/<run_id>/work/<group_id>/svg_output/`. Mặc định concurrency bằng số package sub-agent; truyền `--concurrency N` chỉ khi muốn chia batch nhỏ hơn.
+3. Nếu OpenClaw có `sessions_spawn` / `sessions_yield`, spawn bằng từng `spawn_request` trong `parallel_generation/runs/<run_id>/run_manifest.json`. Mỗi sub-agent nhận đúng một work package từ `run_manifest.subagent_groups` và ghi SVG vào staging riêng: `parallel_generation/runs/<run_id>/work/<group_id>/svg_output/`. Không spawn trực tiếp bằng prompt tự viết. Mặc định concurrency bằng số package sub-agent; truyền `--concurrency N` chỉ khi muốn chia batch nhỏ hơn.
 4. Main agent merge staging về `svg_output/`, chạy validate, rồi mới export PPTX bằng pipeline cũ.
 
 OpenClaw sub-agent được trigger theo pattern:
