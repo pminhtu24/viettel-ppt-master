@@ -441,8 +441,17 @@ def _write_context(
         (contracts_dir / f"{page.key}.md").write_text("\n".join(contract), encoding="utf-8")
 
 
-def _write_plan(project: Path, concurrency: int) -> tuple[dict[str, Any], Path]:
+def _resolve_concurrency(requested: int | None, groups: list[dict[str, Any]]) -> int:
+    if requested is not None:
+        if requested < 1 or requested > 8:
+            raise ValueError("--concurrency must be between 1 and 8")
+        return requested
+    return max(1, sum(1 for group in groups if group.get("parallel_eligible")))
+
+
+def _write_plan(project: Path, concurrency: int | None) -> tuple[dict[str, Any], Path]:
     pages, groups = _build_page_contracts(project)
+    resolved_concurrency = _resolve_concurrency(concurrency, groups)
     out_dir = project / "parallel_generation"
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -451,7 +460,7 @@ def _write_plan(project: Path, concurrency: int) -> tuple[dict[str, Any], Path]:
         "mode": "chapter_parallel",
         "created_at": _utc_now(),
         "project": project.name,
-        "concurrency": concurrency,
+        "concurrency": resolved_concurrency,
         "source_hashes": {
             "design_spec.md": _sha256(project / "design_spec.md"),
             "spec_lock.md": _sha256(project / "spec_lock.md"),
@@ -475,15 +484,17 @@ def cmd_plan(args: argparse.Namespace) -> int:
     if not project.exists():
         print(f"[ERROR] Project path does not exist: {project}")
         return 1
-    if args.concurrency < 1 or args.concurrency > 8:
-        print("[ERROR] --concurrency must be between 1 and 8")
+
+    try:
+        manifest, out_dir = _write_plan(project, args.concurrency)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"[ERROR] {exc}")
         return 1
 
-    manifest, out_dir = _write_plan(project, args.concurrency)
     print(f"[OK] Wrote parallel generation plan: {out_dir}")
     print(
         f"[OK] Pages: {len(manifest['pages'])} | "
-        f"Groups: {len(manifest['groups'])} | Concurrency: {args.concurrency}"
+        f"Groups: {len(manifest['groups'])} | Concurrency: {manifest['concurrency']}"
     )
     for group in manifest["groups"]:
         eligible = "parallel" if group["parallel_eligible"] else "standalone"
@@ -626,9 +637,6 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
     if not project.exists():
         print(f"[ERROR] Project path does not exist: {project}")
         return 1
-    if args.concurrency < 1 or args.concurrency > 8:
-        print("[ERROR] --concurrency must be between 1 and 8")
-        return 1
 
     try:
         manifest, _ = _write_plan(project, args.concurrency)
@@ -705,7 +713,7 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
         "project": project.name,
         "project_path": str(project),
         "run_id": run_dir.name,
-        "concurrency": args.concurrency,
+        "concurrency": manifest["concurrency"],
         "source_manifest": str(project / "parallel_generation" / "manifest.json"),
         "subagent_groups": subagent_groups,
         "main_agent_groups": main_agent_groups,
@@ -720,7 +728,7 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
         "",
         f"- Project: `{project}`",
         f"- Run ID: `{run_dir.name}`",
-        f"- Concurrency: `{args.concurrency}`",
+        f"- Concurrency: `{manifest['concurrency']}`",
         "",
         "## Main-Agent Packages",
         "",
@@ -737,8 +745,9 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
         ]
     )
     if spawn_snippets:
-        for batch_index, start in enumerate(range(0, len(spawn_snippets), args.concurrency), start=1):
-            batch = spawn_snippets[start : start + args.concurrency]
+        concurrency = int(manifest["concurrency"])
+        for batch_index, start in enumerate(range(0, len(spawn_snippets), concurrency), start=1):
+            batch = spawn_snippets[start : start + concurrency]
             runbook.extend([f"### Batch {batch_index}", ""])
             runbook.extend(batch)
             runbook.extend(["", "Wait for this batch before starting the next one:", "", "```js\nsessions_yield()\n```", ""])
@@ -999,12 +1008,22 @@ def build_parser() -> argparse.ArgumentParser:
 
     plan = sub.add_parser("plan", help="create chapter-parallel work packages")
     plan.add_argument("project_path", type=Path)
-    plan.add_argument("--concurrency", type=int, default=2)
+    plan.add_argument(
+        "--concurrency",
+        type=int,
+        default=None,
+        help="Optional spawn batch size; defaults to one sub-agent per eligible package.",
+    )
     plan.set_defaults(func=cmd_plan)
 
     prepare = sub.add_parser("prepare-subagents", help="create OpenClaw sub-agent package prompts and staging dirs")
     prepare.add_argument("project_path", type=Path)
-    prepare.add_argument("--concurrency", type=int, default=2)
+    prepare.add_argument(
+        "--concurrency",
+        type=int,
+        default=None,
+        help="Optional spawn batch size; defaults to one sub-agent per eligible package.",
+    )
     prepare.add_argument("--run-id", default=None)
     prepare.set_defaults(func=cmd_prepare_subagents)
 

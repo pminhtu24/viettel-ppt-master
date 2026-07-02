@@ -35,8 +35,9 @@
 > ```
 > - mode: chapter_parallel
 > - parallel_runtime: auto
-> - concurrency: 2
 > ```
+>
+> Do not write a fixed parallel concurrency here. `parallel_generation.py` resolves concurrency from the number of `| subagent` packages in `## generation_packages`.
 >
 > User override wins: explicit serial / tuần tự / no parallel / no sub-agent keeps `mode: serial` even above 15 slides; explicit parallel keeps `mode: chapter_parallel` even at 15 slides or fewer. If page count was a range, use the final confirmed/recommended slide count, not the range endpoints and not a buffered threshold.
 

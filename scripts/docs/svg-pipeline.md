@@ -129,15 +129,15 @@ Experimental chapter-parallel generation support. These tools run before
 `finalize_svg.py`; they do not template or code-generate SVG markup.
 
 ```bash
-python3 scripts/parallel_generation.py plan <project_path> --concurrency 2
-python3 scripts/parallel_generation.py prepare-subagents <project_path> --concurrency 2
+python3 scripts/parallel_generation.py plan <project_path>
+python3 scripts/parallel_generation.py prepare-subagents <project_path>
 python3 scripts/parallel_generation.py merge <project_path> --run-id <run_id>
 python3 scripts/parallel_generation.py validate <project_path>
 ```
 
 Behavior:
 - `parallel_generation.py plan` writes immutable package context under `<project_path>/parallel_generation/`.
-- `prepare-subagents` writes OpenClaw package prompts, staging directories, and a `sessions_spawn` runbook under `<project_path>/parallel_generation/runs/<run_id>/`.
+- `prepare-subagents` writes OpenClaw package prompts, staging directories, and a `sessions_spawn` runbook under `<project_path>/parallel_generation/runs/<run_id>/`; default concurrency equals the number of eligible sub-agent packages.
 - `merge` checks package reports, missing/duplicate/out-of-scope staged SVGs, and copies staged package output into `<project_path>/svg_output/`.
 - Work packages may be generated separately through `run_manifest.subagent_groups`; pages inside one package remain serial for continuity.
 - `parallel_generation.py validate` checks missing/duplicate/out-of-order slides, spec snapshot drift, and SVG quality before export.
