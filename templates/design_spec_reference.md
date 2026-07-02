@@ -13,7 +13,7 @@
 | **Project Name** | {project_name} |
 | **Canvas Format** | {canvas_info['name']} ({canvas_info['dimensions']}) |
 | **Page Count** | [Filled by Strategist] |
-| **Generation Mode** | serial by default for confirmed decks of 15 slides or fewer; chapter_parallel when confirmed page count is >15 or user explicitly requests parallel/sub-agent execution |
+| **Generation Mode** | serial by default for confirmed decks of 15 slides or fewer; chapter_parallel when confirmed page count is 16+ or user explicitly requests parallel/sub-agent execution; no threshold buffer |
 | **Design Style** | {design_style} |
 | **Target Audience** | [Filled by Strategist] |
 | **Use Case** | [Filled by Strategist] |

@@ -30,7 +30,7 @@
 
 > Normal runs of 15 confirmed slides or fewer MUST emit the default serial rows above after the user confirms the ninth confirmation. This avoids sub-agent startup overhead on short decks.
 >
-> Emit the parallel override below when the confirmed page count is greater than 15, or when the user explicitly asks for parallel / spawn / sub-agent / chạy song song:
+> Emit the parallel override below when the confirmed page count is 16 or more, or when the user explicitly asks for parallel / spawn / sub-agent / chạy song song. The threshold is strict; do not invent buffers such as `15+5`.
 >
 > ```
 > - mode: chapter_parallel
@@ -38,7 +38,24 @@
 > - concurrency: 2
 > ```
 >
-> User override wins: explicit serial / tuần tự / no parallel / no sub-agent keeps `mode: serial` even above 15 slides; explicit parallel keeps `mode: chapter_parallel` even at 15 slides or fewer. If page count was a range, use the final confirmed/recommended slide count, not the range endpoints.
+> User override wins: explicit serial / tuần tự / no parallel / no sub-agent keeps `mode: serial` even above 15 slides; explicit parallel keeps `mode: chapter_parallel` even at 15 slides or fewer. If page count was a range, use the final confirmed/recommended slide count, not the range endpoints and not a buffered threshold.
+
+## generation_packages
+
+- g01-cover-toc: P01-P02 | main
+- g02-section-name: P03-P05 | subagent
+- g03-section-name: P06-P09 | subagent
+
+> Emit this section only when `## generation` has `mode: chapter_parallel`. Do not emit `## generation_packages` in serial mode.
+>
+> This is the machine-readable package contract used by `parallel_generation.py`; do not leave the package split only as prose in `design_spec.md §IX`.
+>
+> Rules:
+> - Cover / TOC / agenda / ending-only packages use `| main`.
+> - Content chapter/section packages use `| subagent`.
+> - Lines must cover every expected `P<NN>` exactly once.
+> - Use stable `gNN-short-name` ids and page ranges/lists such as `P03-P05` or `P03, P04, P05`.
+> - One `| subagent` line becomes one `run_manifest.subagent_groups` item and one `sessions_spawn` call. Do not combine multiple package lines into one sub-agent.
 
 ## colors
 

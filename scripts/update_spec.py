@@ -48,7 +48,7 @@ def parse_lock(lock_path: Path) -> dict[str, dict[str, str]]:
             continue
         if current is None:
             continue
-        m = re.match(r"^-\s+([A-Za-z0-9_]+)\s*:\s*(.+?)\s*$", line)
+        m = re.match(r"^-\s+([A-Za-z0-9_-]+)\s*:\s*(.+?)\s*$", line)
         if m:
             sections[current][m.group(1)] = m.group(2)
     return sections
@@ -65,7 +65,7 @@ def rewrite_lock(lock_path: Path, section: str, key: str, new_value: str) -> Non
             continue
         if not in_section:
             continue
-        m = re.match(r"^(-\s+)([A-Za-z0-9_]+)(\s*:\s*)(.+?)(\s*)$", stripped)
+        m = re.match(r"^(-\s+)([A-Za-z0-9_-]+)(\s*:\s*)(.+?)(\s*)$", stripped)
         if m and m.group(2) == key:
             lines[i] = f"{m.group(1)}{m.group(2)}{m.group(3)}{new_value}{m.group(5)}\n"
             lock_path.write_text("".join(lines), encoding="utf-8")

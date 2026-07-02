@@ -87,10 +87,52 @@ def _load_spec_lock(lock_path: Path) -> dict[str, dict[str, str]]:
             continue
         if current is None:
             continue
-        m = re.match(r"^-\s+([A-Za-z0-9_]+)\s*:\s*(.+?)\s*$", line)
+        m = re.match(r"^-\s+([A-Za-z0-9_-]+)\s*:\s*(.+?)\s*$", line)
         if m:
             sections[current][m.group(1)] = m.group(2)
     return sections
+
+
+def _parse_package_pages(raw_value: str) -> list[str]:
+    scope = raw_value.split("|", 1)[0]
+    scope = re.sub(r"\([^)]*\)", "", scope)
+    pages: list[str] = []
+
+    for match in re.finditer(
+        r"[Pp]?(\d{1,3})(?:\s*[-\u2013\u2014]\s*[Pp]?(\d{1,3}))?",
+        scope,
+    ):
+        start = int(match.group(1))
+        end = int(match.group(2) or match.group(1))
+        if end < start:
+            raise ValueError(f"Invalid descending page range in generation_packages: {raw_value!r}")
+        for number in range(start, end + 1):
+            key = f"P{number:02d}"
+            if key not in pages:
+                pages.append(key)
+
+    if not pages:
+        raise ValueError(f"Could not parse page list in generation_packages value: {raw_value!r}")
+    return pages
+
+
+def _parse_package_runtime(raw_value: str) -> bool | None:
+    if "|" not in raw_value:
+        return None
+    hints = {part.strip().lower().replace("-", "_") for part in raw_value.split("|")[1:]}
+    if hints & {"main", "main_agent", "main_agent_package", "mainagent"}:
+        return False
+    if hints & {"subagent", "sub_agent", "parallel", "spawn"}:
+        return True
+    return None
+
+
+def _infer_package_kind(package_id: str, page_keys: list[str], page_by_key: dict[str, PageContract]) -> str:
+    slug = re.sub(r"^g\d+[-_]*", "", package_id.lower()).strip("-_")
+    if slug:
+        return slug.replace("_", "-")
+    roles = {page_by_key[key].role for key in page_keys}
+    return roles.pop() if len(roles) == 1 else "package"
 
 
 def _extract_slide_blocks(design_spec: str) -> dict[int, tuple[str, str]]:
@@ -235,6 +277,53 @@ def _build_groups(pages: list[PageContract]) -> list[dict[str, Any]]:
     return groups
 
 
+def _build_groups_from_lock(
+    pages: list[PageContract],
+    lock: dict[str, dict[str, str]],
+) -> list[dict[str, Any]] | None:
+    package_specs = lock.get("generation_packages") or {}
+    if not package_specs:
+        return None
+
+    page_by_key = {page.key: page for page in pages}
+    groups: list[dict[str, Any]] = []
+    owner_by_page: dict[str, str] = {}
+
+    for package_id, raw_value in package_specs.items():
+        page_keys = _parse_package_pages(raw_value)
+        unknown = [key for key in page_keys if key not in page_by_key]
+        if unknown:
+            raise ValueError(f"generation_packages {package_id} references unknown pages: {', '.join(unknown)}")
+
+        duplicate = [key for key in page_keys if key in owner_by_page]
+        if duplicate:
+            owners = ", ".join(f"{key} already in {owner_by_page[key]}" for key in duplicate)
+            raise ValueError(f"generation_packages {package_id} overlaps previous packages: {owners}")
+
+        runtime = _parse_package_runtime(raw_value)
+        if runtime is None:
+            standalone = all(page_by_key[key].role in {"cover", "toc", "ending"} for key in page_keys)
+            runtime = not standalone
+
+        group = {
+            "id": package_id,
+            "kind": _infer_package_kind(package_id, page_keys, page_by_key),
+            "pages": page_keys,
+            "parallel_eligible": runtime,
+            "internal_order": "serial",
+        }
+        groups.append(group)
+        for key in page_keys:
+            owner_by_page[key] = package_id
+            page_by_key[key].group_id = package_id
+
+    missing = [page.key for page in pages if page.key not in owner_by_page]
+    if missing:
+        raise ValueError(f"generation_packages missing expected pages: {', '.join(missing)}")
+
+    return groups
+
+
 def _build_page_contracts(project: Path) -> tuple[list[PageContract], list[dict[str, Any]]]:
     design_path = project / "design_spec.md"
     lock_path = project / "spec_lock.md"
@@ -277,7 +366,7 @@ def _build_page_contracts(project: Path) -> tuple[list[PageContract], list[dict[
             )
         )
 
-    groups = _build_groups(pages)
+    groups = _build_groups_from_lock(pages, lock) or _build_groups(pages)
     return pages, groups
 
 
@@ -638,10 +727,23 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
     ]
     for group in main_agent_groups:
         runbook.append(f"- `{group['id']}` ({group['kind']}): {', '.join(group['pages'])}")
-    runbook.extend(["", "## Spawn Commands", ""])
-    runbook.extend(spawn_snippets or ["_No sub-agent eligible groups found._"])
+    runbook.extend(
+        [
+            "",
+            "## Spawn Commands",
+            "",
+            "Call one `sessions_spawn` per package. Do not combine multiple package prompts in one sub-agent.",
+            "",
+        ]
+    )
     if spawn_snippets:
-        runbook.extend(["", "Then wait for the active batch:", "", "```js\nsessions_yield()\n```"])
+        for batch_index, start in enumerate(range(0, len(spawn_snippets), args.concurrency), start=1):
+            batch = spawn_snippets[start : start + args.concurrency]
+            runbook.extend([f"### Batch {batch_index}", ""])
+            runbook.extend(batch)
+            runbook.extend(["", "Wait for this batch before starting the next one:", "", "```js\nsessions_yield()\n```", ""])
+    else:
+        runbook.append("_No sub-agent eligible groups found._")
     runbook.extend(
         [
             "",

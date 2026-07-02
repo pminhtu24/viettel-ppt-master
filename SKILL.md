@@ -23,7 +23,7 @@ description: >
 > 4. **GATE BEFORE ENTRY** — Each Step has prerequisites (🚧 GATE) listed at the top; these MUST be verified before starting that Step
 > 5. **NO SPECULATIVE EXECUTION** — "Pre-preparing" content for subsequent Steps is FORBIDDEN (e.g., writing SVG code during the Strategist phase)
 > 6. **CONTROLLED SUB-AGENT SVG GENERATION ONLY** — Executor Step 6 SVG generation is context-dependent. Sub-agent SVG generation is FORBIDDEN unless `generation_mode=chapter_parallel` and `parallel_runtime=openclaw_subagents` are active, the runtime exposes `sessions_spawn`, each sub-agent receives exactly one work package from `run_manifest.subagent_groups`, uses isolated context, writes only to run-local staging, and the main agent merges + validates before export
-> 7. **SERIAL DEFAULT WITH PARALLEL AUTO-RECOMMENDATION** — In the ninth confirmation, default to `generation_mode=serial`, `parallel_runtime=none`, `concurrency=1` for decks with a confirmed page count of 15 or fewer. Recommend `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2` only when the confirmed page count is greater than 15, or when the user explicitly asks for parallel / spawn / sub-agent / chạy song song. User override wins: if the user explicitly asks for serial / tuần tự / không parallel / không spawn, write `generation_mode=serial` even for decks over 15 slides. If `chapter_parallel` is confirmed, Executor MUST run the parallel preflight gate before the first SVG. If sub-agent tools are unavailable, keep `generation_mode=chapter_parallel`, set `parallel_runtime=main_agent_packages`, print the exact reason, and still use the package plan + validate gate. Pages inside each work package remain sequential for visual continuity
+> 7. **SERIAL DEFAULT WITH PARALLEL AUTO-RECOMMENDATION** — In the ninth confirmation, default to `generation_mode=serial`, `parallel_runtime=none`, `concurrency=1` for decks with a confirmed page count of 15 or fewer. Recommend `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2` only when the confirmed page count is greater than 15, or when the user explicitly asks for parallel / spawn / sub-agent / chạy song song. This threshold is a strict integer comparison: 16+ slides means `chapter_parallel`; do not invent buffers, tolerance bands, or phrases like `15+5 threshold`. User override wins: if the user explicitly asks for serial / tuần tự / không parallel / không spawn, write `generation_mode=serial` even for decks over 15 slides. If `chapter_parallel` is confirmed, Executor MUST run the parallel preflight gate before the first SVG. If sub-agent tools are unavailable, keep `generation_mode=chapter_parallel`, set `parallel_runtime=main_agent_packages`, print the exact reason, and still use the package plan + validate gate. Pages inside each work package remain sequential for visual continuity
 > 8. **SPEC_LOCK RE-READ PER PAGE** — Before generating each SVG page, Executor MUST `read_file <project_path>/spec_lock.md`. All colors / fonts / icons / images MUST come from this file — no values from memory or invented on the fly. Executor MUST also look up the current page's `page_rhythm` (`anchor` / `dense` / `breathing`), optional `page_backgrounds` (section-only Viettel background layer, if any), `page_layouts` (which template SVG to inherit, if any), and `page_charts` (which chart template to adapt, if any). Empty / absent entries are intentional Strategist signals; missing `page_backgrounds` means no decorative background for that page — see executor-base.md §2.1. This rule exists to resist context-compression drift on long decks and to break the uniform "every page is a card grid" default
 > 9. **SVG MUST BE HAND-WRITTEN, NOT SCRIPT-GENERATED** — Every SVG page is written directly by the active package author (main agent in serial mode, or the assigned isolated sub-agent in `openclaw_subagents` mode), one page at a time. Writing or running a Python / Node / shell script that produces the SVG files in batch — looping over pages, templating from data, or emitting them via a generator — is FORBIDDEN, including under "save tokens", "quick draft", or "user is in a hurry" pretexts. The script-generation path was tried on a feature branch and abandoned: cross-page visual consistency depends on per-page authoring with full upstream context, which a generator script cannot reproduce
 
@@ -218,7 +218,7 @@ Read references/strategist.md
 6. Icon usage approach
 7. Typography plan (fixed FS Magistral family and weight rules; informational, not a font choice)
 8. Image usage approach
-9. Generation mode: default `serial` for decks up to 15 slides; recommend `chapter_parallel` only when confirmed slide count is >15 or the user explicitly asks for parallel/sub-agent execution
+9. Generation mode: default `serial` for decks up to 15 slides; recommend `chapter_parallel` when confirmed slide count is 16+ or the user explicitly asks for parallel/sub-agent execution
 
 **Viettel brand lock**: for every normal run, present PPT 16:9, Viettel red `#EE0033`, white/approved-gray reporting surfaces, dark-neutral text, the locked family `"FS Magistral"` and its fixed weight roles, top-right logo slot, footer/page-number treatment, and content safe area as fixed decisions. Typography is informational in the confirmation set, not a user choice. Deep blue `#12436D` is chart/diagram/icon-only. `spec_lock.md` MUST record `brand.profile: viettel_default` and these values exactly. Only an explicit hard non-Viettel request may record `brand.profile: custom_override`.
 
@@ -382,12 +382,12 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 Generating work-package slides without this startup gate is a workflow violation. If this gate was skipped, stop and run it immediately; do not finish generation and ask the user to rerun.
 
 > ⚠️ **Controlled package authorship**: SVG generation stays in the main agent unless `generation_mode=chapter_parallel` selects `parallel_runtime=openclaw_subagents`. In that mode, sub-agents may author SVG only for their assigned package, in isolated context, into staging output, followed by main-agent merge + validation.
-> ⚠️ **Generation rhythm**: default `generation_mode=serial`, `parallel_runtime=none`, `concurrency=1` for confirmed decks of 15 slides or fewer. Use `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2` only when the confirmed slide count is greater than 15 or the user explicitly asks for parallel/sub-agent execution. Do not treat ad hoc page batches (e.g., 5 per group) as valid parallel mode.
+> ⚠️ **Generation rhythm**: default `generation_mode=serial`, `parallel_runtime=none`, `concurrency=1` for confirmed decks of 15 slides or fewer. Use `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2` when the confirmed slide count is 16+ or the user explicitly asks for parallel/sub-agent execution. The threshold is strict; do not add a buffer such as `15+5`. Do not treat ad hoc page batches (e.g., 5 per group) as valid parallel mode.
 
 **Generation Mode Selection (Mandatory)**:
 
 - **Default / production**: `generation_mode=serial`, `parallel_runtime=none`, `concurrency=1` for confirmed decks of 15 slides or fewer.
-- **Auto parallel recommendation**: if the confirmed page count is greater than 15, recommend `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2`.
+- **Auto parallel recommendation**: if the confirmed page count is 16 or more, recommend `generation_mode=chapter_parallel`, `parallel_runtime=auto`, `concurrency=2`. Do not add buffers/tolerance bands to the 15-slide threshold.
 - **User override**: explicit serial/parallel wording in the ninth confirmation wins over the page-count rule.
 - **Runtime fallback**: if `sessions_spawn` / `sessions_yield` are unavailable or fail before package work starts, keep `generation_mode=chapter_parallel`, set `parallel_runtime=main_agent_packages`, and generate package-by-package in the main agent only after reporting the exact fallback reason.
 - Before writing any SVG, run the parallel preflight commands only when `spec_lock.md ## generation` says `mode: chapter_parallel`:
@@ -421,10 +421,13 @@ Report this checkpoint before generating any SVG:
 
 Use the generated `parallel_generation/` work packages as the runtime contract. The planner may use chapter/section boundaries to form packages, but spawning is driven only by `run_manifest.subagent_groups`. Cover / TOC / ending packages remain main-agent packages. Sub-agent work packages may run concurrently through `sessions_spawn`; pages inside one package stay serial. SVG files are still hand-written from the package context, never script-generated.
 
+For `chapter_parallel`, Strategist must write `spec_lock.md ## generation_packages` with one line per confirmed package. `parallel_generation.py` treats that section as authoritative; if it is absent, the script falls back to role heuristics and may combine ordinary content pages into one package. Each `| subagent` package line must become one `run_manifest.subagent_groups` item and one separate `sessions_spawn` call.
+
 **OpenClaw Sub-Agent Spawn Pattern**:
 
 - Spawn only groups listed in `<project_path>/parallel_generation/runs/<run_id>/run_manifest.json` under `subagent_groups`.
 - Prefer the manifest's per-package `spawn_request` fields when present; they contain the exact `task`, `taskName`, prompt path, and staging path for each package.
+- Call one `sessions_spawn` per package. Never combine multiple package prompts or multiple `subagent_groups` entries into one sub-agent task.
 - Use isolated context and keep cleanup artifacts for debugging:
 
 ```js
@@ -439,7 +442,7 @@ sessions_spawn({
 });
 ```
 
-- Spawn up to `concurrency=2`, then call `sessions_yield()`.
+- Spawn up to `concurrency=2`, call `sessions_yield()`, then continue with the next batch until every `subagent_groups` package has run.
 - After all sub-agents finish, merge staged package SVGs:
 
 ```bash
