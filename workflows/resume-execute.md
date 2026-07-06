@@ -48,7 +48,7 @@ Then jump to `### Step 6: Executor Phase` and run the documented pipeline:
 - Read references (executor-base + shared-standards + chosen style file + image-layout-spec + svg-image-embedding)
 - Design Parameter Confirmation
 - Executor Startup Order (`serial` default; `chapter_parallel` only when `spec_lock.md ## generation` says so)
-- If `mode: chapter_parallel` and OpenClaw exposes `sessions_spawn` / `sessions_yield`, spawn packages listed in `run_manifest.subagent_groups` as isolated sub-agents before SVG authoring for those packages. Use the generated `spawn_request` from `run_manifest.json`; do not write direct ad hoc `sessions_spawn` prompts. Use one spawn call per package; default concurrency equals the number of eligible sub-agent packages
+- If `mode: chapter_parallel` and ZeroClaw delegate is available, run packages listed in `run_manifest.subagent_groups` as isolated background delegate tasks before SVG authoring for those packages. Use the generated `delegate_request` from `run_manifest.json`; do not write direct ad hoc delegate prompts. Use one delegate task per package; default concurrency equals the number of eligible sub-agent packages
 - Pre-generation Batch Read (every layout / chart SVG referenced in `spec_lock`)
 - Per-page `spec_lock` re-read + package-scoped SVG generation (sequential inside each package; sub-agent work packages may run in parallel)
 - Quality Check Gate

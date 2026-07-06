@@ -520,7 +520,7 @@ generation_mode=chapter_parallel
 parallel_runtime=auto
 ```
 
-Present this as the ninth confirmation. Explain briefly that serial avoids sub-agent startup overhead on short decks, while `chapter_parallel` splits the deck into work packages for longer decks; when OpenClaw exposes `sessions_spawn` / `sessions_yield`, packages listed in `run_manifest.subagent_groups` run in isolated sub-agent sessions, while pages inside each package remain sequential for visual continuity. Parallel concurrency is resolved from the number of eligible sub-agent packages. Cover / TOC / ending stay under the main agent unless the package planner marks otherwise.
+Present this as the ninth confirmation. Explain briefly that serial avoids sub-agent startup overhead on short decks, while `chapter_parallel` splits the deck into work packages for longer decks; ZeroClaw delegate runs packages listed in `run_manifest.subagent_groups` as isolated background tasks, while pages inside each package remain sequential for visual continuity. Parallel concurrency is resolved from the number of eligible sub-agent packages. Cover / TOC / ending stay under the main agent unless the package planner marks otherwise.
 
 Hard threshold rule: compare the final confirmed/recommended slide count directly against 15. A 16-slide or 20-slide deck MUST recommend `chapter_parallel` unless the user explicitly chooses serial. Do not invent buffer math such as `15+5 threshold`.
 
@@ -571,9 +571,9 @@ Explicit serial override:
 - reason: user_confirmed_serial
 ```
 
-Executor Step 6 reads this section before SVG authoring. If it says `serial`, Executor uses the legacy one-agent path, skips parallel preflight, and reports `parallel_runtime: none`. If it says `chapter_parallel`, Executor must run the parallel preflight and attempt OpenClaw sub-agent spawning when the runtime exposes the tools. If sub-agent tools are unavailable, Executor keeps `mode: chapter_parallel` and falls back only at `parallel_runtime=main_agent_packages`.
+Executor Step 6 reads this section before SVG authoring. If it says `serial`, Executor uses the legacy one-agent path, skips parallel preflight, and reports `parallel_runtime: none`. If it says `chapter_parallel`, Executor must run the parallel preflight and attempt ZeroClaw delegate execution when the runtime exposes the tools. If sub-agent tools are unavailable, Executor keeps `mode: chapter_parallel` and falls back only at `parallel_runtime=main_agent_packages`.
 
-For `chapter_parallel`, `## generation_packages` is mandatory. For `serial`, do not emit `## generation_packages`. Build the parallel package section from the final chapter/section plan in `design_spec.md §IX`; do not rely on prose-only chapter grouping. The section must cover every expected `P<NN>` exactly once. Mark cover / TOC / agenda / ending-only packages as `| main`; mark content chapter/section packages as `| subagent`. Each `| subagent` line must become a separate `run_manifest.subagent_groups` item and a separate `sessions_spawn` call; never merge multiple package lines into one sub-agent task.
+For `chapter_parallel`, `## generation_packages` is mandatory. For `serial`, do not emit `## generation_packages`. Build the parallel package section from the final chapter/section plan in `design_spec.md §IX`; do not rely on prose-only chapter grouping. The section must cover every expected `P<NN>` exactly once. Mark cover / TOC / agenda / ending-only packages as `| main`; mark content chapter/section packages as `| subagent`. Each `| subagent` line must become a separate `run_manifest.subagent_groups` item and a separate ZeroClaw delegate task; never merge multiple package lines into one sub-agent task.
 
 ### Template Match — Visualization + Structural Patterns (Non-blocking — Strategist recommends, no user confirmation needed)
 

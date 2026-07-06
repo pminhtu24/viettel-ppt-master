@@ -95,23 +95,22 @@ Flow parallel:
 
 1. Tạo work packages bằng `python3 scripts/parallel_generation.py plan <project_path>`.
 2. Chuẩn bị prompt và staging bằng `python3 scripts/parallel_generation.py prepare-subagents <project_path>`.
-3. Nếu OpenClaw có `sessions_spawn` / `sessions_yield`, spawn bằng từng `spawn_request` trong `parallel_generation/runs/<run_id>/run_manifest.json`. Mỗi sub-agent nhận đúng một work package từ `run_manifest.subagent_groups` và ghi SVG vào staging riêng: `parallel_generation/runs/<run_id>/work/<group_id>/svg_output/`. Không spawn trực tiếp bằng prompt tự viết. Mặc định concurrency bằng số package sub-agent; truyền `--concurrency N` chỉ khi muốn chia batch nhỏ hơn.
+3. Nếu ZeroClaw delegate hỗ trợ `background=True`, `session_target="isolated"` và `check_result`, chạy từng `delegate_request` trong `parallel_generation/runs/<run_id>/run_manifest.json`. Mỗi sub-agent nhận đúng một work package từ `run_manifest.subagent_groups` và ghi SVG vào staging riêng: `parallel_generation/runs/<run_id>/work/<group_id>/svg_output/`. Không viết prompt delegate trực tiếp. Mặc định concurrency bằng số package sub-agent; truyền `--concurrency N` chỉ khi muốn chia batch nhỏ hơn.
 4. Main agent merge staging về `svg_output/`, chạy validate, rồi mới export PPTX bằng pipeline cũ.
 
-OpenClaw sub-agent được trigger theo pattern:
+ZeroClaw delegate sub-agent được trigger theo pattern:
 
-```js
-sessions_spawn({
-  task: "Read and execute the package prompt at <prompt_file>. Do not work outside that scope.",
-  taskName: "<task_name>",
-  runtime: "subagent",
-  mode: "run",
-  context: "isolated",
-  cleanup: "keep",
-  timeoutSeconds: 1800
-})
+```python
+task = delegate(
+    action="delegate",
+    background=True,
+    session_target="isolated",
+    agentic=True,
+    max_iterations=100,
+    prompt="Read and execute the package prompt at <prompt_file>. Do not work outside that scope.",
+)
 
-sessions_yield()
+delegate(action="check_result", task_id=task["task_id"])
 ```
 
 Sau khi sub-agents chạy xong, main agent bắt buộc chạy:

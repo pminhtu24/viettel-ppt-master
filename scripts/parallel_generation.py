@@ -587,7 +587,7 @@ def _render_package_prompt(
         [
             "# Viettel PPT Work Package Task",
             "",
-            "You are an isolated OpenClaw sub-agent assigned to one work package from run_manifest.subagent_groups.",
+            "You are an isolated ZeroClaw delegate task assigned to one work package from run_manifest.subagent_groups.",
             "Generate only the SVG pages listed in this prompt.",
             "",
             "## Scope",
@@ -650,7 +650,7 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
 
     subagent_groups: list[dict[str, Any]] = []
     main_agent_groups: list[dict[str, Any]] = []
-    spawn_snippets: list[str] = []
+    delegate_snippets: list[str] = []
 
     for group in manifest.get("groups", []):
         if group.get("parallel_eligible"):
@@ -665,7 +665,15 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
             )
             raw_task_name = f"ppt_{project.name}_{run_dir.name}_{package_id}"
             task_name = re.sub(r"[^A-Za-z0-9_]+", "_", raw_task_name).strip("_")
-            spawn_task = f"Read and execute the package prompt at {prompt_file}. Do not work outside that scope."
+            delegate_prompt = f"Read and execute the package prompt at {prompt_file}. Do not work outside that scope."
+            delegate_request = {
+                "action": "delegate",
+                "background": True,
+                "session_target": "isolated",
+                "agentic": True,
+                "max_iterations": 100,
+                "prompt": delegate_prompt,
+            }
             package = {
                 "id": package_id,
                 "kind": group.get("kind", "unknown"),
@@ -675,27 +683,19 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
                 "work_dir": str(work_dir),
                 "svg_output_dir": str(svg_dir),
                 "package_report": str(work_dir / "package_report.json"),
-                "spawn_request": {
-                    "task": spawn_task,
-                    "taskName": task_name,
-                    "runtime": "subagent",
-                    "mode": "run",
-                    "context": "isolated",
-                    "cleanup": "keep",
-                    "timeoutSeconds": 1800,
-                },
+                "delegate_request": delegate_request,
             }
             subagent_groups.append(package)
-            spawn_snippets.append(
-                "sessions_spawn({\n"
-                f"  task: \"{spawn_task}\",\n"
-                f"  taskName: \"{task_name}\",\n"
-                "  runtime: \"subagent\",\n"
-                "  mode: \"run\",\n"
-                "  context: \"isolated\",\n"
-                "  cleanup: \"keep\",\n"
-                "  timeoutSeconds: 1800\n"
-                "})"
+            task_var = re.sub(r"[^A-Za-z0-9_]+", "_", f"task_{package_id}").strip("_")
+            delegate_snippets.append(
+                f"{task_var} = delegate(\n"
+                "    action=\"delegate\",\n"
+                "    background=True,\n"
+                "    session_target=\"isolated\",\n"
+                "    agentic=True,\n"
+                "    max_iterations=100,\n"
+                f"    prompt=\"{delegate_prompt}\",\n"
+                ")"
             )
         else:
             main_agent_groups.append(
@@ -708,7 +708,7 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
 
     run_manifest = {
         "version": 1,
-        "mode": "openclaw_subagents",
+        "mode": "zeroclaw_delegate",
         "created_at": _utc_now(),
         "project": project.name,
         "project_path": str(project),
@@ -724,7 +724,7 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
     )
 
     runbook = [
-        "# OpenClaw Sub-Agent Spawn Runbook",
+        "# ZeroClaw Delegate Runbook",
         "",
         f"- Project: `{project}`",
         f"- Run ID: `{run_dir.name}`",
@@ -738,38 +738,47 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
     runbook.extend(
         [
             "",
-            "## Spawn Commands",
+            "## Delegate Commands",
             "",
-            "Use these generated package prompts only. Do not write direct ad hoc `sessions_spawn` prompts.",
-            "Call one `sessions_spawn` per package. Do not combine multiple package prompts in one sub-agent.",
-            "Each sub-agent must write only to its package `svg_output_dir` under this run's `work/<package_id>/` staging directory.",
+            "Use these generated package prompts only. Do not write direct ad hoc delegate prompts.",
+            "Call one background delegate task per package. Do not combine multiple package prompts in one task.",
+            "Each delegate task must use `session_target=\"isolated\"` and write only to its package `svg_output_dir` under this run's `work/<package_id>/` staging directory.",
             "",
         ]
     )
-    if spawn_snippets:
+    if delegate_snippets:
         concurrency = int(manifest["concurrency"])
-        for batch_index, start in enumerate(range(0, len(spawn_snippets), concurrency), start=1):
-            batch = spawn_snippets[start : start + concurrency]
-            runbook.extend([f"### Batch {batch_index}", ""])
+        for batch_index, start in enumerate(range(0, len(delegate_snippets), concurrency), start=1):
+            batch = delegate_snippets[start : start + concurrency]
+            runbook.extend([f"### Batch {batch_index}", "", "```python"])
             runbook.extend(batch)
-            runbook.extend(["", "Wait for this batch before starting the next one:", "", "```js\nsessions_yield()\n```", ""])
+            runbook.extend(
+                [
+                    "```",
+                    "",
+                    "Poll this batch before starting the next one:",
+                    "",
+                    "```python\ndelegate(action=\"list_results\")\ndelegate(action=\"check_result\", task_id=\"<task_id>\")\n```",
+                    "",
+                ]
+            )
     else:
-        runbook.append("_No sub-agent eligible groups found._")
+        runbook.append("_No delegate-eligible groups found._")
     runbook.extend(
         [
             "",
-            "## After Yield",
+            "## After Delegates Complete",
             "",
             f"1. Run `python3 {SCRIPT_DIR}/parallel_generation.py merge {project} --run-id {run_dir.name}`.",
             f"2. Run `python3 {SCRIPT_DIR}/parallel_generation.py validate {project}`.",
             "",
         ]
     )
-    (run_dir / "sessions_spawn_runbook.md").write_text("\n\n".join(runbook), encoding="utf-8")
+    (run_dir / "delegate_runbook.md").write_text("\n\n".join(runbook), encoding="utf-8")
 
-    print(f"[OK] Prepared OpenClaw sub-agent run: {run_dir}")
+    print(f"[OK] Prepared ZeroClaw delegate run: {run_dir}")
     print(f"[OK] Sub-agent work packages: {len(subagent_groups)} | Main-agent packages: {len(main_agent_groups)}")
-    print(f"[OK] Runbook: {run_dir / 'sessions_spawn_runbook.md'}")
+    print(f"[OK] Runbook: {run_dir / 'delegate_runbook.md'}")
     for package in subagent_groups:
         print(f"  - {package['id']}: {', '.join(package['pages'])} -> {package['prompt_file']}")
     return 0
@@ -1014,17 +1023,17 @@ def build_parser() -> argparse.ArgumentParser:
         "--concurrency",
         type=int,
         default=None,
-        help="Optional spawn batch size; defaults to one sub-agent per eligible package.",
+        help="Optional delegate batch size; defaults to one sub-agent per eligible package.",
     )
     plan.set_defaults(func=cmd_plan)
 
-    prepare = sub.add_parser("prepare-subagents", help="create OpenClaw sub-agent package prompts and staging dirs")
+    prepare = sub.add_parser("prepare-subagents", help="create ZeroClaw delegate package prompts and staging dirs")
     prepare.add_argument("project_path", type=Path)
     prepare.add_argument(
         "--concurrency",
         type=int,
         default=None,
-        help="Optional spawn batch size; defaults to one sub-agent per eligible package.",
+        help="Optional delegate batch size; defaults to one sub-agent per eligible package.",
     )
     prepare.add_argument("--run-id", default=None)
     prepare.set_defaults(func=cmd_prepare_subagents)

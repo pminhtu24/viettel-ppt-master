@@ -56,7 +56,7 @@
 > - Content chapter/section packages use `| subagent`.
 > - Lines must cover every expected `P<NN>` exactly once.
 > - Use stable `gNN-short-name` ids and page ranges/lists such as `P03-P05` or `P03, P04, P05`.
-> - One `| subagent` line becomes one `run_manifest.subagent_groups` item and one `sessions_spawn` call. Do not combine multiple package lines into one sub-agent.
+> - One `| subagent` line becomes one `run_manifest.subagent_groups` item and one ZeroClaw delegate task. Do not combine multiple package lines into one sub-agent.
 
 ## colors
 
