@@ -517,10 +517,10 @@ Auto-recommend parallel when the confirmed page count is 16 or more:
 
 ```text
 generation_mode=chapter_parallel
-parallel_runtime=auto
+parallel_runtime=spawn_subagent
 ```
 
-Present this as the ninth confirmation. Explain briefly that serial avoids sub-agent startup overhead on short decks, while `chapter_parallel` splits the deck into work packages for longer decks; ZeroClaw delegate runs packages listed in `run_manifest.subagent_groups` as isolated background tasks, while pages inside each package remain sequential for visual continuity. Parallel concurrency is resolved from the number of eligible sub-agent packages. Cover / TOC / ending stay under the main agent unless the package planner marks otherwise.
+Present this as the ninth confirmation. Explain briefly that serial avoids sub-agent startup overhead on short decks, while `chapter_parallel` splits the deck into work packages for longer decks; `spawn_subagent` runs each package listed in `run_manifest.subagent_groups` as an isolated task, while pages inside each package remain sequential for visual continuity. Parallel concurrency is resolved from the number of eligible sub-agent packages. Cover / TOC / ending stay under the main agent unless the package planner marks otherwise.
 
 Hard threshold rule: compare the final confirmed/recommended slide count directly against 15. A 16-slide or 20-slide deck MUST recommend `chapter_parallel` unless the user explicitly chooses serial. Do not invent buffer math such as `15+5 threshold`.
 
@@ -551,7 +551,7 @@ Auto parallel for 16 or more slides, or explicit parallel override:
 ## generation
 
 - mode: chapter_parallel
-- parallel_runtime: auto
+- parallel_runtime: spawn_subagent
 
 ## generation_packages
 
@@ -571,9 +571,9 @@ Explicit serial override:
 - reason: user_confirmed_serial
 ```
 
-Executor Step 6 reads this section before SVG authoring. If it says `serial`, Executor uses the legacy one-agent path, skips parallel preflight, and reports `parallel_runtime: none`. If it says `chapter_parallel`, Executor must run the parallel preflight and attempt ZeroClaw delegate execution when the runtime exposes the tools. If sub-agent tools are unavailable, Executor keeps `mode: chapter_parallel` and falls back only at `parallel_runtime=main_agent_packages`.
+Executor Step 6 reads this section before SVG authoring. If it says `serial`, Executor uses the legacy one-agent path, skips parallel preflight, and reports `parallel_runtime: none`. If it says `chapter_parallel`, Executor must run the parallel preflight and attempt `spawn_subagent` execution when the runtime exposes the tool. If `spawn_subagent` is unavailable or fails before package work starts, Executor keeps `mode: chapter_parallel` and falls back only at `parallel_runtime=main_agent_packages`.
 
-For `chapter_parallel`, `## generation_packages` is mandatory. For `serial`, do not emit `## generation_packages`. Build the parallel package section from the final chapter/section plan in `design_spec.md §IX`; do not rely on prose-only chapter grouping. The section must cover every expected `P<NN>` exactly once. Mark cover / TOC / agenda / ending-only packages as `| main`; mark content chapter/section packages as `| subagent`. Each `| subagent` line must become a separate `run_manifest.subagent_groups` item and a separate ZeroClaw delegate task; never merge multiple package lines into one sub-agent task.
+For `chapter_parallel`, `## generation_packages` is mandatory. For `serial`, do not emit `## generation_packages`. Build the parallel package section from the final chapter/section plan in `design_spec.md §IX`; do not rely on prose-only chapter grouping. The section must cover every expected `P<NN>` exactly once. Mark cover / TOC / agenda / ending-only packages as `| main`; mark content chapter/section packages as `| subagent`. Each `| subagent` line must become a separate `run_manifest.subagent_groups` item and a separate `spawn_subagent` call; never merge multiple package lines into one sub-agent task.
 
 ### Template Match — Visualization + Structural Patterns (Non-blocking — Strategist recommends, no user confirmation needed)
 
@@ -791,7 +791,7 @@ Divider rules:
 3. Save to: `projects/<project_name>.../design_spec.md`
 4. **Generate execution lock**: read `templates/spec_lock_reference.md` and produce `projects/<project_name>.../spec_lock.md` — a distilled, machine-readable short form of the brand / generation mode / color / typography / icon / image / **page_rhythm** / optional **page_backgrounds** / **page_layouts** / **page_charts** decisions above. This file is what the Executor re-reads before every page (see [executor-base.md](executor-base.md) §2.1). The values in `spec_lock.md` MUST exactly match the decisions recorded in `design_spec.md`; if they ever diverge, `spec_lock.md` wins and `design_spec.md` should be treated as historical narrative.
    - **brand is mandatory**: normal runs write `profile: viettel_default` and `deep_blue_scope: chart_diagram_icon_only`. Write `profile: custom_override` only after an explicit hard non-Viettel request and record the reason in `design_spec.md`.
-   - **generation is mandatory**: normal runs of 15 confirmed slides or fewer write `mode: serial`, `parallel_runtime: none`, and `concurrency: 1`. Write `mode: chapter_parallel` and `parallel_runtime: auto` when the confirmed page count is 16 or more, or when the user explicitly selected parallel / spawn / sub-agent execution. The threshold is strict; do not add a `15+5` buffer. For `chapter_parallel`, also write `## generation_packages` with one line per confirmed work package; this section, not §IX prose, drives `run_manifest.subagent_groups` and parallel concurrency.
+   - **generation is mandatory**: normal runs of 15 confirmed slides or fewer write `mode: serial`, `parallel_runtime: none`, and `concurrency: 1`. Write `mode: chapter_parallel` and `parallel_runtime: spawn_subagent` when the confirmed page count is 16 or more, or when the user explicitly selected parallel / spawn / sub-agent execution. The threshold is strict; do not add a `15+5` buffer. For `chapter_parallel`, also write `## generation_packages` with one line per confirmed work package; this section, not §IX prose, drives `run_manifest.subagent_groups` and parallel concurrency.
    - **page_rhythm is mandatory**: Based on the page list in §IX Content Outline, assign each page one of `anchor` / `dense` / `breathing` (see `spec_lock_reference.md` for the full vocabulary). This is what breaks the uniform "every page is a card grid" feel — without it the Executor defaults all pages to `dense`.
    - **Rhythm follows narrative, not quota**: `breathing` pages mark natural pauses — chapter transitions, standalone emphasis (hero quote / big number), SCQA bridges. For Viettel decks with clear major headings or 8+ slides, proactively create meaningful section dividers from the source structure (see §5.1). Dense decks may still be all `dense` only when the source has no real narrative break. **Do NOT invent filler pages** ("Thank you", empty dividers) to pad rhythm — every `breathing` page must say something independent.
    - **page_backgrounds is section-only for Viettel**: For `brand.profile: viettel_default`, read `templates/backgrounds/backgrounds_index.json` and assign background ids only to cover, chapter, section-divider, ending, and low-content `breathing` pages in §IX. Dense content, chart, KPI, and table pages MUST NOT appear in `page_backgrounds`; they use the clean Viettel shell.

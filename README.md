@@ -88,36 +88,34 @@ Nếu số slide đã chốt từ 16 trở lên, hoặc bạn yêu cầu paralle
 
 ```text
 generation_mode=chapter_parallel
-parallel_runtime=auto
+parallel_runtime=spawn_subagent
 ```
 
 Flow parallel:
 
 1. Tạo work packages bằng `python3 scripts/parallel_generation.py plan <project_path>`.
 2. Chuẩn bị prompt và staging bằng `python3 scripts/parallel_generation.py prepare-subagents <project_path>`.
-3. Nếu ZeroClaw delegate hỗ trợ `background=True`, `session_target="isolated"` và `check_result`, chạy từng `delegate_request` trong `parallel_generation/runs/<run_id>/run_manifest.json`. Mỗi sub-agent nhận đúng một work package từ `run_manifest.subagent_groups` và ghi SVG vào staging riêng: `parallel_generation/runs/<run_id>/work/<group_id>/svg_output/`. Không viết prompt delegate trực tiếp. Mặc định concurrency bằng số package sub-agent; truyền `--concurrency N` chỉ khi muốn chia batch nhỏ hơn.
-4. Main agent merge staging về `svg_output/`, chạy validate, rồi mới export PPTX bằng pipeline cũ.
+3. Nếu `spawn_subagent` khả dụng, truyền từng `spawn_subagent_request.prompt` trong `parallel_generation/runs/<run_id>/run_manifest.json` vào `spawn_subagent(prompt=...)`. Mỗi sub-agent nhận đúng một work package và ghi SVG vào staging riêng. Mỗi slide chỉ có một lượt sửa checker tổng hợp; nếu vẫn lỗi, package ghi `status: "failed"` và kết thúc thay vì lặp.
+4. Nếu mọi package đều `passed`, dùng strict merge. Nếu có spawn abort/failed hoặc report thiếu/không hợp lệ, chạy `merge --allow-partial`: file sạch hoặc chỉ có warning được copy, file thiếu/lỗi được ghi vào `partial_merge_report.json`.
+5. Main agent chỉ tạo `missing_pages` và viết lại `rejected_pages`; không ghi đè `merged_pages`. Sau đó chạy validate rồi mới export PPTX.
 
-ZeroClaw delegate sub-agent được trigger theo pattern:
+Sub-agent được trigger theo pattern:
 
 ```python
-task = delegate(
-    action="delegate",
-    background=True,
-    session_target="isolated",
-    agentic=True,
-    max_iterations=100,
-    prompt="Read and execute the package prompt at <prompt_file>. Do not work outside that scope.",
-)
-
-delegate(action="check_result", task_id=task["task_id"])
+spawn_subagent(prompt="Read and execute the package prompt at <prompt_file>. Do not work outside that scope.")
 ```
 
-Sau khi sub-agents chạy xong, main agent bắt buộc chạy:
+Khi mọi package đều pass, main agent chạy:
 
 ```bash
 python3 scripts/parallel_generation.py merge <project_path> --run-id <run_id>
 python3 scripts/parallel_generation.py validate <project_path>
+```
+
+Nếu có package abort/failed, thay lệnh merge bằng:
+
+```bash
+python3 scripts/parallel_generation.py merge <project_path> --run-id <run_id> --allow-partial
 ```
 
 Nếu runtime không hỗ trợ sub-agent trong `chapter_parallel`, skill phải in `Parallel Runtime Decision` kèm lý do fallback, giữ `generation_mode=chapter_parallel`, rồi chạy các work package bằng main agent với `parallel_runtime=main_agent_packages`. Với `serial`, skill bỏ qua parallel preflight và sinh slide tuần tự. Dù chạy bằng sub-agent hay main agent, SVG vẫn được viết theo từng slide/package, không sinh bằng batch template/codegen hàng loạt.

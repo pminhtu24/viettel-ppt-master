@@ -34,7 +34,7 @@
 >
 > ```
 > - mode: chapter_parallel
-> - parallel_runtime: auto
+> - parallel_runtime: spawn_subagent
 > ```
 >
 > Do not write a fixed parallel concurrency here. `parallel_generation.py` resolves concurrency from the number of `| subagent` packages in `## generation_packages`.
@@ -56,7 +56,7 @@
 > - Content chapter/section packages use `| subagent`.
 > - Lines must cover every expected `P<NN>` exactly once.
 > - Use stable `gNN-short-name` ids and page ranges/lists such as `P03-P05` or `P03, P04, P05`.
-> - One `| subagent` line becomes one `run_manifest.subagent_groups` item and one ZeroClaw delegate task. Do not combine multiple package lines into one sub-agent.
+> - One `| subagent` line becomes one `run_manifest.subagent_groups` item and one `spawn_subagent` call. Do not combine multiple package lines into one sub-agent.
 
 ## colors
 

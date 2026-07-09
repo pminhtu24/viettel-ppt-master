@@ -587,7 +587,7 @@ def _render_package_prompt(
         [
             "# Viettel PPT Work Package Task",
             "",
-            "You are an isolated ZeroClaw delegate task assigned to one work package from run_manifest.subagent_groups.",
+            "You are an isolated spawn_subagent task assigned to one work package from run_manifest.subagent_groups.",
             "Generate only the SVG pages listed in this prompt.",
             "",
             "## Scope",
@@ -617,9 +617,13 @@ def _render_package_prompt(
             "",
             "## Quality Gate",
             "",
+            "- Author the complete staged SVG before running the checker.",
             "- After each staged SVG, run:",
             f"  `python3 {SCRIPT_DIR}/svg_quality_checker.py <staged_svg_file>`",
-            "- Fix any checker `error` before moving to the next page.",
+            "- If the checker reports errors, re-read the staged SVG and make one consolidated repair pass that addresses all reported errors.",
+            "- Run the checker once more after that repair. Never call `file_edit` more than once for the same page.",
+            "- If the edit makes no file change, the same checker errors repeat, or any checker error remains, do not retry or respawn.",
+            "- On failure, write `package_report.json` with `status: \"failed\"`, preserve all remaining errors in `checker_errors`, then stop this package and return.",
             "- At completion, write `package_report.json` with keys: "
             "`status`, `package_id`, `pages`, `generated_files`, `checker_errors`, `notes`.",
             "- Use `status: \"passed\"` only if all assigned pages exist in staging and have no checker errors.",
@@ -650,7 +654,7 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
 
     subagent_groups: list[dict[str, Any]] = []
     main_agent_groups: list[dict[str, Any]] = []
-    delegate_snippets: list[str] = []
+    spawn_snippets: list[str] = []
 
     for group in manifest.get("groups", []):
         if group.get("parallel_eligible"):
@@ -663,39 +667,23 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
                 _render_package_prompt(project, run_dir, group, manifest),
                 encoding="utf-8",
             )
-            raw_task_name = f"ppt_{project.name}_{run_dir.name}_{package_id}"
-            task_name = re.sub(r"[^A-Za-z0-9_]+", "_", raw_task_name).strip("_")
-            delegate_prompt = f"Read and execute the package prompt at {prompt_file}. Do not work outside that scope."
-            delegate_request = {
-                "action": "delegate",
-                "background": True,
-                "session_target": "isolated",
-                "agentic": True,
-                "max_iterations": 100,
-                "prompt": delegate_prompt,
+            spawn_prompt = f"Read and execute the package prompt at {prompt_file}. Do not work outside that scope."
+            spawn_subagent_request = {
+                "prompt": spawn_prompt,
             }
             package = {
                 "id": package_id,
                 "kind": group.get("kind", "unknown"),
                 "pages": group.get("pages", []),
-                "task_name": task_name,
                 "prompt_file": str(prompt_file),
                 "work_dir": str(work_dir),
                 "svg_output_dir": str(svg_dir),
                 "package_report": str(work_dir / "package_report.json"),
-                "delegate_request": delegate_request,
+                "spawn_subagent_request": spawn_subagent_request,
             }
             subagent_groups.append(package)
-            task_var = re.sub(r"[^A-Za-z0-9_]+", "_", f"task_{package_id}").strip("_")
-            delegate_snippets.append(
-                f"{task_var} = delegate(\n"
-                "    action=\"delegate\",\n"
-                "    background=True,\n"
-                "    session_target=\"isolated\",\n"
-                "    agentic=True,\n"
-                "    max_iterations=100,\n"
-                f"    prompt=\"{delegate_prompt}\",\n"
-                ")"
+            spawn_snippets.append(
+                f"spawn_subagent(prompt={json.dumps(spawn_prompt, ensure_ascii=False)})"
             )
         else:
             main_agent_groups.append(
@@ -708,7 +696,7 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
 
     run_manifest = {
         "version": 1,
-        "mode": "zeroclaw_delegate",
+        "mode": "spawn_subagent",
         "created_at": _utc_now(),
         "project": project.name,
         "project_path": str(project),
@@ -724,7 +712,7 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
     )
 
     runbook = [
-        "# ZeroClaw Delegate Runbook",
+        "# spawn_subagent Runbook",
         "",
         f"- Project: `{project}`",
         f"- Run ID: `{run_dir.name}`",
@@ -738,47 +726,51 @@ def cmd_prepare_subagents(args: argparse.Namespace) -> int:
     runbook.extend(
         [
             "",
-            "## Delegate Commands",
+            "## spawn_subagent Calls",
             "",
-            "Use these generated package prompts only. Do not write direct ad hoc delegate prompts.",
-            "Call one background delegate task per package. Do not combine multiple package prompts in one task.",
-            "Each delegate task must use `session_target=\"isolated\"` and write only to its package `svg_output_dir` under this run's `work/<package_id>/` staging directory.",
+            "Use these generated package prompts only. Do not write direct ad hoc spawn_subagent prompts.",
+            "Call one spawn_subagent per package. Do not combine multiple package prompts in one sub-agent.",
+            "Each spawn_subagent writes only to its package `svg_output_dir` under this run's `work/<package_id>/` staging directory.",
+            "Each page gets at most one consolidated repair pass. A failed package writes `status: \"failed\"` and returns instead of retrying.",
             "",
         ]
     )
-    if delegate_snippets:
+    if spawn_snippets:
         concurrency = int(manifest["concurrency"])
-        for batch_index, start in enumerate(range(0, len(delegate_snippets), concurrency), start=1):
-            batch = delegate_snippets[start : start + concurrency]
+        for batch_index, start in enumerate(range(0, len(spawn_snippets), concurrency), start=1):
+            batch = spawn_snippets[start : start + concurrency]
             runbook.extend([f"### Batch {batch_index}", "", "```python"])
             runbook.extend(batch)
             runbook.extend(
                 [
                     "```",
                     "",
-                    "Poll this batch before starting the next one:",
-                    "",
-                    "```python\ndelegate(action=\"list_results\")\ndelegate(action=\"check_result\", task_id=\"<task_id>\")\n```",
+                    "Wait for this batch's spawn responses before starting the next batch.",
                     "",
                 ]
             )
     else:
-        runbook.append("_No delegate-eligible groups found._")
+        runbook.append("_No spawn_subagent-eligible groups found._")
     runbook.extend(
         [
             "",
-            "## After Delegates Complete",
+            "## After spawn_subagent Calls Complete",
             "",
-            f"1. Run `python3 {SCRIPT_DIR}/parallel_generation.py merge {project} --run-id {run_dir.name}`.",
-            f"2. Run `python3 {SCRIPT_DIR}/parallel_generation.py validate {project}`.",
+            "1. Inspect every spawn response and `package_report.json`.",
+            f"2. If every package passed, run `python3 {SCRIPT_DIR}/parallel_generation.py merge {project} --run-id {run_dir.name}`.",
+            f"3. If any package aborted, failed, or has a missing/invalid report, do not respawn. Run `python3 {SCRIPT_DIR}/parallel_generation.py merge {project} --run-id {run_dir.name} --allow-partial`.",
+            "4. Read `partial_merge_report.json`. The main agent creates only `missing_pages` and rewrites only `rejected_pages` in the project `svg_output/`; never modify `merged_pages`.",
+            "5. If `conflict_pages` is non-empty, stop instead of overwriting existing output. Resolve explicitly with `--replace-output` only when replacement is intended.",
+            f"6. Run `python3 {SCRIPT_DIR}/parallel_generation.py validate {project}` after recovery pages pass their per-page checker.",
             "",
         ]
     )
-    (run_dir / "delegate_runbook.md").write_text("\n\n".join(runbook), encoding="utf-8")
+    runbook_path = run_dir / "spawn_subagent_runbook.md"
+    runbook_path.write_text("\n\n".join(runbook), encoding="utf-8")
 
-    print(f"[OK] Prepared ZeroClaw delegate run: {run_dir}")
+    print(f"[OK] Prepared spawn_subagent run: {run_dir}")
     print(f"[OK] Sub-agent work packages: {len(subagent_groups)} | Main-agent packages: {len(main_agent_groups)}")
-    print(f"[OK] Runbook: {run_dir / 'delegate_runbook.md'}")
+    print(f"[OK] Runbook: {runbook_path}")
     for package in subagent_groups:
         print(f"  - {package['id']}: {', '.join(package['pages'])} -> {package['prompt_file']}")
     return 0
@@ -792,6 +784,13 @@ def _discover_svg_numbers(svg_dir: Path) -> dict[int, list[Path]]:
             continue
         numbers.setdefault(int(m.group(1)), []).append(path)
     return numbers
+
+
+def _check_staged_svg(path: Path) -> tuple[list[str], list[str]]:
+    if SVGQualityChecker is None:
+        return ["Could not import SVGQualityChecker"], []
+    result = SVGQualityChecker().check_file(str(path))
+    return list(result.get("errors", [])), list(result.get("warnings", []))
 
 
 def _staged_package_errors(package: dict[str, Any]) -> list[str]:
@@ -834,8 +833,127 @@ def _staged_package_errors(package: dict[str, Any]) -> list[str]:
         if len(staged.get(number, [])) > 1:
             names = ", ".join(path.name for path in staged[number])
             errors.append(f"{package_id}: duplicate staged SVGs for P{number:02d}: {names}")
+        elif len(staged.get(number, [])) == 1:
+            quality_errors, _ = _check_staged_svg(staged[number][0])
+            for error in quality_errors:
+                errors.append(f"{package_id}: P{number:02d}: {error}")
 
     return errors
+
+
+def _merge_partial(
+    project: Path,
+    run_dir: Path,
+    packages: list[dict[str, Any]],
+    *,
+    replace_output: bool,
+) -> int:
+    if SVGQualityChecker is None:
+        print("[ERROR] Could not import SVGQualityChecker")
+        return 1
+
+    target_dir = project / "svg_output"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    existing_by_number = _discover_svg_numbers(target_dir)
+    backup_dir = run_dir / "backup" / "svg_output_conflicts"
+
+    merged_pages: list[str] = []
+    warning_pages: list[str] = []
+    missing_pages: list[str] = []
+    rejected_pages: dict[str, list[str]] = {}
+    conflict_pages: list[str] = []
+    ignored_files: list[str] = []
+    owners: dict[int, list[str]] = {}
+
+    for package in packages:
+        package_id = str(package.get("id", "unknown"))
+        for number in _expected_numbers([str(page) for page in package.get("pages", [])]):
+            owners.setdefault(number, []).append(package_id)
+
+    for package in packages:
+        package_id = str(package.get("id", "unknown"))
+        svg_dir = Path(str(package["svg_output_dir"]))
+        staged = _discover_svg_numbers(svg_dir)
+        expected = _expected_numbers([str(page) for page in package.get("pages", [])])
+        expected_set = set(expected)
+
+        ignored_files.extend(
+            str(path)
+            for path in sorted(svg_dir.glob("*.svg"))
+            if not re.match(r"^(\d{2,3})(?:[_-].*)?\.svg$", path.name)
+        )
+        for number in sorted(set(staged) - expected_set):
+            ignored_files.extend(str(path) for path in staged[number])
+
+        for number in expected:
+            page = f"P{number:02d}"
+            page_owners = owners[number]
+            if len(page_owners) > 1:
+                rejected_pages[page] = [
+                    "Assigned to multiple packages: " + ", ".join(page_owners)
+                ]
+                continue
+
+            candidates = staged.get(number, [])
+            if not candidates:
+                missing_pages.append(page)
+                continue
+            if len(candidates) > 1:
+                rejected_pages[page] = [
+                    "Duplicate staged SVGs: " + ", ".join(path.name for path in candidates)
+                ]
+                continue
+
+            src = candidates[0]
+            quality_errors, quality_warnings = _check_staged_svg(src)
+            if quality_errors:
+                rejected_pages[page] = quality_errors
+                continue
+
+            existing = existing_by_number.get(number, [])
+            if existing and not replace_output:
+                conflict_pages.append(page)
+                continue
+            if existing:
+                backup_dir.mkdir(parents=True, exist_ok=True)
+                for old in existing:
+                    shutil.move(str(old), str(backup_dir / old.name))
+
+            target = target_dir / src.name
+            shutil.copy2(src, target)
+            existing_by_number[number] = [target]
+            merged_pages.append(page)
+            if quality_warnings:
+                warning_pages.append(page)
+
+    report = {
+        "status": "complete"
+        if not (missing_pages or rejected_pages or conflict_pages)
+        else "partial",
+        "run_id": run_dir.name,
+        "created_at": _utc_now(),
+        "merged_pages": sorted(merged_pages),
+        "warning_pages": sorted(warning_pages),
+        "missing_pages": sorted(missing_pages),
+        "rejected_pages": dict(sorted(rejected_pages.items())),
+        "conflict_pages": sorted(set(conflict_pages)),
+        "ignored_files": sorted(ignored_files),
+    }
+    report_path = run_dir / "partial_merge_report.json"
+    report_path.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+    print(
+        f"[OK] Partial merge copied {len(merged_pages)} page(s); "
+        f"missing {len(missing_pages)}, rejected {len(rejected_pages)}, "
+        f"conflicts {len(set(conflict_pages))}"
+    )
+    print(f"[OK] Partial merge report: {report_path}")
+    if backup_dir.exists():
+        print(f"[OK] Backed up replaced package SVG(s) to {backup_dir}")
+    return 0
 
 
 def cmd_merge(args: argparse.Namespace) -> int:
@@ -850,6 +968,13 @@ def cmd_merge(args: argparse.Namespace) -> int:
     if not packages:
         print("[WARN] No sub-agent packages to merge")
         return 0
+    if args.allow_partial:
+        return _merge_partial(
+            project,
+            run_dir,
+            packages,
+            replace_output=args.replace_output,
+        )
 
     errors: list[str] = []
     owner_by_number: dict[int, str] = {}
@@ -1023,17 +1148,17 @@ def build_parser() -> argparse.ArgumentParser:
         "--concurrency",
         type=int,
         default=None,
-        help="Optional delegate batch size; defaults to one sub-agent per eligible package.",
+        help="Optional spawn_subagent batch size; defaults to one sub-agent per eligible package.",
     )
     plan.set_defaults(func=cmd_plan)
 
-    prepare = sub.add_parser("prepare-subagents", help="create ZeroClaw delegate package prompts and staging dirs")
+    prepare = sub.add_parser("prepare-subagents", help="create spawn_subagent package prompts and staging dirs")
     prepare.add_argument("project_path", type=Path)
     prepare.add_argument(
         "--concurrency",
         type=int,
         default=None,
-        help="Optional delegate batch size; defaults to one sub-agent per eligible package.",
+        help="Optional spawn_subagent batch size; defaults to one sub-agent per eligible package.",
     )
     prepare.add_argument("--run-id", default=None)
     prepare.set_defaults(func=cmd_prepare_subagents)
@@ -1045,6 +1170,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--replace-output",
         action="store_true",
         help="back up and replace conflicting package SVG numbers in svg_output/",
+    )
+    merge.add_argument(
+        "--allow-partial",
+        action="store_true",
+        help="merge checker-clean staged SVGs and report missing/rejected pages for main-agent recovery",
     )
     merge.set_defaults(func=cmd_merge)
 

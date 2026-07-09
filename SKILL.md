@@ -22,10 +22,10 @@ description: >
 > 3. **NO CROSS-PHASE BUNDLING** — Cross-phase bundling is FORBIDDEN. (Note: the Nine Confirmations in Step 4 are ⛔ BLOCKING — the AI MUST present recommendations and wait for explicit user confirmation before proceeding. Once the user confirms, all subsequent non-BLOCKING steps — design spec output, SVG generation, speaker notes, and post-processing — may proceed automatically without further user confirmation)
 > 4. **GATE BEFORE ENTRY** — Each Step has prerequisites (🚧 GATE) listed at the top; these MUST be verified before starting that Step
 > 5. **NO SPECULATIVE EXECUTION** — "Pre-preparing" content for subsequent Steps is FORBIDDEN (e.g., writing SVG code during the Strategist phase)
-> 6. **CONTROLLED SUB-AGENT SVG GENERATION ONLY** — Executor Step 6 SVG generation is context-dependent. Sub-agent SVG generation is FORBIDDEN unless `generation_mode=chapter_parallel` and `parallel_runtime=zeroclaw_delegate` are active, `parallel_generation.py prepare-subagents` has produced a run manifest, each sub-agent receives exactly one work package from `run_manifest.subagent_groups`, uses the generated `delegate_request` / package prompt, uses `session_target="isolated"`, writes only to run-local staging, and the main agent merges + validates before export. Direct ad hoc delegate prompts are FORBIDDEN
-> 7. **SERIAL DEFAULT WITH PARALLEL AUTO-RECOMMENDATION** — In the ninth confirmation, default to `generation_mode=serial`, `parallel_runtime=none`, `concurrency=1` for decks with a confirmed page count of 15 or fewer. Recommend `generation_mode=chapter_parallel`, `parallel_runtime=auto` only when the confirmed page count is greater than 15, or when the user explicitly asks for parallel / spawn / sub-agent / chạy song song; in that mode concurrency resolves from the number of eligible sub-agent packages. This threshold is a strict integer comparison: 16+ slides means `chapter_parallel`; do not invent buffers, tolerance bands, or phrases like `15+5 threshold`. User override wins: if the user explicitly asks for serial / tuần tự / không parallel / không spawn, write `generation_mode=serial` even for decks over 15 slides. If `chapter_parallel` is confirmed, Executor MUST run the parallel preflight gate before the first SVG. If sub-agent tools are unavailable, keep `generation_mode=chapter_parallel`, set `parallel_runtime=main_agent_packages`, print the exact reason, and still use the package plan + validate gate. Pages inside each work package remain sequential for visual continuity
+> 6. **CONTROLLED SUB-AGENT SVG GENERATION ONLY** — Executor Step 6 SVG generation is context-dependent. Sub-agent SVG generation is FORBIDDEN unless `generation_mode=chapter_parallel` and `parallel_runtime=spawn_subagent` are active, `parallel_generation.py prepare-subagents` has produced a run manifest, each sub-agent receives exactly one work package from `run_manifest.subagent_groups`, uses the generated `spawn_subagent_request` / package prompt, writes only to run-local staging, and the main agent merges + validates before export. Direct ad hoc spawn_subagent prompts are FORBIDDEN. If a spawn ends with an abort/error, missing/invalid report, or non-passed report, run quality-aware partial merge; the main agent may create only pages listed as missing or rejected and must not modify merged pages
+> 7. **SERIAL DEFAULT WITH PARALLEL AUTO-RECOMMENDATION** — In the ninth confirmation, default to `generation_mode=serial`, `parallel_runtime=none`, `concurrency=1` for decks with a confirmed page count of 15 or fewer. Recommend `generation_mode=chapter_parallel`, `parallel_runtime=spawn_subagent` only when the confirmed page count is greater than 15, or when the user explicitly asks for parallel / spawn / sub-agent / chạy song song; in that mode concurrency resolves from the number of eligible sub-agent packages. This threshold is a strict integer comparison: 16+ slides means `chapter_parallel`; do not invent buffers, tolerance bands, or phrases like `15+5 threshold`. User override wins: if the user explicitly asks for serial / tuần tự / không parallel / không spawn, write `generation_mode=serial` even for decks over 15 slides. If `chapter_parallel` is confirmed, Executor MUST run the parallel preflight gate before the first SVG. If `spawn_subagent` is unavailable, keep `generation_mode=chapter_parallel`, set `parallel_runtime=main_agent_packages`, print the exact reason, and still use the package plan + validate gate. If a started package later fails, do not respawn it; partial-merge its reusable pages and recover only missing/rejected pages in the main agent. Pages inside each work package remain sequential for visual continuity
 > 8. **SPEC_LOCK RE-READ PER PAGE** — Before generating each SVG page, Executor MUST `read_file <project_path>/spec_lock.md`. All colors / fonts / icons / images MUST come from this file — no values from memory or invented on the fly. Executor MUST also look up the current page's `page_rhythm` (`anchor` / `dense` / `breathing`), optional `page_backgrounds` (section-only Viettel background layer, if any), `page_layouts` (which template SVG to inherit, if any), and `page_charts` (which chart template to adapt, if any). Empty / absent entries are intentional Strategist signals; missing `page_backgrounds` means no decorative background for that page — see executor-base.md §2.1. This rule exists to resist context-compression drift on long decks and to break the uniform "every page is a card grid" default
-> 9. **SVG MUST BE HAND-WRITTEN, NOT SCRIPT-GENERATED** — Every SVG page is written directly by the active package author (main agent in serial mode, or the assigned isolated sub-agent in `zeroclaw_delegate` mode), one page at a time. Writing or running a Python / Node / shell script that produces the SVG files in batch — looping over pages, templating from data, or emitting them via a generator — is FORBIDDEN, including under "save tokens", "quick draft", or "user is in a hurry" pretexts. The script-generation path was tried on a feature branch and abandoned: cross-page visual consistency depends on per-page authoring with full upstream context, which a generator script cannot reproduce
+> 9. **SVG MUST BE HAND-WRITTEN, NOT SCRIPT-GENERATED** — Every SVG page is written directly by the active package author (main agent in serial / `main_agent_packages` / partial recovery, or the assigned isolated sub-agent in `spawn_subagent` mode), one page at a time. Writing or running a Python / Node / shell script that produces the SVG files in batch — looping over pages, templating from data, or emitting them via a generator — is FORBIDDEN, including under "save tokens", "quick draft", or "user is in a hurry" pretexts. The script-generation path was tried on a feature branch and abandoned: cross-page visual consistency depends on per-page authoring with full upstream context, which a generator script cannot reproduce
 
 > [!IMPORTANT]
 >
@@ -69,7 +69,7 @@ description: >
 | `${SKILL_DIR}/scripts/analyze_images.py`           | Image analysis                                                                                                                          |
 | `${SKILL_DIR}/scripts/image_gen.py`                | AI image generation (multi-provider)                                                                                                    |
 | `${SKILL_DIR}/scripts/svg_quality_checker.py`      | SVG quality check                                                                                                                       |
-| `${SKILL_DIR}/scripts/parallel_generation.py`      | Chapter-parallel planner, ZeroClaw delegate prompt/staging preparer, staged output merger, and validator; does not generate SVG code    |
+| `${SKILL_DIR}/scripts/parallel_generation.py`      | Chapter-parallel planner, spawn_subagent prompt/staging preparer, staged output merger, and validator; does not generate SVG code        |
 | `${SKILL_DIR}/scripts/total_md_split.py`           | Speaker notes splitting                                                                                                                 |
 | `${SKILL_DIR}/scripts/finalize_svg.py`             | SVG post-processing (unified entry)                                                                                                     |
 | `${SKILL_DIR}/scripts/svg_to_pptx.py`              | Export to PPTX                                                                                                                          |
@@ -371,25 +371,25 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 2. If it says `mode: serial`, print `## Parallel Runtime Decision` with `generation_mode: serial`, `parallel_runtime: none`, and `fallback_reason: none`, then generate through the legacy serial path.
 3. Otherwise, run `parallel_generation.py plan`.
 4. Run `parallel_generation.py prepare-subagents`.
-5. Read the generated run manifest and count `subagent_groups` / `main_agent_groups`. Verify every `subagent_groups` entry has `delegate_request`, `prompt_file`, `svg_output_dir`, and `package_report`; if not, rerun `prepare-subagents` before delegation.
+5. Read the generated run manifest and count `subagent_groups` / `main_agent_groups`. Verify every `subagent_groups` entry has `spawn_subagent_request.prompt`, `prompt_file`, `svg_output_dir`, and `package_report`; if not, rerun `prepare-subagents` before spawning.
 6. Decide runtime by tool availability:
-   - if ZeroClaw `delegate` supports `background=True`, `session_target="isolated"`, and `check_result`, and `subagent_groups > 0`, set `parallel_runtime=zeroclaw_delegate`;
-   - if ZeroClaw delegate is not callable, keep `generation_mode=chapter_parallel`, set `parallel_runtime=main_agent_packages`, and print the exact missing-tool reason;
+   - if `spawn_subagent` is callable and `subagent_groups > 0`, set `parallel_runtime=spawn_subagent`;
+   - if `spawn_subagent` is not callable, keep `generation_mode=chapter_parallel`, set `parallel_runtime=main_agent_packages`, and print the exact missing-tool reason;
    - if `subagent_groups == 0`, keep `generation_mode=chapter_parallel`, set `parallel_runtime=main_agent_packages`, and print `fallback_reason: no eligible sub-agent package`.
 7. Print `## Parallel Runtime Decision`.
-8. If `parallel_runtime=zeroclaw_delegate`, call `delegate_request` for the eligible packages before authoring any SVG assigned to those packages. The main agent may generate only main-agent packages while delegate tasks run.
+8. If `parallel_runtime=spawn_subagent`, read each eligible package's `spawn_subagent_request.prompt` and call `spawn_subagent(prompt="<generated prompt>")`. The main agent may generate only main-agent packages while sub-agents run.
 
 Generating work-package slides without this startup gate is a workflow violation. If this gate was skipped, stop and run it immediately; do not finish generation and ask the user to rerun.
 
-> ⚠️ **Controlled package authorship**: SVG generation stays in the main agent unless `generation_mode=chapter_parallel` selects `parallel_runtime=zeroclaw_delegate`. In that mode, sub-agents may author SVG only for their assigned package, in an isolated ZeroClaw delegate session, into staging output, followed by main-agent merge + validation.
-> ⚠️ **Generation rhythm**: default `generation_mode=serial`, `parallel_runtime=none`, `concurrency=1` for confirmed decks of 15 slides or fewer. Use `generation_mode=chapter_parallel`, `parallel_runtime=auto` when the confirmed slide count is 16+ or the user explicitly asks for parallel/sub-agent execution; parallel concurrency resolves from the number of eligible sub-agent packages. The threshold is strict; do not add a buffer such as `15+5`. Do not treat ad hoc page batches (e.g., 5 per group) as valid parallel mode.
+> ⚠️ **Controlled package authorship**: SVG generation stays in the main agent unless `generation_mode=chapter_parallel` selects `parallel_runtime=spawn_subagent`. In that mode, sub-agents may author SVG only for their assigned package, into staging output, followed by main-agent merge + validation. The main agent must not edit a package while its spawn is running. After partial merge, it may create only `missing_pages` and rewrite only `rejected_pages`; `merged_pages` are immutable.
+> ⚠️ **Generation rhythm**: default `generation_mode=serial`, `parallel_runtime=none`, `concurrency=1` for confirmed decks of 15 slides or fewer. Use `generation_mode=chapter_parallel`, `parallel_runtime=spawn_subagent` when the confirmed slide count is 16+ or the user explicitly asks for parallel/sub-agent execution; parallel concurrency resolves from the number of eligible sub-agent packages. The threshold is strict; do not add a buffer such as `15+5`. Do not treat ad hoc page batches (e.g., 5 per group) as valid parallel mode.
 
 **Generation Mode Selection (Mandatory)**:
 
 - **Default / production**: `generation_mode=serial`, `parallel_runtime=none`, `concurrency=1` for confirmed decks of 15 slides or fewer.
-- **Auto parallel recommendation**: if the confirmed page count is 16 or more, recommend `generation_mode=chapter_parallel`, `parallel_runtime=auto`. The preflight resolves concurrency from the number of eligible sub-agent packages. Do not add buffers/tolerance bands to the 15-slide threshold.
+- **Auto parallel recommendation**: if the confirmed page count is 16 or more, recommend `generation_mode=chapter_parallel`, `parallel_runtime=spawn_subagent`. The preflight resolves concurrency from the number of eligible sub-agent packages. Do not add buffers/tolerance bands to the 15-slide threshold.
 - **User override**: explicit serial/parallel wording in the ninth confirmation wins over the page-count rule.
-- **Runtime fallback**: if ZeroClaw delegate is unavailable or fails before package work starts, keep `generation_mode=chapter_parallel`, set `parallel_runtime=main_agent_packages`, and generate package-by-package in the main agent only after reporting the exact fallback reason.
+- **Runtime fallback**: if `spawn_subagent` is unavailable or fails before package work starts, keep `generation_mode=chapter_parallel`, set `parallel_runtime=main_agent_packages`, and generate package-by-package in the main agent only after reporting the exact fallback reason.
 - Before writing any SVG, run the parallel preflight commands only when `spec_lock.md ## generation` says `mode: chapter_parallel`:
 
 ```bash
@@ -405,7 +405,7 @@ Report this checkpoint before generating any SVG:
 ## Parallel Runtime Decision
 
 - generation_mode: chapter_parallel | serial
-- parallel_runtime: none | zeroclaw_delegate | main_agent_packages
+- parallel_runtime: none | spawn_subagent | main_agent_packages
 - concurrency: <run_manifest concurrency; equals eligible sub-agent package count unless explicitly overridden>
 - run_id: <run_id or n/a>
 - subagent_packages: <count>
@@ -413,48 +413,52 @@ Report this checkpoint before generating any SVG:
 - fallback_reason: <none | exact runtime fallback reason>
 ```
 
-- If ZeroClaw delegate is available and `subagent_packages > 0`, `parallel_runtime` MUST be `zeroclaw_delegate`.
-- If ZeroClaw delegate is unavailable, state exactly: `fallback_reason: ZeroClaw delegate unavailable in active runtime` and keep `generation_mode=chapter_parallel`.
-- If a delegate call fails before package work starts, state the exact tool error and continue as `parallel_runtime=main_agent_packages`.
+- If `spawn_subagent` is available and `subagent_packages > 0`, `parallel_runtime` MUST be `spawn_subagent`.
+- If `spawn_subagent` is unavailable, state exactly: `fallback_reason: spawn_subagent unavailable in active runtime` and keep `generation_mode=chapter_parallel`.
+- If a spawn_subagent call fails before package work starts, state the exact tool error and continue as `parallel_runtime=main_agent_packages`.
 - Do not begin SVG generation in the main agent until this checkpoint is printed.
 - Do not claim runtime fallback unless the startup gate above was actually attempted. Serial mode is a normal selected/default mode, not a runtime fallback.
 
-Use the generated `parallel_generation/` work packages as the runtime contract. The planner may use chapter/section boundaries to form packages, but delegation is driven only by `run_manifest.subagent_groups`. Cover / TOC / ending packages remain main-agent packages. Sub-agent work packages may run concurrently through ZeroClaw delegate; pages inside one package stay serial. SVG files are still hand-written from the package context, never script-generated.
+Use the generated `parallel_generation/` work packages as the runtime contract. The planner may use chapter/section boundaries to form packages, but spawning is driven only by `run_manifest.subagent_groups`. Cover / TOC / ending packages remain main-agent packages. Sub-agent work packages may run concurrently through `spawn_subagent`; pages inside one package stay serial. SVG files are still hand-written from the package context, never script-generated.
 
-For `chapter_parallel`, Strategist must write `spec_lock.md ## generation_packages` with one line per confirmed package. `parallel_generation.py` treats that section as authoritative; if it is absent, the script falls back to role heuristics and may combine ordinary content pages into one package. Each `| subagent` package line must become one `run_manifest.subagent_groups` item and one separate ZeroClaw delegate task.
+For `chapter_parallel`, Strategist must write `spec_lock.md ## generation_packages` with one line per confirmed package. `parallel_generation.py` treats that section as authoritative; if it is absent, the script falls back to role heuristics and may combine ordinary content pages into one package. Each `| subagent` package line must become one `run_manifest.subagent_groups` item and one separate spawn_subagent call.
 
-**ZeroClaw Delegate Pattern**:
+**spawn_subagent Pattern**:
 
 - Spawn only groups listed in `<project_path>/parallel_generation/runs/<run_id>/run_manifest.json` under `subagent_groups`.
-- Use the manifest's per-package `delegate_request` fields; they contain the exact delegate prompt and isolated-session settings for each package.
-- Call one background delegate task per package. Never combine multiple package prompts or multiple `subagent_groups` entries into one sub-agent task.
-- Never write an ad hoc delegate prompt. If there is no `run_manifest.json` with `delegate_request` entries, stop and run `parallel_generation.py prepare-subagents <project_path>`.
+- Use the manifest's per-package `spawn_subagent_request` fields; they contain the exact prompt for each package.
+- Pass the string at `spawn_subagent_request.prompt` to `spawn_subagent(prompt=...)`; the request object itself is not callable.
+- Call one spawn_subagent per package. Never combine multiple package prompts or multiple `subagent_groups` entries into one sub-agent.
+- Never write an ad hoc spawn_subagent prompt. If there is no `run_manifest.json` with `spawn_subagent_request` entries, stop and run `parallel_generation.py prepare-subagents <project_path>`.
 - Each sub-agent writes only to its package staging directory: `<project_path>/parallel_generation/runs/<run_id>/work/<group_id>/svg_output/`. It must not write directly to `<project_path>/svg_output/`.
-- Use isolated ZeroClaw sessions:
 
 ```python
-delegate(
-    action="delegate",
-    background=True,
-    session_target="isolated",
-    agentic=True,
-    max_iterations=100,
-    prompt="Read and execute the package prompt at <prompt_file>. Do not work outside that scope.",
-)
+spawn_subagent(prompt="Read and execute the package prompt at <prompt_file>. Do not work outside that scope.")
 ```
 
-- Start one delegate task per `subagent_groups` package, then poll with `delegate(action="check_result", task_id="<task_id>")`. Use `--concurrency <n>` only when the user explicitly wants smaller batches.
-- After all delegate tasks finish, merge staged package SVGs:
+- Start one spawn_subagent call per `subagent_groups` package. Multiple calls in the same turn may run in parallel; no task IDs or polling are used. Use `--concurrency <n>` only when the user explicitly wants smaller batches.
+- Each sub-agent gets one consolidated checker-repair pass per page. If its edit is a no-op, the same errors repeat, or any error remains after that pass, it must write `status: "failed"` with the remaining `checker_errors` and return instead of retrying.
+- After all spawn_subagent calls return, inspect every response and `package_report.json`. Treat an abort/error, missing or invalid report, or any status other than `passed` as a failed package.
+- If every package passed, use strict merge:
 
 ```bash
 python3 ${SKILL_DIR}/scripts/parallel_generation.py merge <project_path> --run-id <run_id>
 ```
 
+- If any package failed, do not respawn. Run quality-aware partial merge:
+
+```bash
+python3 ${SKILL_DIR}/scripts/parallel_generation.py merge <project_path> --run-id <run_id> --allow-partial
+```
+
+- Read `<project_path>/parallel_generation/runs/<run_id>/partial_merge_report.json`. Checker-clean files, including warning-only files, are listed in `merged_pages`; absent files are in `missing_pages`; checker-failing or duplicate files are in `rejected_pages`.
+- The main agent creates only `missing_pages` and rewrites only `rejected_pages` in `<project_path>/svg_output/`. Never overwrite `merged_pages`. If `conflict_pages` is non-empty, stop unless intentional replacement is explicitly selected with `--replace-output`.
+
 **Visual Construction Phase**:
 
 - `serial`: generate SVG pages sequentially, one at a time, in one continuous pass → `<project_path>/svg_output/`
 - `chapter_parallel` with `main_agent_packages`: generate packages in order in the main agent → `<project_path>/svg_output/`
-- `chapter_parallel` with `zeroclaw_delegate`: main agent generates standalone packages to `<project_path>/svg_output/`; each delegate task generates only its package to `<project_path>/parallel_generation/runs/<run_id>/work/<group_id>/svg_output/`; main agent merges after package reports pass.
+- `chapter_parallel` with `spawn_subagent`: main agent generates standalone packages to `<project_path>/svg_output/`; each sub-agent generates only its package to run-local staging. Strict merge is used when all packages pass; otherwise partial merge preserves checker-clean staged pages and the main agent authors only missing/rejected pages in `svg_output/`.
 
 **Per-page Quality Check Gate (Mandatory)** — after each SVG page is written, before generating the next page in the same serial/package stream:
 
@@ -474,7 +478,7 @@ python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
 - Any `error` (banned SVG features, viewBox mismatch, spec_lock drift, text overflow, title-zone content intrusion, etc.) MUST be fixed before proceeding — return to Visual Construction, regenerate that page, re-run check.
 - `warning` entries (low-res image, non-PPT-safe font tail, long text without a wrap contract, etc.): fix when straightforward, otherwise acknowledge and release.
 - Run against `svg_output/` (not after `finalize_svg.py` — finalize rewrites SVG and masks violations).
-- For `generation_mode=chapter_parallel`, merge staged package output first if using sub-agents, then run `python3 ${SKILL_DIR}/scripts/parallel_generation.py validate <project_path>` and fix any missing/duplicate/out-of-order slide or spec snapshot failure before export.
+- For `generation_mode=chapter_parallel`, use strict or partial merge as specified above, recover only pages listed by the partial report, then run `python3 ${SKILL_DIR}/scripts/parallel_generation.py validate <project_path>` and fix any missing/duplicate/out-of-order slide or spec snapshot failure before export.
 
 **Logic Construction Phase**: generate speaker notes → `<project_path>/notes/total.md`
 
