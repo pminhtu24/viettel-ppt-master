@@ -536,7 +536,7 @@ Selected chart templates must be mirrored into project `spec_lock.md ## page_cha
 ### Asset Path Rule
 
 The source asset lives in `templates/layouts/viettel_default/viettel-logo.png`. During project setup, copy it to `<project_path>/images/viettel-logo.png`; generated SVG pages reference it through the runtime path `../images/viettel-logo.png`.
-The font bundle lives in `templates/layouts/viettel_default/fonts/`. During project setup, copy it to `<project_path>/fonts/` unchanged. The deck still declares the intended brand stack in `spec_lock.md`; runtime availability is validated by `scripts/check_fonts.py`.
+The font bundle lives in `templates/layouts/viettel_default/fonts/`. During project setup, copy only the required FS Magistral Book, Medium, and Bold faces to `<project_path>/fonts/`. The deck still declares the intended brand stack in `spec_lock.md`; runtime availability is validated by `scripts/check_fonts.py`.
 
 ### Optional Official Assets
 
