@@ -4,7 +4,7 @@
       <stop offset="0%" stop-color="#EE0033" stop-opacity="0.14"/>
       <stop offset="100%" stop-color="#EE0033" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="laneBlue" x1="100%" y1="0%" x2="0%" y2="100%">
+    <linearGradient id="laneBlue" x1="100%" y1="0%" x2="0%" y2="100%" data-viettel-blue-scope="background">
       <stop offset="0%" stop-color="#12436D" stop-opacity="0.14"/>
       <stop offset="100%" stop-color="#12436D" stop-opacity="0"/>
     </linearGradient>

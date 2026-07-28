@@ -1,6 +1,6 @@
 <svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_global_meridian_dual" data-safe-text-zone="x=96-700,y=135-575" data-viettel-blue-scope="background">
   <defs>
-    <linearGradient id="globeWash" x1="0%" y1="50%" x2="100%" y2="50%">
+    <linearGradient id="globeWash" x1="0%" y1="50%" x2="100%" y2="50%" data-viettel-blue-scope="background">
       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
       <stop offset="100%" stop-color="#12436D" stop-opacity="0.08"/>
     </linearGradient>

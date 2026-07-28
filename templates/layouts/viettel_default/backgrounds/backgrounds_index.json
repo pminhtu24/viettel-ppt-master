@@ -231,7 +231,7 @@
       "recommended_pages": ["chapter", "section-divider", "ending", "breathing"],
       "rhythm": ["anchor", "breathing"],
       "intensity": "medium",
-      "safe_text_zone": "x=180-1080, y=120-430",
+      "safe_text_zone": "x=180-1080, y=120-470",
       "deep_blue_background": true,
       "description": "Red and deep-blue convergence lanes for synthesis, recommendation, and conclusion pages."
     },

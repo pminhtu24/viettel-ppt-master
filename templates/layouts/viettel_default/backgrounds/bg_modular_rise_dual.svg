@@ -1,6 +1,6 @@
 <svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_modular_rise_dual" data-safe-text-zone="x=96-650,y=130-570" data-viettel-blue-scope="background">
   <defs>
-    <linearGradient id="moduleWash" x1="0%" y1="100%" x2="100%" y2="0%">
+    <linearGradient id="moduleWash" x1="0%" y1="100%" x2="100%" y2="0%" data-viettel-blue-scope="background">
       <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
       <stop offset="100%" stop-color="#12436D" stop-opacity="0.1"/>
     </linearGradient>

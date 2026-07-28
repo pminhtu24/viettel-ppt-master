@@ -1,6 +1,6 @@
 <svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_datastream_cascade" data-safe-text-zone="x=96-760,y=135-580" data-viettel-blue-scope="background">
   <defs>
-    <linearGradient id="streamFade" x1="0%" y1="0%" x2="0%" y2="100%">
+    <linearGradient id="streamFade" x1="0%" y1="0%" x2="0%" y2="100%" data-viettel-blue-scope="background">
       <stop offset="0%" stop-color="#12436D" stop-opacity="0.14"/>
       <stop offset="100%" stop-color="#12436D" stop-opacity="0"/>
     </linearGradient>
