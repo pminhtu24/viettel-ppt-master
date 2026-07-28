@@ -1,0 +1,20 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_pulse_timeline_dual" data-safe-text-zone="x=96-1120,y=120-500" data-viettel-blue-scope="background">
+  <defs>
+    <linearGradient id="timelineWash" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#12436D" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="#FFFFFF"/>
+  <path d="M24 720 V566 C246 548 438 550 640 566 C842 582 1034 580 1280 548 V720 Z" fill="url(#timelineWash)"/>
+  <g id="pulse-timeline" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M104 622 H286 L326 580 L374 658 L426 604 H604 L646 568 L702 638 L754 594 H938 L980 554 L1034 626 L1082 590 H1190" stroke="#E6E6E6" stroke-width="9"/>
+    <path d="M104 622 H286 L326 580 L374 658 L426 604 H604" stroke="#EE0033" stroke-width="3" stroke-opacity="0.46"/>
+    <path d="M604 604 L646 568 L702 638 L754 594 H938 L980 554 L1034 626 L1082 590 H1190" stroke="#12436D" stroke-width="3" stroke-opacity="0.4"/>
+    <circle cx="326" cy="580" r="7" fill="#EE0033" fill-opacity="0.58"/>
+    <circle cx="646" cy="568" r="7" fill="#12436D" fill-opacity="0.54"/>
+    <circle cx="980" cy="554" r="7" fill="#EE0033" fill-opacity="0.52"/>
+  </g>
+  <rect x="0" y="0" width="18" height="720" fill="#EE0033"/>
+  <rect x="18" y="0" width="6" height="720" fill="#E6E6E6"/>
+</svg>

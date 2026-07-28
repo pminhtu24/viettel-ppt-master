@@ -1,0 +1,22 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_modular_rise_dual" data-safe-text-zone="x=96-650,y=130-570" data-viettel-blue-scope="background">
+  <defs>
+    <linearGradient id="moduleWash" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#12436D" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="#FFFFFF"/>
+  <path d="M690 720 C782 596 842 492 930 392 C1038 270 1144 174 1280 74 V720 Z" fill="url(#moduleWash)"/>
+  <g id="module-rise">
+    <path d="M790 560 L898 500 L1006 560 L898 622 Z" fill="#F2F2F2" stroke="#E6E6E6" stroke-width="2"/>
+    <path d="M884 420 L992 360 L1100 420 L992 482 Z" fill="#12436D" fill-opacity="0.08" stroke="#12436D" stroke-width="2" stroke-opacity="0.18"/>
+    <path d="M978 280 L1086 220 L1194 280 L1086 342 Z" fill="#EE0033" fill-opacity="0.08" stroke="#EE0033" stroke-width="2" stroke-opacity="0.24"/>
+    <path d="M898 500 V622 M992 360 V482 M1086 220 V342" stroke="#12436D" stroke-width="2" stroke-opacity="0.16"/>
+    <path d="M898 500 L992 360 L1086 220" fill="none" stroke="#EE0033" stroke-width="3" stroke-opacity="0.36"/>
+    <circle cx="898" cy="500" r="6" fill="#EE0033" fill-opacity="0.46"/>
+    <circle cx="992" cy="360" r="7" fill="#12436D" fill-opacity="0.46"/>
+    <circle cx="1086" cy="220" r="6" fill="#EE0033" fill-opacity="0.58"/>
+  </g>
+  <rect x="0" y="0" width="18" height="720" fill="#EE0033"/>
+  <rect x="18" y="0" width="6" height="720" fill="#E6E6E6"/>
+</svg>

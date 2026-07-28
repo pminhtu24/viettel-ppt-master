@@ -1,0 +1,22 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_global_meridian_dual" data-safe-text-zone="x=96-700,y=135-575" data-viettel-blue-scope="background">
+  <defs>
+    <linearGradient id="globeWash" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#12436D" stop-opacity="0.08"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="#FFFFFF"/>
+  <path d="M742 0 H1280 V720 H760 C840 586 870 468 862 344 C854 206 814 96 742 0 Z" fill="url(#globeWash)"/>
+  <g id="global-meridians" fill="none">
+    <circle cx="1080" cy="360" r="238" stroke="#12436D" stroke-width="3" stroke-opacity="0.16"/>
+    <ellipse cx="1080" cy="360" rx="112" ry="238" stroke="#12436D" stroke-width="2" stroke-opacity="0.2"/>
+    <ellipse cx="1080" cy="360" rx="190" ry="238" stroke="#E6E6E6" stroke-width="2"/>
+    <path d="M858 278 C998 320 1160 320 1280 274" stroke="#EE0033" stroke-width="3" stroke-opacity="0.32"/>
+    <path d="M858 442 C998 400 1160 400 1280 446" stroke="#12436D" stroke-width="3" stroke-opacity="0.24"/>
+    <path d="M850 360 H1280" stroke="#E6E6E6" stroke-width="2"/>
+    <circle cx="976" cy="308" r="7" fill="#EE0033" fill-opacity="0.58"/>
+    <circle cx="1168" cy="414" r="7" fill="#12436D" fill-opacity="0.5"/>
+  </g>
+  <rect x="0" y="0" width="18" height="720" fill="#EE0033"/>
+  <rect x="18" y="0" width="6" height="720" fill="#E6E6E6"/>
+</svg>

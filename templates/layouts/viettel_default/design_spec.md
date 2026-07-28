@@ -50,7 +50,7 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 | Role             | Value     | Usage                                                            |
 | ---------------- | --------- | ---------------------------------------------------------------- |
 | **Viettel Red**  | `#EE0033` | Brand accent, active rules, page number block, primary CTA      |
-| **Deep Blue**    | `#12436D` | Chart, diagram/infographic, and icon marks only                   |
+| **Deep Blue**    | `#12436D` | Chart, diagram/infographic, icon marks, and cataloged builtin background layers |
 
 ### Functional Colors
 
@@ -82,9 +82,11 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 
 > Use chart colors in rotation order for data visualizations (bar charts, line charts, pie charts).
 
-> **Deep-blue hard rule**: `#12436D` is never a text, background, card, rail,
-> footer, divider, or decorative color. Every SVG element using it must live
-> inside `<g data-viettel-blue-scope="chart|diagram|icon">`.
+> **Deep-blue hard rule**: `#12436D` is never a text, card, rail, footer,
+> divider, ad-hoc background, or unregistered decorative color. Every SVG
+> element using it must live inside
+> `<g data-viettel-blue-scope="chart|diagram|icon|background">`; `background`
+> is reserved for builtin items marked `deep_blue_background: true`.
 
 ### Optional Gradient Scheme
 
@@ -568,13 +570,18 @@ KPI, and table pages omit `page_backgrounds` and keep the clean Viettel shell.
 | Section page need | Preferred backgrounds |
 | --- | --- |
 | Calm cover / ending | `bg_clean_white_rail`, `bg_signal_arc` |
-| Strong brand cover / ending | `bg_red_corner_sweep`, `bg_red_corner_depth`, `bg_red_folded_stage`, `bg_wave_ribbon_soft` |
-| Chapter / section transition | `bg_red_folded_stage`, `bg_red_corner_depth`, `bg_signal_arc`, `bg_network_texture_light` |
+| Strong brand cover / ending | `bg_red_corner_sweep`, `bg_red_folded_stage`, `bg_wave_ribbon_soft` |
+| Chapter / section transition | `bg_red_folded_stage`, `bg_signal_arc`, `bg_network_texture_light` |
 | 3D / dimensional divider | `bg_3d_floating_slabs`, `bg_3d_cube_stack`, `bg_3d_glass_panels` |
 | Strategy / market divider | `bg_topographic_lines`, `bg_market_rings`, `bg_orbit_nodes`, `bg_map_mesh` |
 | Technical / platform divider | `bg_enterprise_stack`, `bg_circuit_trace`, `bg_mosaic_dots` |
 | Operations / dashboard divider | `bg_radial_dashboard_field`, `bg_3d_glass_panels`, `bg_layered_cards_field` |
 | Security / cloud divider | `bg_security_shield_field`, `bg_cloud_edge`, `bg_mosaic_dots` |
+| Vision / strategy divider | `bg_dual_compass_focus`, `bg_convergence_lane_dual` |
+| AI / data / platform divider | `bg_datastream_cascade`, `bg_prism_refraction_dual` |
+| Telecom / coverage divider | `bg_global_meridian_dual`, `bg_service_ripple_dual` |
+| Partnership / ecosystem divider | `bg_bridge_span_dual`, `bg_dual_corner_frames` |
+| Transformation / roadmap divider | `bg_modular_rise_dual`, `bg_pulse_timeline_dual` |
 
 **Usage rules**:
 
@@ -584,7 +591,7 @@ KPI, and table pages omit `page_backgrounds` and keep the clean Viettel shell.
 4. Use backgrounds only on cover, chapter, section-divider, ending, or true low-content breathing pages.
 5. Backgrounds are supporting atmosphere only: keep marks pale, low-opacity, and softly blended so content and charts remain dominant.
 6. Do not use SVG filters/blur effects; simulate softness with opacity, broad shapes, gradients, and calm safe zones.
-7. Do not recolor backgrounds outside the approved Viettel palette. Deep blue remains forbidden for background/decorative layers.
+7. Do not recolor backgrounds outside the approved Viettel palette. Deep blue is allowed only for a builtin item marked `deep_blue_background: true`; wrap its copied elements in `<g data-viettel-blue-scope="background" data-viettel-background-id="<id>">` and preserve the indexed safe text zone.
 
 ---
 

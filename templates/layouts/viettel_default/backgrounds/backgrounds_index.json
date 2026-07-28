@@ -24,16 +24,6 @@
       "description": "Section-only red corner sweep for cover, divider, ending, and other low-content pages."
     },
     {
-      "id": "bg_red_corner_depth",
-      "file": "bg_red_corner_depth.svg",
-      "category": "cover",
-      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
-      "rhythm": ["anchor", "breathing"],
-      "intensity": "high",
-      "safe_text_zone": "x=96-790, y=150-520",
-      "description": "Section-only folded red corner depth for divider, chapter, ending, and low-content pages."
-    },
-    {
       "id": "bg_red_folded_stage",
       "file": "bg_red_folded_stage.svg",
       "category": "brand",
@@ -222,6 +212,116 @@
       "intensity": "medium",
       "safe_text_zone": "x=96-730, y=132-590",
       "description": "Section-only dot-mosaic field for network, data, and ecosystem dividers."
+    },
+    {
+      "id": "bg_bridge_span_dual",
+      "file": "bg_bridge_span_dual.svg",
+      "category": "ecosystem",
+      "recommended_pages": ["chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-1120, y=120-430",
+      "deep_blue_background": true,
+      "description": "Low bridge-span motif for partnership, connectivity, and ecosystem transitions with a clear upper text field."
+    },
+    {
+      "id": "bg_convergence_lane_dual",
+      "file": "bg_convergence_lane_dual.svg",
+      "category": "strategy",
+      "recommended_pages": ["chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=180-1080, y=120-430",
+      "deep_blue_background": true,
+      "description": "Red and deep-blue convergence lanes for synthesis, recommendation, and conclusion pages."
+    },
+    {
+      "id": "bg_datastream_cascade",
+      "file": "bg_datastream_cascade.svg",
+      "category": "data",
+      "recommended_pages": ["chapter", "section-divider", "breathing"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-760, y=135-580",
+      "deep_blue_background": true,
+      "description": "Right-edge data-stream cascade for AI, analytics, cloud, and platform section pages."
+    },
+    {
+      "id": "bg_dual_compass_focus",
+      "file": "bg_dual_compass_focus.svg",
+      "category": "strategy",
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-690, y=145-560",
+      "deep_blue_background": true,
+      "description": "Quiet compass focus for vision, strategic direction, priorities, and executive summary pages."
+    },
+    {
+      "id": "bg_dual_corner_frames",
+      "file": "bg_dual_corner_frames.svg",
+      "category": "brand",
+      "recommended_pages": ["cover", "chapter", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "low",
+      "safe_text_zone": "x=250-1030, y=205-545",
+      "deep_blue_background": true,
+      "description": "Balanced red and deep-blue corner frames for centered covers, endings, and calm anchor pages."
+    },
+    {
+      "id": "bg_global_meridian_dual",
+      "file": "bg_global_meridian_dual.svg",
+      "category": "coverage",
+      "recommended_pages": ["cover", "chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-700, y=135-575",
+      "deep_blue_background": true,
+      "description": "Right-edge globe and meridian field for global telecom, coverage, expansion, and market pages."
+    },
+    {
+      "id": "bg_modular_rise_dual",
+      "file": "bg_modular_rise_dual.svg",
+      "category": "architecture",
+      "recommended_pages": ["chapter", "section-divider", "breathing"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-650, y=130-570",
+      "deep_blue_background": true,
+      "description": "Ascending modular planes for enterprise architecture, capability building, and growth transitions."
+    },
+    {
+      "id": "bg_prism_refraction_dual",
+      "file": "bg_prism_refraction_dual.svg",
+      "category": "innovation",
+      "recommended_pages": ["cover", "chapter", "section-divider", "breathing"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "medium",
+      "safe_text_zone": "x=96-680, y=135-580",
+      "deep_blue_background": true,
+      "description": "Translucent prism and split signal motif for innovation, transformation, and future-state pages."
+    },
+    {
+      "id": "bg_pulse_timeline_dual",
+      "file": "bg_pulse_timeline_dual.svg",
+      "category": "transformation",
+      "recommended_pages": ["chapter", "section-divider", "breathing"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "low",
+      "safe_text_zone": "x=96-1120, y=120-500",
+      "deep_blue_background": true,
+      "description": "Low pulse timeline for roadmap, migration, operational journey, and phased transformation pages."
+    },
+    {
+      "id": "bg_service_ripple_dual",
+      "file": "bg_service_ripple_dual.svg",
+      "category": "customer",
+      "recommended_pages": ["chapter", "section-divider", "ending", "breathing"],
+      "rhythm": ["anchor", "breathing"],
+      "intensity": "low",
+      "safe_text_zone": "x=96-710, y=130-580",
+      "deep_blue_background": true,
+      "description": "Right-edge service ripples for customer experience, service quality, operations, and closing pages."
     }
   ]
 }

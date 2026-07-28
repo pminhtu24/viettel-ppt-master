@@ -1,0 +1,25 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_convergence_lane_dual" data-safe-text-zone="x=180-1080,y=120-470" data-viettel-blue-scope="background">
+  <defs>
+    <linearGradient id="laneRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EE0033" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#EE0033" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="laneBlue" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#12436D" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#12436D" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="#FFFFFF"/>
+  <path d="M24 82 C228 184 374 300 504 446 C574 524 624 580 640 720 H24 Z" fill="url(#laneRed)"/>
+  <path d="M1280 82 C1076 184 930 300 800 446 C730 524 680 580 664 720 H1280 Z" fill="url(#laneBlue)"/>
+  <g id="convergence-lanes" fill="none" stroke-linecap="round">
+    <path d="M80 120 C280 220 422 328 540 466 C602 538 634 600 650 690" stroke="#EE0033" stroke-width="3" stroke-opacity="0.34"/>
+    <path d="M1224 120 C1024 220 882 328 764 466 C702 538 670 600 654 690" stroke="#12436D" stroke-width="3" stroke-opacity="0.34"/>
+    <path d="M120 172 C304 258 438 358 552 486" stroke="#E6E6E6" stroke-width="3"/>
+    <path d="M1184 172 C1000 258 866 358 752 486" stroke="#E6E6E6" stroke-width="3"/>
+    <circle cx="650" cy="690" r="8" fill="#EE0033" fill-opacity="0.56"/>
+    <circle cx="654" cy="690" r="4" fill="#12436D" fill-opacity="0.62"/>
+  </g>
+  <rect x="0" y="0" width="18" height="720" fill="#EE0033"/>
+  <rect x="18" y="0" width="6" height="720" fill="#E6E6E6"/>
+</svg>

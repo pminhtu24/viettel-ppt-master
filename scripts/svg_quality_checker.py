@@ -51,7 +51,7 @@ VIETTEL_VIEWBOX = "0 0 1280 720"
 VIETTEL_FONT_STACK = '"FS Magistral"'
 VIETTEL_ALLOWED_FONT_WEIGHTS = {"", "normal", "400", "500", "bold", "700"}
 VIETTEL_DEEP_BLUE = "#12436D"
-VIETTEL_BLUE_SCOPES = {"chart", "diagram", "icon"}
+VIETTEL_BLUE_SCOPES = {"chart", "diagram", "icon", "background"}
 VIETTEL_ALLOWED_COLORS = {
     "#000000",
     "#12436D",
@@ -1096,7 +1096,7 @@ class SVGQualityChecker:
         if unscoped_blue:
             result['errors'].append(
                 f"Viettel deep-blue violation: {unscoped_blue} mark(s) use {VIETTEL_DEEP_BLUE} outside "
-                'data-viettel-blue-scope="chart|diagram|icon"'
+                'data-viettel-blue-scope="chart|diagram|icon|background"'
             )
 
     def _looks_like_viettel_svg(self, content: str) -> bool:

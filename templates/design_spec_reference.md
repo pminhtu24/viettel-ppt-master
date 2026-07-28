@@ -4,7 +4,7 @@
 >
 > Machine-readable execution contract: `spec_lock.md` (color / typography / icon / image short form). Executor re-reads `spec_lock.md` before every SVG page to resist context-compression drift. Keep both in sync; on divergence, `spec_lock.md` wins.
 >
-> **Viettel default brand contract**: every normal run uses PPT 16:9 and `brand.profile: viettel_default`. Keep the Viettel logo/chrome, locked font stack, Viettel red, white/approved-gray surfaces, and dark-neutral text on every page. Deep blue `#12436D` is chart/diagram/icon-only and every such mark must be inside `<g data-viettel-blue-scope="chart|diagram|icon">`. Use `brand.profile: custom_override` only for an explicit hard non-Viettel request; color/font/style requests alone do not unlock the brand.
+> **Viettel default brand contract**: every normal run uses PPT 16:9 and `brand.profile: viettel_default`. Keep the Viettel logo/chrome, locked font stack, Viettel red, white/approved-gray surfaces, and dark-neutral text on every page. Deep blue `#12436D` is chart/diagram/icon-only except for cataloged builtin backgrounds explicitly marked `deep_blue_background: true`; every such mark must be inside `<g data-viettel-blue-scope="chart|diagram|icon|background">`, with `background` reserved for the cataloged layer wrapper. Use `brand.profile: custom_override` only for an explicit hard non-Viettel request; color/font/style requests alone do not unlock the brand.
 
 ## I. Project Information
 
@@ -49,7 +49,7 @@
 | **Background** | `#FFFFFF` | Page background |
 | **Secondary bg** | `#F2F2F2` | Card and section surfaces |
 | **Primary** | `#EE0033` | Viettel brand accents and primary data |
-| **Deep blue** | `#12436D` | Chart, diagram/infographic, and icon marks only |
+| **Deep blue** | `#12436D` | Chart, diagram/infographic, icon marks, and explicitly cataloged builtin background layers |
 | **Body text** | `#000000` | Main titles and body text |
 | **Secondary text** | `#44494D` | Captions and annotations |
 | **Tertiary text** | `#999999` | Supplementary info and footers |
@@ -58,7 +58,7 @@
 | **Warning** | `#F46A25` | Warning indicators and data series |
 | **Neutral data** | `#6B7280` | Neutral chart series |
 
-> `#12436D` is never a text, background, card, rail, footer, divider, or decorative color. Put each deep-blue mark inside `<g data-viettel-blue-scope="chart|diagram|icon">`.
+> `#12436D` is never a text, card, rail, footer, divider, ad-hoc background, or unregistered decorative color. Put each deep-blue mark inside `<g data-viettel-blue-scope="chart|diagram|icon|background">`; use `background` only for a builtin item whose index row sets `deep_blue_background: true`.
 
 ### AI Image Strategy (fill only when §VIII has `ai` rows)
 
@@ -284,6 +284,8 @@ Catalog read: 71 templates
 > For `brand.profile: viettel_default`, Strategist MUST read `templates/backgrounds/backgrounds_index.json` and assign background ids only to cover, chapter, section-divider, ending, and low-content breathing pages. Dense content, chart, KPI, and table pages MUST omit `page_backgrounds` so the standard clean shell stays behind content.
 >
 > Softness rule: choose backgrounds that are already visually softened by pale fills, low opacity, wide geometry, and calm safe zones. Do not request SVG filters or blur effects.
+>
+> Deep-blue builtin rule: `#12436D` is allowed only when the selected index item sets `deep_blue_background: true`. Record the background id normally; Executor applies the required `data-viettel-blue-scope="background"` wrapper and preserves the indexed safe text zone.
 
 | Page | Background ID | Category | Intensity | Reason |
 | ---- | ------------- | -------- | --------- | ------ |

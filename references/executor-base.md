@@ -2,7 +2,7 @@
 
 > Style-specific content is in the corresponding `executor-{style}.md`. Technical constraints are in shared-standards.md.
 >
-> **Viettel default brand gate (HARD rule)**: read `spec_lock.md ## brand` before generation. `profile: viettel_default` requires PPT 16:9, Viettel logo/chrome on every page, the locked Viettel font stack, Viettel red, white/approved-gray surfaces, and dark-neutral text. Deep blue `#12436D` is permitted only for chart, diagram/infographic, and icon marks inside `<g data-viettel-blue-scope="chart|diagram|icon">`; never use it for text, backgrounds, cards, rails, footers, dividers, or decoration. Only `profile: custom_override` disables these Viettel-specific rules.
+> **Viettel default brand gate (HARD rule)**: read `spec_lock.md ## brand` before generation. `profile: viettel_default` requires PPT 16:9, Viettel logo/chrome on every page, the locked Viettel font stack, Viettel red, white/approved-gray surfaces, and dark-neutral text. Deep blue `#12436D` is permitted only for chart, diagram/infographic, icon marks, and cataloged builtin background layers. Use `<g data-viettel-blue-scope="chart|diagram|icon">` for normal marks and `<g data-viettel-blue-scope="background" data-viettel-background-id="<id>">` only when copying an index item marked `deep_blue_background: true`; never use it for text, cards, rails, footers, dividers, ad-hoc backgrounds, or unregistered decoration. Only `profile: custom_override` disables these Viettel-specific rules.
 
 ---
 
@@ -93,12 +93,12 @@ Rules:
 
 - Read `templates/backgrounds/backgrounds_index.json` once during the pre-generation batch read.
 - Read only the `templates/backgrounds/<id>.svg` files listed in `spec_lock.md page_backgrounds`; if the section is absent, read no background SVGs.
-- Copy the selected background SVG's decorative body elements near the top of the output SVG, immediately after the single base page `<rect>` and before shell chrome/content. Do not copy the background SVG as the entire page, and do not copy any full-canvas opaque white/base `<rect>` from the background file.
+- Copy the selected background SVG's decorative body elements near the top of the output SVG, immediately after the single base page `<rect>` and before shell chrome/content. Wrap the copied elements in `<g data-viettel-blue-scope="background" data-viettel-background-id="<id>">` when the selected index item has `deep_blue_background: true`; otherwise use an ordinary background group. Do not copy the background SVG as the entire page, and do not copy any full-canvas opaque white/base `<rect>` from the background file.
 - When inheriting a layout SVG and applying `page_backgrounds`, the final XML order MUST be: `<defs>` if needed → one base page `<rect>` → optional decorative background layer (without its white/base rect) → template chrome/content/page elements. Never paste a layout/template full-canvas white rect after the decorative background layer.
 - Keep the normal Viettel logo, top accent/rail, footer, page number, title safe area, and text-fit rules.
 - Backgrounds are reserved for cover, chapter, section-divider, ending, and low-content `breathing` pages. Dense content, chart, KPI, and table pages should omit `page_backgrounds` and use the clean Viettel shell.
 - Treat backgrounds as supporting atmosphere: if background marks compete with content, reduce opacity, cover them with a pale content surface, or switch to a lower-intensity background. Do not use SVG `<filter>` / blur effects; simulate softness with pale fills, broad geometry, gradients, and low opacity.
-- Deep blue `#12436D` remains forbidden for background/decorative layers.
+- Deep blue `#12436D` remains forbidden for ad-hoc background/decorative layers. The only exception is a cataloged builtin background whose `backgrounds_index.json` item sets `deep_blue_background: true`; preserve its declared safe text zone and scoped wrapper exactly.
 
 ---
 
@@ -119,7 +119,7 @@ Before the first SVG page, output a confirmation listing: canvas dimensions, bod
 **Forbidden — values outside the lock**:
 
 - Colors (fill / stroke / stop-color) MUST come from `colors`
-- Under `viettel_default`, every `#12436D` mark MUST be inside `<g data-viettel-blue-scope="chart|diagram|icon">`; `<text>` may never use deep blue, even inside a scoped group
+- Under `viettel_default`, every `#12436D` mark MUST be inside `<g data-viettel-blue-scope="chart|diagram|icon|background">`; `background` is reserved for cataloged builtin layers marked `deep_blue_background: true`. `<text>` may never use deep blue, even inside a scoped group
 - Icons MUST come from `icons.inventory`; library MUST equal `icons.library`
 - Font family from `typography`: under `viettel_default`, use only `font_family: "FS Magistral"` and reject role-family overrides; under `custom_override`, use a declared role override if present, else fall back to `font_family`
 - Font sizes follow a **ramp anchored on `typography.body`**, not a closed menu. Use the declared slots when they fit. Intermediate sizes (e.g., 40px hero number, 13px annotation) are allowed if the ratio to `body` falls within the role's band (see `design_spec.md §IV ramp table`). Sizes outside every band require extending the lock first.

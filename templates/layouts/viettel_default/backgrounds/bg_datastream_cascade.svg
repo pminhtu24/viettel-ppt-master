@@ -1,0 +1,23 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_datastream_cascade" data-safe-text-zone="x=96-760,y=135-580" data-viettel-blue-scope="background">
+  <defs>
+    <linearGradient id="streamFade" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#12436D" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#12436D" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="#FFFFFF"/>
+  <path d="M790 0 H1280 V720 H1018 C982 610 946 512 924 408 C890 252 862 114 790 0 Z" fill="url(#streamFade)"/>
+  <g id="data-streams" fill="none" stroke-linecap="round">
+    <path d="M900 0 V166 C900 250 930 286 930 364 V542" stroke="#12436D" stroke-width="3" stroke-opacity="0.24"/>
+    <path d="M976 0 V202 C976 278 1006 314 1006 388 V620" stroke="#E6E6E6" stroke-width="4"/>
+    <path d="M1052 0 V136 C1052 236 1082 280 1082 366 V566" stroke="#EE0033" stroke-width="3" stroke-opacity="0.3"/>
+    <path d="M1128 0 V220 C1128 292 1158 326 1158 402 V690" stroke="#12436D" stroke-width="3" stroke-opacity="0.2"/>
+    <path d="M1204 0 V160 C1204 244 1234 288 1234 354 V506" stroke="#E6E6E6" stroke-width="3"/>
+    <circle cx="930" cy="364" r="6" fill="#12436D" fill-opacity="0.5"/>
+    <circle cx="1006" cy="388" r="5" fill="#999999" fill-opacity="0.4"/>
+    <circle cx="1082" cy="366" r="7" fill="#EE0033" fill-opacity="0.58"/>
+    <circle cx="1158" cy="402" r="5" fill="#12436D" fill-opacity="0.42"/>
+  </g>
+  <rect x="0" y="0" width="18" height="720" fill="#EE0033"/>
+  <rect x="18" y="0" width="6" height="720" fill="#E6E6E6"/>
+</svg>

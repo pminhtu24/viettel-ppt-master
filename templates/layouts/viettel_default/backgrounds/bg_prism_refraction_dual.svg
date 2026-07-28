@@ -1,0 +1,24 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" data-background-id="bg_prism_refraction_dual" data-safe-text-zone="x=96-680,y=135-580" data-viettel-blue-scope="background">
+  <defs>
+    <linearGradient id="prismBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#12436D" stop-opacity="0.03"/>
+      <stop offset="100%" stop-color="#12436D" stop-opacity="0.16"/>
+    </linearGradient>
+    <linearGradient id="prismRed" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#EE0033" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#EE0033" stop-opacity="0.14"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="#FFFFFF"/>
+  <g id="prism-field">
+    <path d="M884 118 L1188 246 L1046 598 L770 410 Z" fill="url(#prismBlue)" stroke="#12436D" stroke-width="2" stroke-opacity="0.16"/>
+    <path d="M884 118 L1046 598 L984 382 Z" fill="#FFFFFF" fill-opacity="0.58"/>
+    <path d="M984 382 L1188 246 L1046 598 Z" fill="url(#prismRed)"/>
+    <path d="M724 328 L984 382" stroke="#E6E6E6" stroke-width="5" stroke-linecap="round"/>
+    <path d="M984 382 L1242 330" stroke="#EE0033" stroke-width="3" stroke-opacity="0.38"/>
+    <path d="M984 382 L1226 430" stroke="#12436D" stroke-width="3" stroke-opacity="0.32"/>
+    <circle cx="984" cy="382" r="7" fill="#EE0033" fill-opacity="0.58"/>
+  </g>
+  <rect x="0" y="0" width="18" height="720" fill="#EE0033"/>
+  <rect x="18" y="0" width="6" height="720" fill="#E6E6E6"/>
+</svg>

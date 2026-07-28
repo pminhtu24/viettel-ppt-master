@@ -16,7 +16,7 @@
 ## brand
 
 - profile: viettel_default
-- deep_blue_scope: chart_diagram_icon_only
+- deep_blue_scope: chart_diagram_icon_catalog_background_only
 
 > Every normal run MUST emit exactly the two lines above. `viettel_default` means the Viettel logo, brand chrome, approved colors, and locked typography remain mandatory even on pages with adaptive composition and no `page_layouts` entry.
 >
@@ -40,7 +40,7 @@
 
 > For `viettel_default`, keep only the approved rows actually used and do not add colors outside this palette. For explicit `custom_override`, replace the section with the override palette.
 >
-> **Viettel default color lock**: normal runs use Viettel red `#EE0033`, white/approved-gray surfaces, and dark-neutral text. Deep blue `#12436D` may appear only in chart, diagram/infographic, or icon marks. Every deep-blue SVG mark MUST be inside `<g data-viettel-blue-scope="chart|diagram|icon">`; it is forbidden for text, backgrounds, cards, rails, footers, dividers, and decoration.
+> **Viettel default color lock**: normal runs use Viettel red `#EE0033`, white/approved-gray surfaces, and dark-neutral text. Deep blue `#12436D` may appear only in chart, diagram/infographic, icon marks, or a cataloged builtin background whose index item sets `deep_blue_background: true`. Every deep-blue SVG mark MUST be inside `<g data-viettel-blue-scope="chart|diagram|icon|background">`; `background` scope also requires `data-viettel-background-id="<id>"`. Deep blue remains forbidden for text, cards, rails, footers, dividers, ad-hoc backgrounds, and unregistered decoration.
 >
 > **`image_rendering` and `image_palette`** — required only when `images` section below contains `ai`-sourced files. Values MUST be valid names from `references/image-renderings/_index.md` and `references/image-palettes/_index.md`. Image_Generator reads these and applies them deck-wide. Omit both rows when the deck has no AI-generated images.
 
@@ -132,7 +132,7 @@
 - P01: bg_red_corner_sweep
 - P03: bg_red_folded_stage
 - P06: bg_wave_ribbon_soft
-- P07: bg_red_corner_depth
+- P07: bg_signal_arc
 
 > Optional section-only entries for `brand.profile: viettel_default`. Key: `P<NN>` matching §IX. Value: a background id from `templates/backgrounds/backgrounds_index.json`, without `.svg`.
 >
@@ -143,6 +143,8 @@
 > **Softening rule**: background details should be visually softened with pale fills, low opacity, wide shapes, and gradient-like fades. Do not use SVG `<filter>` / blur effects; they are not PPTX-safe. Keep sharp detail away from the main content/chart area.
 >
 > **Selection source**: read `templates/backgrounds/backgrounds_index.json`. Match by section/page role, `page_rhythm`, content topic, and `safe_text_zone`. Avoid repeating the same background on adjacent section pages when another suitable option exists.
+>
+> **Deep-blue builtin exception**: an item may use `#12436D` only when its index row sets `deep_blue_background: true`. Executor must preserve the item's `safe_text_zone` and wrap its copied decorative elements in `<g data-viettel-blue-scope="background" data-viettel-background-id="<id>">`. This exception never permits deep-blue text or ad-hoc background decoration.
 >
 > **Missing entry** → Executor applies no decorative background. This is expected for content-heavy pages.
 
