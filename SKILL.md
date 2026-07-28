@@ -348,14 +348,14 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 **Visual Construction Phase**: generate SVG pages sequentially, one at a time, in one continuous pass → `<project_path>/svg_output/`
 
 ```bash
-python3 ${SKILL_DIR}/scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel  # viettel_default only
+python3 ${SKILL_DIR}/scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel --file svg_output/<page>.svg --slide-number <N>  # viettel_default only
 python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>/svg_output/<page>.svg
 ```
 
 - After each page, run the commands above (`custom_override`: omit chrome normalization). This deterministic chrome step is allowed post-processing, not scripted page generation.
 - Any `error` MUST be fixed and the same file re-checked before starting the next page. Treat the cover and first normal non-cover page as calibration gates.
 - `warning` entries (low-res image, non-PPT-safe font tail, long text without a wrap contract, etc.): fix when straightforward, otherwise acknowledge and release.
-- After all pages pass individually, run `python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>` and fix every remaining project-level error before speaker notes.
+- After all pages pass individually: chart decks run [`verify-charts`](workflows/verify-charts.md), whose final step is the full-deck gate; non-chart decks run `python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>`. Fix every remaining error before speaker notes.
 - Run against `svg_output/` (not after `finalize_svg.py` — finalize rewrites SVG and masks violations).
 
 **Logic Construction Phase**: generate speaker notes → `<project_path>/notes/total.md`
@@ -370,8 +370,6 @@ python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>/svg_output/<p
 - [x] svg_quality_checker.py passed (0 errors)
 - [x] Speaker notes generated at notes/total.md
 ```
-
-> **Chart pages?** If this deck contains data charts (bar / line / pie / radar / etc.), run the standalone [`verify-charts`](workflows/verify-charts.md) workflow before Step 7 to calibrate coordinates. AI models routinely introduce 10–50 px errors when mapping data to pixel positions; verify-charts eliminates that class of error. Skip if no chart pages.
 
 ---
 

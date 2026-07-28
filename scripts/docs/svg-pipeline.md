@@ -9,10 +9,13 @@ These tools cover post-processing, SVG validation, speaker notes, recorded narra
 Run these steps in order:
 
 ```bash
+python3 scripts/svg_quality_checker.py <project_path>
 python3 scripts/total_md_split.py <project_path>
 python3 scripts/finalize_svg.py <project_path>
 python3 scripts/svg_to_pptx.py <project_path>
 ```
+
+During skill-driven generation, check each SVG immediately; this command is the single final project-level gate.
 
 ## `finalize_svg.py`
 

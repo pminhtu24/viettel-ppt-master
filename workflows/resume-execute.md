@@ -49,7 +49,8 @@ Then jump to `### Step 6: Executor Phase` and run the documented pipeline:
 - Design Parameter Confirmation
 - Pre-generation Batch Read (every layout / chart SVG referenced in `spec_lock`)
 - Per-page `spec_lock` re-read + sequential page generation
-- Quality Check Gate
+- Per-page chrome normalization and quality gate; fix each SVG before continuing
+- Chart verification when applicable, then one full-deck quality gate
 - Speaker notes generation
 - Step 7: Post-processing & Export (`total_md_split` → `finalize_svg` → `svg_to_pptx`)
 

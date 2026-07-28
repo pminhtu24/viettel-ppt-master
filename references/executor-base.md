@@ -217,7 +217,7 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
 - **Proximity**: group related elements with tight spacing; separate unrelated groups
 - **Spec adherence**: follow color, layout, canvas format, and typography in the spec
 - **Template structure**: if templates exist, inherit the visual framework
-- **Viettel brand chrome**: if the deck uses `viettel_default` or the execution lock specifies a Viettel brand profile, normalize every newly written page with `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` before its per-file quality check. This gives layout, chart, and framework pages the same logo/page-number contract before validation; the final `finalize_svg.py --brand-chrome viettel --strip-comments` pass is idempotent.
+- **Viettel brand chrome**: if the deck uses `viettel_default` or the execution lock specifies a Viettel brand profile, normalize every newly written page with `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel --file svg_output/<page>.svg --slide-number <N>` before its per-file quality check. This gives layout, chart, and framework pages the same logo/page-number contract before validation without rescanning earlier pages; the final `finalize_svg.py --brand-chrome viettel --strip-comments` pass is idempotent.
 - **Viettel logo clearance**: the fixed logo reserves `x=1060-1224, y=20-82`. Header/title text, subtitles, chart labels, and callouts MUST NOT enter this slot. Content-page titles should use `data-box="88,36,960,58" data-wrap="true"` or manual line breaks so long titles wrap before the logo.
 - **Viettel page number ownership**: each slide has exactly one page-number treatment. If a page inherits a Viettel shell, do not draw another bottom-right number; pre-check chrome normalization adds one only when the shell does not already own it.
 - **Brand font runtime honesty**: if font preflight reports that the lead brand font is missing, keep the declared stack in the SVG/PPTX source but tell the user `brand fidelity degraded`. Do not rewrite the deck to hide the fallback state.
@@ -225,8 +225,8 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
 - **Generation rhythm**: lock global design context first, then generate pages sequentially in one continuous context. No batched groups (e.g., 5 at a time).
 - **Phased sequential generation** (mandatory):
   1. **Visual Construction Phase**: generate one SVG page. Chart pages MUST embed plot-area markers per §3.1 below.
-  2. **Per-page Quality Gate**: for `viettel_default`, run `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel`; then run `python3 scripts/svg_quality_checker.py <new_svg_file>` for every profile. Fix every error and re-check that file before generating the next page. Treat the cover and first normal non-cover page as calibration gates.
-  3. **Full-deck Quality Gate**: after all pages pass individually, run `python3 scripts/svg_quality_checker.py <project_path>` to catch project-level consistency errors. Do NOT defer validation to after `finalize_svg.py`.
+  2. **Per-page Quality Gate**: for `viettel_default`, run `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel --file svg_output/<page>.svg --slide-number <N>`; then run `python3 scripts/svg_quality_checker.py <new_svg_file>` for every profile. Fix every error and re-check that file before generating the next page. Treat the cover and first normal non-cover page as calibration gates.
+  3. **Full-deck Quality Gate**: after all pages pass individually, chart decks run `verify-charts`, whose final step is this gate; non-chart decks run `python3 scripts/svg_quality_checker.py <project_path>`. Run the project-level checker exactly once and do not defer it to after `finalize_svg.py`.
   4. **Logic Construction Phase**: after the full deck passes, batch-generate speaker notes for narrative continuity.
 
 ### 3.1 Chart Plot-Area Marker (MANDATORY on every chart page)
@@ -429,7 +429,7 @@ If `spec_lock.md` is absent, consult [`strategist.md`](strategist.md) §g — do
 
 ### Task 1. Generate Complete Speaker Notes Document
 
-After all SVG pages are finalized, enter Logic Construction Phase and write the full notes to `notes/total.md`. Batch-writing (not per-page) lets transitions plan coherently.
+After every SVG passes its per-page gate and the project passes the full-deck gate, enter Logic Construction Phase and write the full notes to `notes/total.md`. Batch-writing (not per-page) lets transitions plan coherently.
 
 **Pure spoken narration**: notes are read aloud verbatim by `notes_to_audio.py` (TTS). Write only what should be spoken. No visible markers, no labeled meta-lines, no enumerated key-point lists, no duration annotations — anything you write outside the heading will be vocalized.
 
@@ -472,7 +472,7 @@ Auto-split `notes/total.md` into per-page files in `notes/`.
 
 ## 9. Next Steps After Completion
 
-> **Auto-continuation**: After Visual Construction Phase (all SVG pages) and Logic Construction Phase (all notes) are complete, the Executor proceeds directly to the post-processing pipeline.
+> **Auto-continuation**: After all SVGs pass their per-page and full-deck gates and Logic Construction Phase completes all notes, the Executor proceeds directly to the post-processing pipeline.
 
 **Post-processing & Export** (same canonical pipeline as [shared-standards.md §5](shared-standards.md)):
 

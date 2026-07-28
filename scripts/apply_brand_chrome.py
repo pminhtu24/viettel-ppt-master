@@ -200,8 +200,42 @@ def main() -> int:
     parser.add_argument("project_dir", type=Path)
     parser.add_argument("--brand-chrome", choices=["viettel"], help="Brand chrome to inject")
     parser.add_argument("--strip-comments", action="store_true", help="Remove XML comments from SVG files")
+    parser.add_argument("--file", type=Path, help="Process one project-relative SVG file")
+    parser.add_argument("--slide-number", type=int, help="Positive slide number required with --file")
     args = parser.parse_args()
     skill_dir = Path(__file__).resolve().parent.parent
+
+    if args.file:
+        if not args.slide_number or args.slide_number < 1:
+            print("[ERROR] --slide-number must be a positive integer when --file is used")
+            return 1
+        project_dir = args.project_dir.resolve()
+        svg_file = (
+            (project_dir / args.file).resolve()
+            if not args.file.is_absolute()
+            else args.file.resolve()
+        )
+        allowed_dirs = {(project_dir / "svg_output").resolve(), (project_dir / "svg_final").resolve()}
+        if not svg_file.is_file() or svg_file.suffix.lower() != ".svg":
+            print(f"[ERROR] SVG file not found: {svg_file}")
+            return 1
+        if svg_file.parent not in allowed_dirs:
+            print("[ERROR] --file must belong directly to the project's svg_output/ or svg_final/")
+            return 1
+        if args.brand_chrome == "viettel":
+            ensure_viettel_logo(project_dir, skill_dir)
+        changed = process_svg_file(
+            svg_file,
+            brand_chrome=args.brand_chrome,
+            strip_comments=args.strip_comments,
+            slide_number=args.slide_number,
+        )
+        print(f"Processed {int(changed)} SVG file(s)")
+        return 0
+
+    if args.slide_number is not None:
+        print("[ERROR] --slide-number requires --file")
+        return 1
     count = process_project(
         args.project_dir,
         brand_chrome=args.brand_chrome,

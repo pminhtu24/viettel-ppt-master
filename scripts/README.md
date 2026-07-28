@@ -24,6 +24,7 @@ python3 scripts/source_to_md/ppt_to_md.py <deck.pptx>
 python3 scripts/source_to_md/excel_to_md.py <workbook.xlsx>
 python3 scripts/project_manager.py init <project_name> --format ppt169 --brand-profile viettel_default
 python3 scripts/project_manager.py import-sources <project_path> <source_files...>
+python3 scripts/svg_quality_checker.py <project_path>
 python3 scripts/total_md_split.py <project_path>
 python3 scripts/finalize_svg.py <project_path> --brand-chrome viettel --strip-comments
 python3 scripts/animation_config.py scaffold <project_path>  # optional object-level animation overrides
@@ -80,6 +81,7 @@ python3 scripts/pptx_template_import.py <template.pptx> --inheritance-mode both
 Post-processing and export:
 
 ```bash
+python3 scripts/svg_quality_checker.py <project_path>
 python3 scripts/total_md_split.py <project_path>
 python3 scripts/finalize_svg.py <project_path> --brand-chrome viettel --strip-comments
 python3 scripts/svg_to_pptx.py <project_path>

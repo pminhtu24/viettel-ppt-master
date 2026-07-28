@@ -291,6 +291,8 @@ Wrap logically related elements in top-level `<g id="...">` groups. Produces Pow
 
 ## 5. Post-processing Pipeline (3 Steps)
 
+**Hard precondition**: every SVG has passed its per-file gate and the project has passed one full-deck `svg_quality_checker.py` run. Do not enter post-processing with unchecked SVG changes.
+
 Must be executed in order — skipping or adding extra flags is FORBIDDEN:
 
 ```bash
