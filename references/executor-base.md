@@ -217,16 +217,17 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
 - **Proximity**: group related elements with tight spacing; separate unrelated groups
 - **Spec adherence**: follow color, layout, canvas format, and typography in the spec
 - **Template structure**: if templates exist, inherit the visual framework
-- **Viettel brand chrome**: if the deck uses `viettel_default` or the execution lock specifies a Viettel brand profile, keep the top-right logo visible on every page. Layout-shell pages may already contain the logo; chart/framework pages MUST receive it during post-processing via `finalize_svg.py --brand-chrome viettel --strip-comments`.
+- **Viettel brand chrome**: if the deck uses `viettel_default` or the execution lock specifies a Viettel brand profile, normalize every newly written page with `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` before its per-file quality check. This gives layout, chart, and framework pages the same logo/page-number contract before validation; the final `finalize_svg.py --brand-chrome viettel --strip-comments` pass is idempotent.
 - **Viettel logo clearance**: the fixed logo reserves `x=1060-1224, y=20-82`. Header/title text, subtitles, chart labels, and callouts MUST NOT enter this slot. Content-page titles should use `data-box="88,36,960,58" data-wrap="true"` or manual line breaks so long titles wrap before the logo.
-- **Viettel page number ownership**: each slide has exactly one page-number treatment. If a page inherits a Viettel shell, do not draw an additional bottom-right slide number; post-processing adds page numbers only to pages that do not already contain the shell footer/page-number treatment.
+- **Viettel page number ownership**: each slide has exactly one page-number treatment. If a page inherits a Viettel shell, do not draw another bottom-right number; pre-check chrome normalization adds one only when the shell does not already own it.
 - **Brand font runtime honesty**: if font preflight reports that the lead brand font is missing, keep the declared stack in the SVG/PPTX source but tell the user `brand fidelity degraded`. Do not rewrite the deck to hide the fallback state.
 - **Main-agent ownership**: SVG generation must run in the main agent (not sub-agents) — pages share upstream context for cross-page visual continuity
 - **Generation rhythm**: lock global design context first, then generate pages sequentially in one continuous context. No batched groups (e.g., 5 at a time).
-- **Phased batch generation** (recommended):
-  1. **Visual Construction Phase**: generate all SVG pages sequentially for visual consistency. Use layout judgment for chart marks during the draft. **MUST embed plot-area markers** per §3.1 below on every chart page — coordinate calibration is a post-generation step (see [`workflows/verify-charts.md`](../workflows/verify-charts.md)) that depends on these markers.
-  2. **Quality Check Gate**: run `python3 scripts/svg_quality_checker.py <project_path>` on `svg_output/`. Any `error` (banned features, viewBox mismatch, spec_lock drift, non-PPT-safe font, etc.) MUST be fixed on the offending page before proceeding — regenerate and re-check. Address `warning`s when straightforward. Do NOT defer to after `finalize_svg.py` — finalize rewrites SVG and masks some violations.
-  3. **Logic Construction Phase**: after SVGs pass the quality check, batch-generate speaker notes for narrative continuity.
+- **Phased sequential generation** (mandatory):
+  1. **Visual Construction Phase**: generate one SVG page. Chart pages MUST embed plot-area markers per §3.1 below.
+  2. **Per-page Quality Gate**: for `viettel_default`, run `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel`; then run `python3 scripts/svg_quality_checker.py <new_svg_file>` for every profile. Fix every error and re-check that file before generating the next page. Treat the cover and first normal non-cover page as calibration gates.
+  3. **Full-deck Quality Gate**: after all pages pass individually, run `python3 scripts/svg_quality_checker.py <project_path>` to catch project-level consistency errors. Do NOT defer validation to after `finalize_svg.py`.
+  4. **Logic Construction Phase**: after the full deck passes, batch-generate speaker notes for narrative continuity.
 
 ### 3.1 Chart Plot-Area Marker (MANDATORY on every chart page)
 

@@ -9,7 +9,7 @@ description: >
 
 > Multi-role SVG presentation workflow. Converts source documents into high-quality SVG pages and exports them to PPTX.
 
-**Core Pipeline**: `Source Document → Create Project → [Template] → Strategist → [Web Image Acquisition] → Executor Live Preview → Quality Check → Post-processing → Export`
+**Core Pipeline**: `Source Document → Create Project → [Template] → Strategist → [Web Image Acquisition] → Executor Live Preview → Per-page Quality Gates → Full-deck Quality Check → Post-processing → Export`
 
 > [!CAUTION]
 >
@@ -26,6 +26,7 @@ description: >
 > 7. **SEQUENTIAL PAGE GENERATION ONLY** — In Executor Step 6, after the global design context is confirmed, SVG pages MUST be generated sequentially page by page in one continuous pass. Grouped page batches (for example, 5 pages at a time) are FORBIDDEN
 > 8. **SPEC_LOCK RE-READ PER PAGE** — Before generating each SVG page, Executor MUST `read_file <project_path>/spec_lock.md`. All colors / fonts / icons / images MUST come from this file — no values from memory or invented on the fly. Executor MUST also look up the current page's `page_rhythm` (`anchor` / `dense` / `breathing`), optional `page_backgrounds` (section-only Viettel background layer, if any), `page_layouts` (which template SVG to inherit, if any), and `page_charts` (which chart template to adapt, if any). Empty / absent entries are intentional Strategist signals; missing `page_backgrounds` means no decorative background for that page — see executor-base.md §2.1. This rule exists to resist context-compression drift on long decks and to break the uniform "every page is a card grid" default
 > 9. **SVG MUST BE HAND-WRITTEN, NOT SCRIPT-GENERATED** — Every SVG page is written by the main agent directly, one page at a time (see rules 6 and 7). Writing or running a Python / Node / shell script that produces the SVG files in batch — looping over pages, templating from data, or emitting them via a generator — is FORBIDDEN, including under "save tokens", "quick draft", or "user is in a hurry" pretexts. The script-generation path was tried on a feature branch and abandoned: cross-page visual consistency depends on per-page authoring with full upstream context, which a generator script cannot reproduce
+> 10. **PASS EACH PAGE BEFORE CONTINUING** — Immediately after writing each SVG, normalize deterministic Viettel chrome when applicable, run `svg_quality_checker.py` on that file, and fix every error before starting the next page. The cover is the first calibration gate; the first non-cover content/chart/KPI/table page is the normal-shell calibration gate. Still run the full-project quality gate after all pages
 
 > [!IMPORTANT]
 >
@@ -346,14 +347,15 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 
 **Visual Construction Phase**: generate SVG pages sequentially, one at a time, in one continuous pass → `<project_path>/svg_output/`
 
-**Quality Check Gate (Mandatory)** — after all SVGs, BEFORE annotation handling and speaker notes:
-
 ```bash
-python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
+python3 ${SKILL_DIR}/scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel  # viettel_default only
+python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>/svg_output/<page>.svg
 ```
 
-- Any `error` (banned SVG features, viewBox mismatch, spec_lock drift, text overflow, title-zone content intrusion, etc.) MUST be fixed before proceeding — return to Visual Construction, regenerate that page, re-run check.
+- After each page, run the commands above (`custom_override`: omit chrome normalization). This deterministic chrome step is allowed post-processing, not scripted page generation.
+- Any `error` MUST be fixed and the same file re-checked before starting the next page. Treat the cover and first normal non-cover page as calibration gates.
 - `warning` entries (low-res image, non-PPT-safe font tail, long text without a wrap contract, etc.): fix when straightforward, otherwise acknowledge and release.
+- After all pages pass individually, run `python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>` and fix every remaining project-level error before speaker notes.
 - Run against `svg_output/` (not after `finalize_svg.py` — finalize rewrites SVG and masks violations).
 
 **Logic Construction Phase**: generate speaker notes → `<project_path>/notes/total.md`
@@ -400,7 +402,7 @@ For an explicit `custom_override` run only, omit Viettel brand chrome:
 python3 ${SKILL_DIR}/scripts/finalize_svg.py <project_path>
 ```
 
-`--brand-chrome viettel` applies the logo layer to both `svg_output/` and `svg_final/`, so native PPTX export and SVG snapshot stay consistent. `--strip-comments` removes template XML comments, including non-visible Chinese notes from imported templates.
+`--brand-chrome viettel` is idempotent: per-page validation has already normalized chrome, and this final pass preserves it while keeping `svg_output/` and `svg_final/` consistent. `--strip-comments` removes template XML comments, including non-visible Chinese notes from imported templates.
 
 **Step 7.3** — Export PPTX (embeds speaker notes by default):
 
