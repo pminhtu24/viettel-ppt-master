@@ -226,7 +226,7 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
 - **Phased sequential generation** (mandatory):
   1. **Visual Construction Phase**: generate one SVG page. Chart pages MUST embed plot-area markers per §3.1 below.
   2. **Per-page Quality Gate**: for `viettel_default`, run `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel --file svg_output/<page>.svg --slide-number <N>`; then run `python3 scripts/svg_quality_checker.py <new_svg_file>` for every profile. Fix every error and re-check that file before generating the next page. Treat the cover and first normal non-cover page as calibration gates.
-  3. **Full-deck Quality Gate**: after all pages pass individually, chart decks run `verify-charts`, whose final step is this gate; non-chart decks run `python3 scripts/svg_quality_checker.py <project_path>`. Run the project-level checker exactly once before export.
+  3. **Chart Verification**: after all pages pass individually, chart decks run `verify-charts`. Re-check only SVGs changed by chart verification. Non-chart decks proceed directly to export.
 
 ### 3.1 Chart Plot-Area Marker (MANDATORY on every chart page)
 
@@ -426,7 +426,7 @@ If `spec_lock.md` is absent, consult [`strategist.md`](strategist.md) §g — do
 
 ## 8. Next Steps After Completion
 
-> **Auto-continuation**: After all SVGs pass their per-page and full-deck gates, proceed directly to native PPTX export.
+> **Auto-continuation**: After all SVGs pass their per-page gates and chart verification passes when applicable, proceed directly to native PPTX export.
 
 ```bash
 python3 scripts/svg_to_pptx.py <project_path>

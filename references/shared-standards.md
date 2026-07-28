@@ -291,7 +291,7 @@ Wrap logically related elements in top-level `<g id="...">` groups. Produces Pow
 
 ## 5. Native PPTX Export
 
-**Hard precondition**: every SVG has passed its per-file gate and the project has passed one full-deck `svg_quality_checker.py` run.
+**Hard precondition**: every SVG has passed its per-file gate. Chart decks must also pass `verify-charts`; re-check only SVGs changed by chart verification.
 
 ```bash
 python3 scripts/svg_to_pptx.py <project_path>
@@ -308,7 +308,7 @@ python3 scripts/svg_to_pptx.py <project_path>
 
 Full reference: [`animations.md`](animations.md).
 
-The exporter reads `svg_output/` directly, expands internal icon placeholders in memory, and maps SVG geometry to editable DrawingML. Any later SVG change requires re-running the affected per-file gate, the single full-deck gate, and export.
+The exporter reads `svg_output/` directly, expands internal icon placeholders in memory, and maps SVG geometry to editable DrawingML. Any later SVG change requires re-running the affected per-file gate and export.
 
 ---
 

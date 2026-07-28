@@ -2,10 +2,10 @@
 
 ## Recommended Pipeline
 
-During skill-driven generation, check each SVG immediately. After every page passes, run the project-level gate once and export the native deck:
+During skill-driven generation, check each SVG immediately. After every page passes, verify charts when applicable and export the native deck:
 
 ```bash
-python3 scripts/svg_quality_checker.py <project_path>
+python3 scripts/svg_quality_checker.py <project_path>/svg_output/<page>.svg
 python3 scripts/svg_to_pptx.py <project_path>
 ```
 

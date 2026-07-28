@@ -9,7 +9,7 @@ description: >
 
 > Multi-role SVG presentation workflow. Converts source documents into high-quality SVG pages and exports them to PPTX.
 
-**Core Pipeline**: `Source Document → Create Project → [Template] → Strategist → [Web Image Acquisition] → Executor Live Preview → Per-page Quality Gates → Full-deck Quality Check → Native PPTX Export`
+**Core Pipeline**: `Source Document → Create Project → [Template] → Strategist → [Web Image Acquisition] → Executor Live Preview → Per-page Quality Gates → [Chart Verification] → Native PPTX Export → Rendered Visual QA`
 
 > [!CAUTION]
 >
@@ -353,7 +353,7 @@ python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>/svg_output/<p
 - After each page, run the commands above (`custom_override`: omit chrome normalization). This deterministic chrome step is allowed post-processing, not scripted page generation.
 - Any `error` MUST be fixed and the same file re-checked before starting the next page. Treat the cover and first normal non-cover page as calibration gates.
 - `warning` entries (low-res image, non-PPT-safe font tail, long text without a wrap contract, etc.): fix when straightforward, otherwise acknowledge and release.
-- After all pages pass individually: chart decks run [`verify-charts`](workflows/verify-charts.md), whose final step is the full-deck gate; non-chart decks run `python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>`. Fix every remaining error before export.
+- After all pages pass individually, chart decks run [`verify-charts`](workflows/verify-charts.md). If chart verification changes an SVG, re-run the per-file checker for that SVG before export. Non-chart decks proceed directly to export.
 
 **✅ Checkpoint — Confirm all SVGs are fully generated and quality-checked. Proceed directly to export**:
 
@@ -369,7 +369,7 @@ python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>/svg_output/<p
 
 ### Step 7: Native PPTX Export
 
-🚧 **GATE**: Step 6 complete; all SVGs in `svg_output/` passed their per-page gates and the single full-deck gate.
+🚧 **GATE**: Step 6 complete; every SVG in `svg_output/` passed its per-page gate, and chart verification passed when applicable.
 
 ```bash
 python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>

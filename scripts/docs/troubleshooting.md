@@ -26,7 +26,7 @@ python3 -m http.server --directory <svg_output_path> 8000
 Preferred sequence:
 
 ```bash
-python3 scripts/svg_quality_checker.py <project_path>
+python3 scripts/svg_quality_checker.py <project_path>/svg_output/<affected-page>.svg
 python3 scripts/svg_to_pptx.py <project_path>
 ```
 

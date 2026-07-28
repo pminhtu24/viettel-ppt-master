@@ -256,10 +256,4 @@ verify-charts: 19_flow.svg | type=sankey | mode=manual-verify | link widths cons
 
 ## After verification
 
-After all chart pages have been checked, run the full-deck quality gate exactly once:
-
-```bash
-python3 skills/viettel-ppt-master/scripts/svg_quality_checker.py <project_path>
-```
-
-Return to the main workflow, then run [SKILL.md Step 7](../SKILL.md); do not export from `verify-charts`.
+After all chart pages have been checked and every changed SVG has passed its per-file checker, return to the main workflow and run [SKILL.md Step 7](../SKILL.md). Do not export from `verify-charts`.
