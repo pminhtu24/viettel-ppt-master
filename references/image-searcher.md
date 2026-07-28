@@ -219,7 +219,7 @@ Use `attribution_text` from the manifest as the **starting point**. Compress for
 
 ## 8. Failure Handling (web-specific)
 
-Extends [`image-base.md`](./image-base.md) §6.
+Apply the retry and terminal-status rules from [`image-base.md`](./image-base.md) §3.
 
 | Situation | Behavior |
 |---|---|
@@ -234,7 +234,7 @@ CLI exit: `0` on success, `1` only when no acceptable image was found across the
 
 ## 9. Handoff with Strategist
 
-Reference field is **intent description**, not a query. See [`image-base.md`](./image-base.md) §8 for the rule.
+Reference field is **intent description**, not a query. See [`image-base.md`](./image-base.md) §2.
 
 If the description is verbose, that's fine — `simplify_query` handles it.
 
@@ -257,7 +257,7 @@ Executor does not interpret raw license strings — `license_tier` is sufficient
 
 ## 11. Task Completion Checkpoint
 
-In addition to the shared checkpoint in [`image-base.md`](./image-base.md) §10:
+In addition to the shared checkpoint in [`image-base.md`](./image-base.md) §4:
 
 - [ ] Every web row has a downloaded file at `project/images/<filename>` OR is marked `Needs-Manual`
 - [ ] Each `Sourced` row has a manifest entry with valid `license_tier` and non-empty `attribution_text`

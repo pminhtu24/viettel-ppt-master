@@ -7,9 +7,9 @@ description: >
 
 # PPT Master Skill
 
-> AI-driven multi-format SVG content generation system. Converts source documents into high-quality SVG pages through multi-role collaboration and exports to PPTX.
+> Multi-role SVG presentation workflow. Converts source documents into high-quality SVG pages and exports them to PPTX.
 
-**Core Pipeline**: `Source Document → Create Project → [Template] → Strategist → [Image_Generator] → Executor Live Preview → Quality Check → Post-processing → Export`
+**Core Pipeline**: `Source Document → Create Project → [Template] → Strategist → [Web Image Acquisition] → Executor Live Preview → Quality Check → Post-processing → Export`
 
 > [!CAUTION]
 >
@@ -67,7 +67,7 @@ description: >
 | `${SKILL_DIR}/scripts/source_to_md/web_to_md.py`   | Web page to Markdown (supports WeChat via `curl_cffi`)                                                                                  |
 | `${SKILL_DIR}/scripts/project_manager.py`          | Project init / validate / manage                                                                                                        |
 | `${SKILL_DIR}/scripts/analyze_images.py`           | Image analysis                                                                                                                          |
-| `${SKILL_DIR}/scripts/image_gen.py`                | AI image generation (multi-provider)                                                                                                    |
+| `${SKILL_DIR}/scripts/image_search.py`             | Openly licensed web-image search with attribution metadata                                                                              |
 | `${SKILL_DIR}/scripts/svg_quality_checker.py`      | SVG quality check                                                                                                                       |
 | `${SKILL_DIR}/scripts/total_md_split.py`           | Speaker notes splitting                                                                                                                 |
 | `${SKILL_DIR}/scripts/finalize_svg.py`             | SVG post-processing (unified entry)                                                                                                     |
@@ -266,7 +266,7 @@ python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
 - [x] Split-mode note appended below the eight items (heavy or normal variant)
 - [x] Design Specification & Content Outline generated
 - [x] Execution lock (spec_lock.md) generated
-- [ ] **Next**: Auto-proceed to [Image_Generator / Executor] phase
+- [ ] **Next**: Auto-proceed to [Web Image Acquisition / Executor] phase
 ```
 
 ---
@@ -275,42 +275,21 @@ python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
 
 🚧 **GATE**: Step 4 complete; Design Specification & Content Outline generated and user confirmed.
 
-> **Trigger**: At least one row in the resource list has `Acquire Via: ai` and/or `Acquire Via: web`. If every row is `user` or `placeholder`, skip to Step 6.
+> **Trigger**: At least one resource-list row has `Acquire Via: web`. If every row is `user` or `placeholder`, skip to Step 6.
+>
+> **Supported acquisition values**: `web`, `user`, and `placeholder`. AI image generation is not part of this skill. If the user requests a generated image, offer web sourcing, a user-provided file, or a placeholder.
+>
+> **Legacy rows whose `Acquire Via` value is `ai`**: when the referenced file already exists, change the row to `Acquire Via: user`, `Status: Existing`, then continue. If the file is absent, stop before Executor and ask the user to choose `web`, provide a file, or use `placeholder`. Never silently convert an AI intent into a web search.
 
-**Always load the common framework**:
-
-```
-Read references/image-base.md
-```
-
-Then **lazy-load the path-specific reference** for each row that actually needs it:
-
-| Acquire Via            | Load reference (only if any such row exists) | Run                                                                                             |
-| ---------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `ai`                   | `references/image-generator.md`              | `python3 ${SKILL_DIR}/scripts/image_gen.py --manifest <project_path>/images/image_prompts.json` |
-| `web`                  | `references/image-searcher.md`               | `python3 ${SKILL_DIR}/scripts/image_search.py ...`                                              |
-| `user` / `placeholder` | (skip)                                       | (skip)                                                                                          |
-
-A deck with only `ai` rows never loads `image-searcher.md`; a deck with only `web` rows never loads `image-generator.md`. A mixed deck loads both, processes each row through its own path, and writes both `image_prompts.json` and `image_sources.json`.
-
-> ⚠️ **In-pipeline ai path MUST use manifest mode** — even when only 1 ai row exists. Write `images/image_prompts.json` first, then run `image_gen.py --manifest`, then `image_gen.py --render-md` to produce the `image_prompts.md` sidecar. The positional form (`image_gen.py "prompt" ...`) is reserved for **out-of-pipeline one-off testing / single-image fixups** — it skips manifest + sidecar, leaving no audit trail.
+Read `references/image-base.md` and `references/image-searcher.md`, then run `python3 ${SKILL_DIR}/scripts/image_search.py ...` for each pending web row. Skip `user` and `placeholder` rows.
 
 Workflow:
 
-1. Extract all rows with `Status: Pending` and `Acquire Via ∈ {ai, web}` from the design spec
-2. Generate prompts (ai rows) and/or run search (web rows) per [image-base.md](references/image-base.md) §2 dispatch table
-3. Verify every row reaches a terminal status: `Generated` (ai success), `Sourced` (web success), or `Needs-Manual`
+1. Extract rows with `Status: Pending` and `Acquire Via: web` from the design spec
+2. Run search per [image-base.md](references/image-base.md) and [image-searcher.md](references/image-searcher.md)
+3. Verify every row reaches `Sourced` or `Needs-Manual`
 
-**✅ Checkpoint — Confirm acquisition attempted for every row**:
-
-```markdown
-## ✅ Image Acquisition Phase Complete
-
-- [x] image_prompts.json created (when any ai rows processed)
-- [x] image_prompts.md sidecar rendered (when any ai rows processed)
-- [x] image_sources.json created (when any web rows processed)
-- [x] Each row: status is `Generated` / `Sourced` / `Needs-Manual` (no `Pending` remaining)
-```
+Checkpoint: `image_sources.json` exists and every web row is `Sourced` or `Needs-Manual`; no `Pending` row remains.
 
 **Default — auto-proceed to Step 6.** Only when the user's Step 4 response explicitly opted into split mode (in reply to the optional hint), output the Phase A hand-off below and stop this conversation:
 
@@ -322,7 +301,7 @@ Workflow:
 - [ ] **Next**: open a fresh chat window and input `continue generation projects/<project_name>` to enter Phase B via the [`resume-execute`](workflows/resume-execute.md) workflow.
 ```
 
-> On acquisition failure, do NOT halt — follow the Failure Handling rule in [image-base.md](references/image-base.md) §5: retry once, then mark the row `Needs-Manual`, report to user, and continue to the checkpoint above.
+> On acquisition failure, do not halt — follow [image-base.md](references/image-base.md) §3: retry once, then mark the row `Needs-Manual`, report it, and continue.
 
 ---
 
@@ -397,10 +376,6 @@ python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
 ### Step 7: Post-processing & Export
 
 🚧 **GATE**: Step 6 complete; all SVGs generated to `svg_output/`; speaker notes `notes/total.md` generated.
-
-🚧 **Image readiness GATE** (when Step 5 left ai rows in `Needs-Manual`): every expected file must exist at `project/images/<filename>` before running 7.1.
-
-> If files are missing: PAUSE, list the missing filenames, point the user to `images/image_prompts.md` (each `### Image N:` block is paste-ready for ChatGPT / Gemini / Midjourney; auto-generated from `image_prompts.json`) and the required placement `project/images/<filename>`. Resume Step 7.1 only after all expected files are in place. `finalize_svg.py` and `svg_to_pptx.py` do not detect missing files at this layer — proceeding with gaps produces a deck with broken image references.
 
 > ⚠️ Run the three sub-steps **one at a time** — each must complete successfully before the next.
 > ❌ **NEVER** combine them into a single code block or shell invocation.

@@ -8,7 +8,7 @@ As a top-tier AI presentation strategist, receive source documents, perform cont
 
 | Previous Step | Current | Next Step |
 |--------------|---------|-----------|
-| Project creation + brand profile confirmed | **Strategist**: Eight Confirmations + Design Spec | Image_Generator or Executor |
+| Project creation + brand profile confirmed | **Strategist**: Eight Confirmations + Design Spec | Web Image Acquisition or Executor |
 
 > **Viettel default brand gate (HARD rule)**: every normal run uses `brand.profile: viettel_default` on PPT 16:9. Keep Viettel logo/chrome, the locked Viettel font stack, Viettel red, white/approved-gray surfaces, and dark-neutral text. Deep blue `#12436D` is restricted to chart, diagram/infographic, icon marks, and cataloged builtin backgrounds explicitly marked `deep_blue_background: true`. Use `brand.profile: custom_override` only when the user explicitly says not to use Viettel, names another brand, or supplies an explicit non-Viettel template path. A color, font, mood, or visual-style request alone does not override Viettel.
 
@@ -26,7 +26,7 @@ As a top-tier AI presentation strategist, receive source documents, perform cont
 
 ⛔ **BLOCKING**: After the read, present professional recommendations for the eight items below as a bundled package and wait for explicit user confirmation.
 
-> **Execution discipline**: This is the last BLOCKING checkpoint in the pipeline. After confirmation, complete the Design Spec and proceed to image generation / SVG / post-processing without further pauses.
+> **Execution discipline**: This is the last BLOCKING checkpoint in the pipeline. After confirmation, complete the Design Spec and proceed to any required web-image acquisition, SVG authoring, and post-processing without further pauses.
 
 ### a. Canvas Format Confirmation
 
@@ -110,15 +110,14 @@ For `viettel_default`, present the locked palette from `templates/layouts/viette
 | Option | Approach | Suitable Scenarios |
 |--------|----------|-------------------|
 | **A** | Emoji | Casual, playful, social media |
-| **B** | AI-generated | Custom style needed |
-| **C** | Built-in icon library | Professional scenarios (recommended) |
-| **D** | Custom icons | Has brand assets |
+| **B** | Built-in icon library | Professional scenarios (recommended) |
+| **C** | Custom icons | Has brand assets |
 
 The built-in icon library contains multiple stylistic libraries plus a brand-logo library:
 
 See [`../templates/icons/README.md`](../templates/icons/README.md) for the current library inventory, counts, prefixes, and SVG placeholder details.
 
-> **Mandatory rules when choosing C**:
+> **Mandatory rules when choosing B**:
 >
 > **At the eight-confirmation stage — decide the library only. Do NOT run `ls | grep` yet.**
 >
@@ -233,163 +232,10 @@ Baseline choice follows **content density**, not style. Common: `18px` (dense) /
 |--------|----------|-------------------|
 | **A** | No images | Data reports, process documentation |
 | **B** | User-provided | Has existing image assets |
-| **C** | AI-generated | Custom illustrations, backgrounds needed |
-| **D** | Web-sourced | Real-world reference imagery, editorial support, stock-style needs (no API key required for default providers) |
-| **E** | Placeholders | Images to be added later |
+| **C** | Web-sourced | Real-world reference imagery, editorial support, stock-style needs (no API key required for default providers) |
+| **D** | Placeholders | Images to be added later |
 
-**When recommending C** — surface its three implementation modes so the user knows "no API key" is a supported state:
-
-| Mode | Trigger | Mechanism |
-|---|---|---|
-| **Path A** | `IMAGE_BACKEND` configured (default) | `image_gen.py` runs in Step 5 |
-| **Path B** | `IMAGE_BACKEND` not configured AND host has a native image tool (Codex / Antigravity / Claude Code / similar) — auto-selected, no user prompting needed | Host-native generation |
-| **Offline Manual** | `IMAGE_BACKEND` not configured AND host has no native image tool | Prompts written to `images/image_prompts.json`; user generates externally and places files in `project/images/` |
-
-Selection is automatic in Step 5 (A → B → Manual). Detailed contract: [`image-generator.md`](./image-generator.md) §3.2.
-
-Selections may be mixed at the row level — e.g. a deck can use C for hero illustrations while sourcing D for supporting team photos.
-
-#### h.5 AI Image Strategy — lock rendering + palette (only when C is selected)
-
-When the deck includes any `ai` rows, Strategist locks a **deck-wide rendering** and **deck-wide palette** here. These two values are written into `design_spec.md §III` and `spec_lock.md colors` / `images` sections, then consumed by Image_Generator. Every AI image in the deck shares them — this is what makes multiple AI images feel like one deck.
-
-🚧 **GATE — before recommending values**: `read_file references/image-renderings/_index.md` and `read_file references/image-palettes/_index.md`. They contain the catalog, auto-selection tables, and a rendering × palette compatibility matrix.
-
-#### Three-candidate presentation (default path)
-
-**Hard rule**: Unless the user has already named a specific rendering or palette (chat or template), present **≥3 distinct rendering × palette combinations** and let the user pick. Never auto-lock a single combination silently.
-
-**Per-candidate schema** (exactly 4 lines, no extras):
-
-```
-[Plan A] <temperament label> — <rendering> × <palette>
-  Visual: <shape / line / material / light, 1-2 phrases>
-  Color: <secondary HEX (ratio) + primary HEX (ratio) + accent HEX (ratio); HEX values from e.>
-  Mood: <2-3 traits>; like <real-world analogy: company / publication / event>
-```
-
-After the candidates, append one line:
-
-```
-> Reference images: see references/ai-image-comparison/ for matching PNGs by name.
-```
-
-**Hard rules for candidate construction**:
-
-| Rule | Behavior |
-|---|---|
-| Filter by e.'s HEX | Only include palettes whose temperament can carry the user's HEX. Vivid red → exclude `cool-corporate` / `mono-ink`; include `vivid-launch` / `warm-earth` / `editorial-classic`. |
-| HEX values in `Color` line MUST be e.'s real values | Palette contributes only the 60-30-10 ratio + role assignment. Never substitute the palette's typical HEX. |
-| Span a personality spectrum | Typically: one conservative-default (industry norm), one shifted-tone (same fit, 1-2 ticks different), one bold-contrast (more expressive, may challenge default). No near-duplicates. |
-| `Mood` line MUST include a real-world analogy | Company / publication / event the user can picture. Adjective stacks alone are forbidden. |
-| Adapt labels to chat language | Schema is English by default. Chinese chat → render as 「方案 A / 视觉 / 色彩 / 情绪」. Structure stays the same; only the labels translate. |
-| Skip presentation when user has specified | User-named rendering or palette (chat / template) bypasses the candidate flow — lock directly per the truth-precedence rule. |
-
-**Forbidden — padding with conflicts**: if e.'s HEX cannot find ≥3 compatible palettes, present the smaller set (2 candidates) and state "your color is unusual — only N palettes can carry it without conflict." Never fill remaining slots with known-conflicting options.
-
-**Worked example** (e. = `#1E3A5F` navy + `#F8F9FA` off-white + `#D4AF37` gold; d. = consulting; chat in English):
-
-```
-[Plan A] Restrained Professional — vector-illustration × cool-corporate
-  Visual: flat vector, solid color blocks, no gradients or shadows
-  Color: off-white #F8F9FA (60-70%) + deep navy #1E3A5F main (25-30%) + gold #D4AF37 accent (<5%)
-  Mood: steady, trustworthy, restrained gravitas; like a McKinsey consulting report
-
-[Plan B] Editorial Depth — editorial × editorial-classic
-  Visual: magazine layout, 8% paper texture, column-based partitioning
-  Color: off-white #F8F9FA paper (55%) + deep navy #1E3A5F column (30%) + gold #D4AF37 rule line (10-14%)
-  Mood: refined, considered, paced; like an Economist feature spread
-
-[Plan C] Future Energy — 3d-isometric × tech-neon
-  Visual: isometric 3D, soft shading, 8% glow halos around bright elements
-  Color: off-white #F8F9FA digital field (50%) + deep navy #1E3A5F main (35%) + gold #D4AF37 emphasis (10-15%)
-  Mood: forward, energetic, futuristic; like an Apple or Stripe product keynote
-
-> Reference images: see references/ai-image-comparison/ for matching PNGs by name.
-```
-
-After the user picks a candidate (or supplies a custom variant), proceed to "Recording the lock" below.
-
----
-
-#### Catalog reference (for candidate construction)
-
-The tables below are source data Strategist reads when constructing the three candidates above. They are no longer the final output by themselves.
-
-**Rendering recommendation** (soft — user may override with any other rendering from the catalog):
-
-| `d. Style` signal | Recommended rendering | Alternates |
-|---|---|---|
-| Top Consulting / strategic / MBB | `editorial` or `vector-illustration` | `blueprint`, `minimalist-swiss` |
-| General Consulting / corporate report / 学术答辩 | `vector-illustration` | `flat`, `editorial` |
-| High-end consulting / luxury / 高端 / design-firm | `minimalist-swiss` | `editorial`, `vector-illustration` |
-| Tech / SaaS / AI / 架构 | `3d-isometric`, `blueprint`, `digital-dashboard` | `flat` |
-| Modern SaaS / fintech / health-tech / premium app | `glassmorphism` | `digital-dashboard`, `flat` |
-| Product launch / brand / marketing | `flat`, `3d-isometric`, `corporate-photo` | `vector-illustration` |
-| Education / training / 教学 / 培训 | `sketch-notes` | `vector-illustration`, `paper-cut` |
-| Children / storybook / 儿童 / 治愈 | `fantasy-animation` | `paper-cut`, `watercolor`, `sketch-notes` |
-| Cultural / folk / festival / 文化 / 节日 | `paper-cut` | `vintage-poster`, `screen-print` |
-| Methodology / Before-After / 方法论 / manifesto | `ink-notes` | `editorial` |
-| Government / formal / 政务 | `editorial` or `corporate-photo` | `vector-illustration` |
-| Finance / journalism / 财经 | `editorial`, `digital-dashboard` | `vector-illustration` |
-| Personal story / 个人成长 / lifestyle | `watercolor`, `warm-scene` | `corporate-photo`, `paper-cut` |
-| Cultural / media / opinion / cinematic | `screen-print`, `vintage-poster` | `editorial`, `warm-scene` |
-| Brand heritage / hospitality / 老字号 / 周年 | `vintage-poster` | `screen-print`, `editorial` |
-| Gaming / retro / 复古 / 像素 | `pixel-art` | `vintage-poster` |
-| Environment / wellness / 环保 | `nature` | `watercolor`, `paper-cut` |
-| Classroom / blackboard / 课堂 | `chalkboard` | `sketch-notes` |
-| Team / company / product photo | `corporate-photo` | — |
-
-**Palette recommendation** (soft — user may override):
-
-| Content vibe / industry | Recommended palette | Alternates |
-|---|---|---|
-| Consulting / finance / B2B / corporate / 学术答辩 | `cool-corporate` | `editorial-classic`, `frost-ice` |
-| Tech / SaaS / AI | `tech-neon` | `cool-corporate`, `dark-cinematic` |
-| Modern SaaS / fintech / health-tech | `frost-ice` | `cool-corporate`, `tech-neon` |
-| Health / medical / beauty / skincare | `frost-ice` | `nature-organic`, `earthy-dusty` |
-| Education / training | `macaron` | `warm-earth` |
-| Methodology / Before-After | `mono-ink` | `editorial-classic` |
-| Personal / lifestyle / brand story | `warm-earth` | `nature-organic`, `earthy-dusty` |
-| Interior / wellness / mindfulness / slow living | `earthy-dusty` | `warm-earth`, `nature-organic` |
-| Product launch / marketing | `vivid-launch` | `tech-neon`, `sunset-gradient` |
-| Creative agency / travel / music / lifestyle | `sunset-gradient` | `vivid-launch`, `warm-earth` |
-| Luxury / fashion / jewelry / premium / heritage | `jewel-tone` | `dark-cinematic`, `editorial-classic` |
-| Children / storybook | `macaron` | `warm-earth` |
-| Premium / film / entertainment | `dark-cinematic` | `jewel-tone`, `duotone` |
-| Cultural / media / cover-art | `duotone` | `editorial-classic` |
-| Environment / wellness | `nature-organic` | `warm-earth`, `earthy-dusty` |
-| Finance / journalism | `editorial-classic` | `cool-corporate` |
-
-After auto-selecting, cross-check `image-palettes/_index.md` compatibility matrix — if rendering × palette is `✗`, swap to the alternate palette.
-
-**d-e-f-g linkage sanity check** (do this after picking rendering + palette):
-
-| Linkage | What to verify |
-|---|---|
-| **d. Style ↔ rendering** | Rendering family should match the Style descriptor's temperament (corporate ≠ sketch-notes; tech ≠ watercolor). Already enforced by the recommendation table above. |
-| **e. Color HEX ↔ palette** | HEX is truth — palette is just the "how to use these HEX" rulebook for AI images (saturation / contrast / 60-30-10 / material). Mismatch → **always swap palette to fit the HEX, never adjust the HEX to fit a palette**. E.g. user gives a vivid red but you auto-picked cool-corporate — switch to vivid-launch or warm-earth, do not propose dimming the red. |
-| **f. Icon library ↔ rendering** | `tabler-outline` pairs well with all renderings (most versatile). `chunk-filled` / `tabler-filled` pair better with `vector-illustration` / `flat` / `editorial`. `phosphor-duotone` pairs with `flat` / `digital-dashboard`. Mismatch is not fatal but worth flagging. |
-| **g. Typography ↔ rendering** | Serif title → pairs well with `editorial`, `corporate-photo`, `screen-print`. Hand-lettered direction → already implied by `sketch-notes` / `ink-notes` (the rendering carries the lettering, no separate font requirement). Display font → `vivid-launch` / `screen-print`. Mismatch is rarely fatal; note in conversation if it feels off. |
-
-**Recording the lock** — after picking, write to:
-
-- `design_spec.md §III Visual Theme` — add two lines under the color table:
-  ```
-  - **Image Rendering**: vector-illustration
-  - **Image Palette**: cool-corporate
-  ```
-- `spec_lock.md colors` section — add two extra rows at the bottom:
-  ```
-  - image_rendering: vector-illustration
-  - image_palette: cool-corporate
-  ```
-
-Image_Generator reads these two fields and applies them deck-wide. If both are absent (legacy decks), Image_Generator falls back to inferring them from `d. Style` and `e. Color` — quality is acceptable but not optimal. Always lock both when C is selected.
-
-#### hero_page suggestion (same confirmation turn)
-
-After the user picks a candidate, scan the outline and surface any pages where the image makes more sense as the page's main voice than as a local block. Present them as a short list and let the user confirm, edit, or skip. Result is recorded as `page_role: hero_page` on the matching `ai` rows. Density is judgment-based — no fixed quota.
+AI image generation is not supported. If the user requests it, offer web sourcing, a user-provided file, or a placeholder.
 
 **Existing source asset rule**: images propagated into `<project_path>/images/` from
 PDF / DOCX / PPTX / HTML / EPUB / URL sources are treated as existing source-provided
@@ -405,7 +251,7 @@ source assets and the user did not explicitly confirm A "No images"**, you must 
 and integrate useful scan results into the image resource list. Existing assets do not
 trigger Step 5 acquisition.
 
-**When B / C / D / E is selected**, add an image resource list to the spec:
+**When B / C / D is selected**, add an image resource list to the spec:
 
 | Column | Description |
 |--------|-------------|
@@ -415,12 +261,10 @@ trigger Step 5 acquisition.
 | Layout suggestion | e.g., `Wide landscape (suitable for full-screen/illustration)` |
 | **Layout pattern** | **MANDATORY** — one or more `#<id> <name>` joined by ` + ` from `image-layout-patterns.md`. Combine a Primary id with optional Modifier ids when the page needs it (e.g. `#48 side-by-side comparison + #21 rounded rectangle crop + #29 two-stop scrim`). A single Primary is fine when the page calls for it. See the GATE earlier in this section. Empty cells or invented ids are invalid. |
 | Purpose | e.g., `Cover background` |
-| Type | Narrative shorthand: Background / Photography / Illustration / Diagram / Decorative pattern. (The internal-composition type used by Image_Generator — one of `background / hero / typography / infographic / flowchart / framework / comparison / timeline / scene` — is inferred from `Purpose` per [`image-type-templates/_index.md`](./image-type-templates/_index.md); no need to label every row.) |
-| **Acquire Via** | `ai` / `web` / `user` / `placeholder` — drives Step 5 dispatch |
+| Type | Narrative shorthand: Background / Photography / Illustration / Diagram / Decorative pattern. |
+| **Acquire Via** | `web` / `user` / `placeholder` — drives Step 5 dispatch |
 | Status | Initial status must be `Pending`, `Existing`, or `Placeholder`; see [`svg-image-embedding.md`](svg-image-embedding.md) for the full status enum |
-| **Reference** | Free-form **intent description** (NOT a search query); feeds Image_Generator (ai) or Image_Searcher (web) |
-| `text_policy` (optional, `ai` rows only) | `none` (no text in image) or `embedded` (text is part of the artwork). Leave blank when Image_Generator should decide per row. Long body / data / lists stay in SVG. |
-| `page_role` (optional, `ai` rows only) | `local` (image is a region block on an SVG page) or `hero_page` (image is the page's main voice). Leave blank when Image_Generator should decide per row. |
+| **Reference** | Free-form visual intent description; Image_Searcher converts web intents into provider queries |
 
 **No-crop flag (exception only)**: most images are croppable — Executor defaults to `preserveAspectRatio="xMidYMid slice"`. When an image must NOT lose pixels (data screenshots, charts, certificates, contracts, dense diagrams), append `no-crop` to its `spec_lock.md images` entry. Executor will then size the container to the native ratio and use `meet`. Don't tag the rest.
 
@@ -436,7 +280,6 @@ trigger Step 5 acquisition.
 
 | Acquire Via | Reference pattern |
 |---|---|
-| `ai` | **Subject + intent + composition** only. Do NOT repeat style words ("flat design", "modern", "vector") or HEX values — both are already locked deck-wide by h.5 (rendering + palette) and `design_spec §III` (colors). Image_Generator's prompt assembler injects them automatically. |
 | `web` | Concrete subject/place/object first, then 1-3 quality descriptors |
 
 **Allowed web quality descriptors**:
@@ -453,8 +296,6 @@ trigger Step 5 acquisition.
 | Mode | Good Reference |
 |---|---|
 | `web` | "Diverse team collaborating at a modern office desk, professional editorial photography, natural light, laptop visible" |
-| `ai` | "Atmospheric backdrop suggesting digital innovation; calm central area reserved for slide title overlay; light geometric anchor at one edge" |
-| `ai` | "Four-stage value chain from raw input to R&D output; icons should suggest tax-form → cost-reduction → equipment-upgrade → innovation; no text labels (SVG overlays them)" |
 
 **Image type descriptions**:
 
@@ -466,7 +307,7 @@ trigger Step 5 acquisition.
 | Diagram | Flowcharts, architecture diagrams, concept relationship maps |
 | Decorative pattern | Partial decoration, textures, borders, divider elements |
 
-🚧 **GATE — before writing §VIII Image Resource List**: when image approach is B/C/D/E (anything other than A "no images"), this is a three-layer hard requirement, not a suggestion:
+🚧 **GATE — before writing §VIII Image Resource List**: when image approach is B/C/D (anything other than A "no images"), this is a three-layer hard requirement, not a suggestion:
 
 1. **Read** — `read_file references/image-layout-patterns.md`. The file enumerates 72 numbered techniques split into **Part 1 — Primary Structures** (#1–#19 container layouts, #38–#46 image-as-canvas + native overlay, #47–#56 multi-image) and **Part 2 — Modifier Layers** (#20–#26 non-rectangular crops, #27–#37 overlays & masks, #57–#61 texture, #62–#72 special). The four `Image narrative intent` values below cover only broad categories.
 2. **Produce** — every row in §VIII Image Resource List MUST fill the `Layout pattern` column with one or more `#<id> <name>` joined by ` + ` drawn verbatim from this file (Primary + optional Modifiers). Rows with empty `Layout pattern` or with an id that does not exist in the file are invalid.
@@ -500,8 +341,6 @@ Side-by-side only: container ratio must match image ratio. Hero / atmosphere / a
 > **Portrait canvases** (Xiaohongshu, Story): Layout rules differ — top-bottom is preferred for most ratios since left-right columns become too narrow. See "Portrait Canvas Override" in `references/image-layout-spec.md`.
 
 > **Multi-image slides**: When multiple images appear on one page, use the grid formulas in the "Multi-Image Layout" section of `references/image-layout-spec.md`.
-
-> **Pipeline handoff**: When C) AI generation is selected, Image_Generator consumes `Pending` rows and updates them to `Generated` or `Needs-Manual` before Executor proceeds. Status names are defined in [`svg-image-embedding.md`](svg-image-embedding.md).
 
 ### Template Match — Visualization + Structural Patterns (Non-blocking — Strategist recommends, no user confirmation needed)
 
@@ -546,7 +385,7 @@ The most common Strategist failure mode is missing the structural half — treat
 >
 > **Fallback when no template fits**:
 > 1. Re-read the full summary list with the page's intent re-stated in plain language — "non-obvious" matches often surface on the second pass (e.g. "causal chain" → `process_flow` or `sankey_chart`).
-> 2. If still no fit: data-driven content → table layout; conceptual/illustrative → "AI-generated image" (Image_Generator handles); structural → "custom layout".
+> 2. If still no fit: data-driven content → table layout; conceptual/illustrative → custom SVG composition or a user/web image; structural → custom layout.
 > 3. Mark the page `no-template-match` in section VII with the fallback chosen and why. Do NOT silently substitute a close-but-wrong chart.
 
 ### Speaker Notes Requirements (Default — no discussion needed)
@@ -751,8 +590,8 @@ After writing `design_spec.md` and `spec_lock.md`, output the next-step prompt b
 ```
 ✅ Design spec complete. Template ready.
 Next step:
-- Images include AI generation → Invoke Image_Generator
-- Otherwise → Invoke Executor
+- Run Web Image Acquisition when the resource list contains `Acquire Via: web`
+- Then invoke Executor
 ```
 
 ### Adaptive Viettel composition (no page layout inheritance)
@@ -760,6 +599,6 @@ Next step:
 ```
 ✅ Design spec complete. Viettel brand lock ready.
 Next step:
-- Images include AI generation → Invoke Image_Generator
-- Otherwise → Invoke Executor (adaptive Viettel composition for pages without layout inheritance)
+- Run Web Image Acquisition when the resource list contains `Acquire Via: web`
+- Then invoke Executor (adaptive Viettel composition for pages without layout inheritance)
 ```

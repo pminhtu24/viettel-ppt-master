@@ -35,15 +35,11 @@
 - success: #28A197
 - warning: #F46A25
 - chart_neutral: #6B7280
-- image_rendering: vector-illustration
-- image_palette: cool-corporate
 
 > For `viettel_default`, keep only the approved rows actually used and do not add colors outside this palette. For explicit `custom_override`, replace the section with the override palette.
 >
 > **Viettel default color lock**: normal runs use Viettel red `#EE0033`, white/approved-gray surfaces, and dark-neutral text. Deep blue `#12436D` may appear only in chart, diagram/infographic, icon marks, or a cataloged builtin background whose index item sets `deep_blue_background: true`. Every deep-blue SVG mark MUST be inside `<g data-viettel-blue-scope="chart|diagram|icon|background">`; `background` scope also requires `data-viettel-background-id="<id>"`. Deep blue remains forbidden for text, cards, rails, footers, dividers, ad-hoc backgrounds, and unregistered decoration.
 >
-> **`image_rendering` and `image_palette`** — required only when `images` section below contains `ai`-sourced files. Values MUST be valid names from `references/image-renderings/_index.md` and `references/image-palettes/_index.md`. Image_Generator reads these and applies them deck-wide. Omit both rows when the deck has no AI-generated images.
-
 ## typography
 
 - font_family: "FS Magistral"

@@ -45,7 +45,7 @@ One offending character invalidates the file and aborts export. Numeric refs (`&
 > - Inner glow / soft-edge → `<filter>` with `<feGaussianBlur>` (§6 Glow)
 > - Drop shadow → filter shadow or layered rect (§6 Shadow)
 >
-> Pixel-level alpha effects (text-knockout image fills, arbitrary alpha composites) have no PPT path — bake into the source image at Image_Generator stage.
+> Pixel-level alpha effects (text-knockout image fills, arbitrary alpha composites) have no PPT path — precompose them in the source image before SVG embedding.
 
 ---
 
@@ -728,7 +728,7 @@ Back2: (370-8.1+3.7, 430-8.8-3.4) = (365.6, 417.8)
 project/
 ├── svg_output/    # Raw SVGs (Executor output, contains placeholders)
 ├── svg_final/     # Post-processed final SVGs (finalize_svg.py output)
-├── images/        # Image assets (user-provided + AI-generated)
+├── images/        # User-provided and web-sourced image assets
 ├── notes/         # Speaker notes (.md files matching SVG names)
 │   └── total.md   # Complete speaker notes document (before splitting)
 ├── templates/     # Project templates (if any)

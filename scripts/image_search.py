@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """Web image search CLI.
 
-Sister tool to ``image_gen.py``: instead of generating an image from a
-prompt, this searches openly-licensed image providers and downloads a
-single best match.
+Search openly-licensed image providers and download a single best match.
 
 Workflow:
     1. Build an :class:`ImageSearchRequest` from CLI args.
@@ -55,12 +53,12 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from config import load_prefixed_env_file  # noqa: E402
-from image_backends.backend_common import download_image  # noqa: E402
 from image_sources.provider_common import (  # noqa: E402
     AssetCandidate,
     ImageSearchRequest,
     USER_AGENT,
     build_attribution_text,
+    download_image,
     ensure_json_parent,
     score_candidate,
 )
@@ -540,7 +538,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Search openly-licensed web images and download a single best match. "
-            "Sister to image_gen.py."
+            "Downloads openly licensed web images and records attribution metadata."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
