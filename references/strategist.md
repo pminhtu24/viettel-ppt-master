@@ -22,7 +22,7 @@ As a top-tier AI presentation strategist, receive source documents, perform cont
 
 ## 1. Eight Confirmations Process
 
-🚧 **GATE — Mandatory read first**: `read_file templates/design_spec_reference.md` before any analysis or writing. The design_spec.md output MUST follow that template's 11-section structure exactly. After writing, self-check each section is present: I Project Info → II Canvas → III Visual Theme → IV Typography → V Layout → VI Icon → VII Visualization → VIII Image → IX Outline → X Speaker Notes → XI Tech Constraints.
+🚧 **GATE — Mandatory read first**: `read_file templates/design_spec_reference.md` before any analysis or writing. The design_spec.md output MUST follow that template's 10-section structure exactly. After writing, self-check each section is present: I Project Info → II Canvas → III Visual Theme → IV Typography → V Layout → VI Icon → VII Visualization → VIII Image → IX Outline → X Tech Constraints.
 
 ⛔ **BLOCKING**: After the read, present professional recommendations for the eight items below as a bundled package and wait for explicit user confirmation.
 
@@ -388,14 +388,6 @@ The most common Strategist failure mode is missing the structural half — treat
 > 2. If still no fit: data-driven content → table layout; conceptual/illustrative → custom SVG composition or a user/web image; structural → custom layout.
 > 3. Mark the page `no-template-match` in section VII with the fallback chosen and why. Do NOT silently substitute a close-but-wrong chart.
 
-### Speaker Notes Requirements (Default — no discussion needed)
-
-- File naming: Recommended to match SVG names (`01_cover.svg` → `notes/01_cover.md`), also compatible with `notes/slide01.md`
-- Fill in the Design Spec: total presentation duration, notes style (formal / conversational / interactive), presentation purpose (inform / persuade / inspire / instruct / report)
-- Split note files must NOT contain `#` heading lines (`notes/total.md` master document MUST use `#` heading lines)
-
----
-
 ## 2. Executor Style Details (Reference for Confirmation Item #4)
 
 ### A) General Versatile — Executor_General
@@ -530,13 +522,13 @@ Divider rules:
 
 ### 6.1 Content Planning Strategy
 
-| Style | Content Outline | Speaker Notes |
-|-------|----------------|---------------|
-| A) General Versatile | Per-page core theme from source doc | Concise script |
-| B) General Consulting | Structured sections, data-driven insights | Professional terms, conclusion-first |
-| C) Top Consulting | SCQA + pyramid principle | Highly condensed, conclusion-driven |
+| Style | Content Outline |
+|-------|-----------------|
+| A) General Versatile | Per-page core theme from source doc |
+| B) General Consulting | Structured sections, data-driven insights |
+| C) Top Consulting | SCQA + pyramid principle |
 
-### 6.2 Outline Output Specification (Must include 11 chapters)
+### 6.2 Outline Output Specification (Must include 10 chapters)
 
 | Chapter | Content Requirements |
 |---------|---------------------|
@@ -549,8 +541,7 @@ Divider rules:
 | VII. Visualization Reference List | Visualization type, reference template path, used-in pages, purpose; for Viettel, include section-page background assignments from `templates/backgrounds/backgrounds_index.json` when used |
 | VIII. Image Resource List | Filename, dimensions, ratio, purpose, status, generation description |
 | IX. Content Outline | Grouped by chapter; each page includes layout, title, content points, visualization type (if applicable) |
-| X. Speaker Notes Requirements | File naming rules, content structure description |
-| XI. Technical Constraints Reminder | SVG generation rules, PPT compatibility rules |
+| X. Technical Constraints Reminder | SVG generation rules and native PPTX constraints |
 
 **Generation steps**:
 1. Read reference template: `templates/design_spec_reference.md`

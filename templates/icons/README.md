@@ -41,7 +41,7 @@ Use placeholder syntax **during SVG generation**:
 - `width`, `height` — Size (recommend 32–48px for legibility)
 - `fill` — Color
 
-`finalize_svg.py` auto-embeds all placeholders during post-processing. To run manually:
+The native PPTX exporter expands placeholders in memory. To expand a standalone SVG manually:
 
 ```bash
 python3 scripts/svg_finalize/embed_icons.py svg_output/*.svg

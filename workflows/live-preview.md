@@ -67,7 +67,6 @@ Triggered by the user signals listed in "When to Run".
    Fix every error before continuing. After all edited files pass, run the full-deck gate exactly once, then re-export:
    ```bash
    python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
-   python3 ${SKILL_DIR}/scripts/finalize_svg.py <project_path>
    python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>
    ```
 5. Tell the user (in their language): annotations applied, new PPTX exported, preview is still running. If the browser still shows the old slide, refresh or reselect the page.

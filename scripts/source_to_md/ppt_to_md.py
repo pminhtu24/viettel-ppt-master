@@ -2,8 +2,8 @@
 """
 PowerPoint to Markdown Converter
 
-Extracts slide text, tables, speaker notes, and embedded pictures from
-Open XML PowerPoint files into Markdown.
+Extracts slide text, tables, and embedded pictures from Open XML PowerPoint
+files into Markdown.
 
 Primary use case: PPTX source decks -> Markdown for PPT generation input.
 
@@ -408,25 +408,6 @@ def _reset_generated_asset_dir(asset_dir: Path) -> None:
     shutil.rmtree(asset_dir)
 
 
-def extract_notes(slide: object) -> str:
-    """Extract speaker notes text from a slide, if available."""
-    try:
-        notes_slide = slide.notes_slide
-    except Exception:
-        return ""
-
-    blocks = []
-    for item in iter_leaf_shapes(notes_slide.shapes):
-        shape = item.shape
-        if not getattr(shape, "has_text_frame", False):
-            continue
-        text = text_frame_to_markdown(shape.text_frame)
-        if text:
-            blocks.append(text)
-
-    return "\n\n".join(blocks).strip()
-
-
 def convert_presentation_to_markdown(
     input_path: str,
     output_path: str | None = None,
@@ -535,13 +516,6 @@ def convert_presentation_to_markdown(
             lines.append("_No extractable text content._")
             lines.append("")
 
-        notes_md = extract_notes(slide)
-        if notes_md:
-            lines.append("### Speaker Notes")
-            lines.append("")
-            lines.append(notes_md)
-            lines.append("")
-
     markdown_content = "\n".join(lines).strip() + "\n"
     out_file.write_text(markdown_content, encoding="utf-8")
     if image_manifest:
@@ -602,7 +576,7 @@ Examples:
   python ppt_to_md.py slides.pptx -o output.md
   python ppt_to_md.py ./decks
   python ppt_to_md.py ./decks -o ./markdown
-  python ppt_to_md.py deck.ppsx -o notes/deck.md
+  python ppt_to_md.py deck.ppsx -o output/deck.md
 
 Supported formats:
   .pptx  .pptm  .ppsx  .ppsm  .potx  .potm

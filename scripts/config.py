@@ -114,9 +114,8 @@ def load_prefixed_env_file(
     Load matching keys from the first supported .env file.
 
     Existing process environment variables always win. Keys outside the
-    requested prefixes are ignored so one shared .env can hold image, search,
-    and narration credentials without leaking unrelated values into the
-    process.
+    requested prefixes are ignored so one shared .env can hold credentials
+    for multiple tools without leaking unrelated values into the process.
     """
     env_path = resolve_env_path()
     if not env_path.exists():

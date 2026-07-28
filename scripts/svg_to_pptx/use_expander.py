@@ -2,10 +2,8 @@
 
 The icon placeholder ``<use data-icon="...">`` is a project-internal SVG
 extension; standard renderers (browsers, PowerPoint's SVG parser) and our
-own DrawingML dispatcher do not understand it. ``finalize_svg`` already
-expands it on disk into ``svg_final/``; this module provides the same
-expansion in memory so ``svg_to_pptx`` can consume ``svg_output/`` directly
-without first running the on-disk finalize step.
+own DrawingML dispatcher do not understand it. This module expands the
+placeholder in memory so ``svg_to_pptx`` can consume ``svg_output/`` directly.
 
 Public API:
     expand_use_data_icons(root, icons_dir) -> int
@@ -14,8 +12,7 @@ Public API:
         the number of replacements made.
 
 The heavy lifting (icon resolution, color application, scaling) is
-delegated to ``svg_finalize.embed_icons`` so the two pipelines stay
-behaviourally aligned.
+delegated to ``svg_finalize.embed_icons``.
 """
 
 from __future__ import annotations
@@ -46,8 +43,7 @@ def _build_replacement_g(
 
     Returns None when the icon name is missing, unresolved, or the icon
     file cannot be parsed. Callers should leave the original ``<use>`` in
-    place in that case (matching the on-disk finalize_svg behaviour, which
-    also leaves unresolvable placeholders untouched).
+    place in that case so unresolved placeholders remain visible for diagnosis.
     """
     use_str = ET.tostring(use_elem, encoding='unicode')
     attrs = embed_icons_mod.parse_use_element(use_str)

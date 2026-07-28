@@ -9,7 +9,7 @@ python3 scripts/project_manager.py validate <project_path>
 ```
 
 2. Fix missing files or invalid directories reported by the validator.
-3. Re-run validation before post-processing or export.
+3. Re-run validation before export.
 
 ## SVG Preview Looks Wrong
 
@@ -21,47 +21,16 @@ python3 scripts/project_manager.py validate <project_path>
 python3 -m http.server --directory <svg_output_path> 8000
 ```
 
-## Speaker Notes Do Not Split
-
-Check `total.md`:
-- headings must start with `# `
-- heading text must match SVG filenames
-- sections must be separated by `---`
-
-Then rerun:
-
-```bash
-python3 scripts/total_md_split.py <project_path>
-```
-
 ## PPT Export Quality Issues
 
 Preferred sequence:
 
 ```bash
-python3 scripts/total_md_split.py <project_path>
-python3 scripts/finalize_svg.py <project_path>
+python3 scripts/svg_quality_checker.py <project_path>
 python3 scripts/svg_to_pptx.py <project_path>
 ```
 
-Do not export directly from `svg_output/` when `svg_final/` exists.
-
-## Recorded Narration Missing
-
-1. Generate audio after `total_md_split.py`, so filenames in `audio/` can match split `notes/*.md` files.
-2. Export with the project-relative audio directory:
-
-```bash
-python3 scripts/notes_to_audio.py <project_path> --voice zh-CN-XiaoxiaoNeural
-python3 scripts/svg_to_pptx.py <project_path> --recorded-narration audio
-```
-
-`--recorded-narration` prepares PowerPoint recorded timings and narrations. If it fails, check:
-- every slide has a matching `m4a`, `mp3`, or `wav` file in `audio/`
-- `ffprobe` is installed and can read each audio duration
-- the deck is not using `--animation-trigger on-click`
-
-Use `--narration-audio-dir audio` only when you intentionally want lower-level, partial audio embedding instead of PowerPoint recorded timings.
+The native exporter reads `svg_output/` directly.
 
 ## Dependency Checklist
 
@@ -73,7 +42,6 @@ pip install -r requirements.txt
 
 Important optional packages:
 - `python-pptx` for PPTX export
-- `edge-tts` for `notes_to_audio.py` recorded narration audio
 - `Pillow` for image utilities
 - `numpy` for watermark removal
 - `PyMuPDF` for PDF conversion

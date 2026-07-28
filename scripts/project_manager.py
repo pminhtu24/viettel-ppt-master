@@ -159,9 +159,7 @@ class ProjectManager:
 
         for rel_path in (
             "svg_output",
-            "svg_final",
             "images",
-            "notes",
             "templates",
             SOURCE_DIRNAME,
             "exports",
@@ -181,13 +179,10 @@ class ProjectManager:
                 f"- Created: {date_str}\n\n"
                 "## Directories\n\n"
                 "- `svg_output/`: raw SVG output\n"
-                "- `svg_final/`: finalized SVG output\n"
                 "- `images/`: presentation assets\n"
-                "- `notes/`: speaker notes\n"
                 "- `templates/`: project templates\n"
                 "- `sources/`: source materials and normalized markdown\n"
                 "- `exports/`: main native pptx (timestamped)\n"
-                "- `backup/<timestamp>/`: SVG snapshot pptx + svg_output/ archive (created only when exported with `--svg-snapshot`; safe to delete old timestamps)\n"
             ),
             encoding="utf-8",
         )

@@ -43,7 +43,6 @@ python3 skills/viettel-ppt-master/scripts/animation_config.py validate <project_
 |---|---|
 | `<project_path>/design_spec.md` | Understand each slide's content intent, narrative role, and visual emphasis |
 | `<project_path>/spec_lock.md` | Confirm page rhythm, layout role, chart/template constraints, and execution contract |
-| `<project_path>/notes/total.md` or `<project_path>/notes/*.md` | Use speaker flow to tune reveal order, delays, and emphasis |
 
 **Hard rule**: semantic files determine animation intent; `svg_output/*.svg` determines valid animation targets. Never reference a slide or group id that is absent from the scaffold / SVG scan.
 
@@ -61,7 +60,7 @@ python3 skills/viettel-ppt-master/scripts/animation_config.py validate <project_
 | Page animation defaults | `defaults.animation` or `slides.<slide>.animation` | Control the default entrance behavior for animated groups on a slide |
 | Object overrides | `slides.<slide>.groups.<group_id>` | Control order, effect, delay, or duration for a real SVG group |
 
-**Per-page motion brief**: for each slide, decide transition effect, transition duration, object reveal sequence, object effects, and timing. Use `design_spec.md` for slide role, `spec_lock.md` for rhythm, speaker notes for narration order, and SVG group ids for target validity.
+**Per-page motion brief**: for each slide, decide transition effect, transition duration, object reveal sequence, object effects, and timing. Use `design_spec.md` for slide role, `spec_lock.md` for rhythm, and SVG group ids for target validity.
 
 **Hard rule**: a custom animation pass must not only edit group effects. It must also decide whether each slide should inherit the default transition or need a slide-specific `transition` override.
 
@@ -203,7 +202,7 @@ python3 skills/viettel-ppt-master/scripts/svg_to_pptx.py <project_path>
 ## ✅ Customize Animations Complete
 
 - [x] `animations.json` exists only because object-level customization was requested
-- [x] `design_spec.md`, `spec_lock.md`, and available speaker notes were checked before editing animation overrides
+- [x] `design_spec.md` and `spec_lock.md` were checked before editing animation overrides
 - [x] Page transitions and in-slide object animations were planned together
 - [x] Transition and object durations were chosen intentionally for the deck's pacing
 - [x] `animation_config.py validate` passed

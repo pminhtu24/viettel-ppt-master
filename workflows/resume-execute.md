@@ -51,8 +51,7 @@ Then jump to `### Step 6: Executor Phase` and run the documented pipeline:
 - Per-page `spec_lock` re-read + sequential page generation
 - Per-page chrome normalization and quality gate; fix each SVG before continuing
 - Chart verification when applicable, then one full-deck quality gate
-- Speaker notes generation
-- Step 7: Post-processing & Export (`total_md_split` → `finalize_svg` → `svg_to_pptx`)
+- Step 7: Native PPTX export (`svg_to_pptx`)
 
 The fresh session pays the cost of re-reading references (~14K tokens) but earns back substantially more headroom by dropping Phase A's accumulated context. Net win in both window pressure and reasoning budget per page.
 

@@ -1415,7 +1415,7 @@ class SVGQualityChecker:
         """Locate image_sources.json for a project SVG.
 
         Quality checks run primarily on <project>/svg_output/*.svg, but this
-        also supports SVGs checked from project root or svg_final.
+        also supports SVGs checked from the project root.
         """
         bases = (svg_path.parent, svg_path.parent.parent, svg_path.parent.parent.parent)
         for base in bases:

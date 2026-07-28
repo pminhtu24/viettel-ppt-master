@@ -175,11 +175,7 @@ def process_project(
     strip_comments: bool = False,
     skill_dir: Path | None = None,
 ) -> int:
-    svg_dirs = [
-        path
-        for path in (project_dir / "svg_output", project_dir / "svg_final")
-        if path.exists()
-    ]
+    svg_dirs = [project_dir / "svg_output"] if (project_dir / "svg_output").exists() else []
     if brand_chrome == "viettel" and skill_dir is not None:
         ensure_viettel_logo(project_dir, skill_dir)
     count = 0
@@ -215,12 +211,12 @@ def main() -> int:
             if not args.file.is_absolute()
             else args.file.resolve()
         )
-        allowed_dirs = {(project_dir / "svg_output").resolve(), (project_dir / "svg_final").resolve()}
+        allowed_dirs = {(project_dir / "svg_output").resolve()}
         if not svg_file.is_file() or svg_file.suffix.lower() != ".svg":
             print(f"[ERROR] SVG file not found: {svg_file}")
             return 1
         if svg_file.parent not in allowed_dirs:
-            print("[ERROR] --file must belong directly to the project's svg_output/ or svg_final/")
+            print("[ERROR] --file must belong directly to the project's svg_output/")
             return 1
         if args.brand_chrome == "viettel":
             ensure_viettel_logo(project_dir, skill_dir)

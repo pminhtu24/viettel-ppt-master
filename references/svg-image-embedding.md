@@ -43,10 +43,10 @@ Defined in the Design Specification & Content Outline; each image carries an `Ac
    ├── Sourced + license_tier=attribution-required → <image href=...> + small <text> credit element on the slide
    └── Placeholder / Needs-Manual without file → Dashed border + description text
 4. Preview: python3 -m http.server -d <project_path> 8000 → /svg_output/<filename>.svg
-5. Post-processing & Export → follow shared-standards.md §5
+5. Native PPTX export → follow shared-standards.md §5
 ```
 
-> Keep external references in `svg_output/` during generation. `finalize_svg.py` auto-embeds images into `svg_final/`; export PPTX from `svg_final/`.
+Keep external references in `svg_output/`. The native exporter resolves them and embeds the image bytes in the PPTX package.
 
 ---
 
@@ -55,7 +55,7 @@ Defined in the Design Specification & Content Outline; each image carries an `Ac
 | Method | Pros | Cons | Suitable For |
 |--------|------|------|-------------|
 | **External reference** | Small file size, fast iteration, easy to replace | Preview requires HTTP server from project root | `svg_output/` development phase |
-| **Base64 embedding** | Self-contained file, stable export | Large file size | `svg_final/` delivery phase |
+| **Base64 embedding** | Self-contained standalone SVG | Large file size and slower editing | Explicit standalone SVG use only |
 
 ---
 
@@ -96,7 +96,7 @@ python3 -m http.server -d <project_path> 8000
 
 ---
 
-## Method 2: Base64 Embedding (Recommended for Delivery Phase)
+## Method 2: Base64 Embedding (Optional)
 
 ### Syntax
 
@@ -116,23 +116,12 @@ python3 -m http.server -d <project_path> 8000
 
 ---
 
-## Conversion Process
+## Export Process
 
-Use the unified pipeline in [shared-standards.md §5](shared-standards.md). `finalize_svg.py` runs before export so image references in `svg_output/` become embedded assets in `svg_final/`.
+Use the native export pipeline in [shared-standards.md §5](shared-standards.md):
 
 ```bash
-python3 scripts/finalize_svg.py <project_path>
 python3 scripts/svg_to_pptx.py <project_path>
-```
-
-### Standalone: embed_images.py (advanced)
-
-For processing specific SVGs without the full pipeline:
-
-```bash
-python3 scripts/svg_finalize/embed_images.py <svg_file>                         # Single file
-python3 scripts/svg_finalize/embed_images.py <project_path>/svg_output/*.svg    # Batch
-python3 scripts/svg_finalize/embed_images.py --dry-run <project_path>/svg_output/*.svg  # Preview
 ```
 
 ---
@@ -155,8 +144,7 @@ project/
 ├── images/            # Image assets
 ├── sources/           # Source files and their accompanying images
 │   └── article_files/
-├── svg_output/        # Raw version (external references)
-└── svg_final/         # Final version (images embedded)
+└── svg_output/        # Canonical SVGs with project-relative image references
 ```
 
 ### Rounded Corner / Non-rectangular Image Cropping
@@ -170,7 +158,7 @@ Fallback when `clipPath` doesn't fit: bake rounded corners into the source image
 ## FAQ
 
 **Q: Can't see images when opening SVG directly?**
-Browser security blocks cross-directory requests. Serve via HTTP from project root, or run `finalize_svg.py` first and view from `svg_final/`.
+Browser security blocks cross-directory requests. Serve via HTTP from the project root and open `/svg_output/<file>.svg`.
 
 **Q: Base64 file too large?**
 Compress the source, use JPEG, reduce resolution to match actual display dimensions.

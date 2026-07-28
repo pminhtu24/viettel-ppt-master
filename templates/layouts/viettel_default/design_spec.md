@@ -688,9 +688,9 @@ KPI, and table pages omit `page_backgrounds` and keep the clean Viettel shell.
    - Use `04_ending.svg` for closing slide
 5. **For chart/KPI/table/flow pages**, select a matching `templates/charts/` template and write the page into `spec_lock.md ## page_charts`
 6. **Replace placeholders** with actual content (remove `{{CONTENT_AREA}}` after filling)
-7. **Apply brand chrome** during post-processing if generating charts/pages without template shell:
+7. **Apply brand chrome** to each generated page without a template shell before its quality check:
    ```bash
-   python3 scripts/finalize_svg.py <project_path> --brand-chrome viettel --strip-comments
+   python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel --file svg_output/<page>.svg --slide-number <N>
    ```
 8. **Export to PPTX** after all content is filled:
    ```bash

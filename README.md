@@ -6,7 +6,7 @@ Skill tạo deck PowerPoint, tối ưu cho slide Viettel: nhận tài liệu ngu
 
 - Tạo presentation/PPT/deck từ PDF, DOCX, PPTX, Excel, Markdown, URL hoặc nội dung bạn mô tả trực tiếp.
 - Tạo deck theo nhận diện Viettel: logo góc phải, màu đỏ `#EE0033`, font FS Magistral và bố cục báo cáo doanh nghiệp.
-- Cần slide có hình ảnh, chart, infographic, notes thuyết trình và file PPTX có thể chỉnh sửa tiếp trong PowerPoint.
+- Cần slide có hình ảnh, chart, infographic và file PPTX có thể chỉnh sửa tiếp trong PowerPoint.
 - Cần preview trên trình duyệt để click vào thành phần slide và để lại annotation sửa nhanh.
 
 ## Cách gọi nhanh
@@ -43,7 +43,7 @@ Tạo PPT Viettel về chiến lược AI trong viễn thông, 12-15 slide, tạ
 4. Strategist: đề xuất 8 điểm cần xác nhận như số slide, audience, style, màu sắc, typography, icon và image approach.
 5. Sinh deck: sau khi bạn xác nhận, skill sinh SVG từng slide theo thứ tự, không batch template hàng loạt.
 6. Live preview (Optional): mở editor local để xem slide và gửi annotation.
-7. Kiểm tra và export: chạy quality check, tạo speaker notes, finalize SVG và xuất PPTX.
+7. Kiểm tra và export: chạy quality check rồi xuất native PPTX trực tiếp từ `svg_output/`.
 
 ## Điều cần xác nhận với người dùng
 
@@ -87,14 +87,13 @@ Editor chạy tại `http://localhost:5050`. Bạn có thể click vào element,
 apply my annotations
 ```
 
-Skill sẽ áp dụng annotation vào SVG, finalize lại và export PPTX mới.
+Skill sẽ áp dụng annotation vào SVG, kiểm tra lại và export PPTX mới.
 
 ## Output
 
 Kết quả chính:
 
 - `projects/<project_name>/svg_output/`: SVG từng slide.
-- `projects/<project_name>/notes/total.md`: notes tổng.
 - `projects/<project_name>/exports/<project_name>_<timestamp>.pptx`: file PowerPoint cuối.
 
 Nếu deck có chart dữ liệu, workflow `verify-charts` sẽ được dùng để căn chỉnh tọa độ chart trước khi export.
