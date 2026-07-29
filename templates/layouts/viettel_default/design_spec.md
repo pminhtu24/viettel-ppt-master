@@ -342,7 +342,7 @@ Implementation rules:
 **Layout Structure**:
 
 - White background with left brand rail
-- Large, clearly visible chapter number (medium gray)
+- Large, clearly visible chapter number (charcoal gray)
 - Centered chapter title with red accent bar
 - Logo fixed at top-right
 
@@ -351,7 +351,7 @@ Implementation rules:
 |------|----------|---------|
 | Brand Rail | x: 0-18, full height | Red vertical rail |
 | Logo | top-right corner | Viettel logo image |
-| Chapter Number | x=110, y=206 | Medium gray {{CHAPTER_NUM}} |
+| Chapter Number | x=110, y=206 | Charcoal gray {{CHAPTER_NUM}} |
 | Accent Bar | x=110, y=238 | Red horizontal bar (90×10) |
 | Title | x=110, y=328 | Chapter title ({{CHAPTER_TITLE}}) |
 | Description | x=112, y=376 | Chapter subtitle ({{CHAPTER_DESC}}) |
@@ -369,8 +369,8 @@ Implementation rules:
 **Signature Elements**:
 
 ```xml
-<!-- Chapter number (medium gray) -->
-<text x="110" y="206" font-size="96" font-weight="700" fill="#999999">{{CHAPTER_NUM}}</text>
+<!-- Chapter number (charcoal gray) -->
+<text x="110" y="206" font-size="96" font-weight="700" fill="#44494D">{{CHAPTER_NUM}}</text>
 
 <!-- Red accent bar -->
 <rect x="110" y="238" width="90" height="10" rx="5" fill="#EE0033"/>
