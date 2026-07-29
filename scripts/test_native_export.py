@@ -14,6 +14,7 @@ SCRIPT = Path(__file__).with_name("svg_to_pptx.py")
 SVG = """<svg width="1280" height="720" viewBox="0 0 1280 720"
 xmlns="http://www.w3.org/2000/svg">
 <rect width="1280" height="720" fill="#FFFFFF"/>
+<use data-icon="tabler-filled/layout-cards" x="40" y="40" width="48" height="48" fill="#000000"/>
 <text x="80" y="120" font-family="Arial" font-size="32">Native export</text>
 </svg>"""
 

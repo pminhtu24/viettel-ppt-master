@@ -225,7 +225,11 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
 - **Generation rhythm**: lock global design context first, then generate pages sequentially in one continuous context. No batched groups (e.g., 5 at a time).
 - **Phased continuous generation** (mandatory):
   1. **Visual Construction Phase**: generate all SVG pages sequentially in one continuous pass. Chart pages MUST embed plot-area markers per §3.1 below.
-  2. **Project Quality Gate**: after every page is generated, run `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` for `viettel_default`, then run `python3 scripts/svg_quality_checker.py <project_path>` for every profile. Fix every error and re-run the project checker before proceeding.
+  2. **Project Quality Gate**: after every page is generated, run `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` for `viettel_default`, then run `python3 scripts/svg_quality_checker.py <project_path>` for every profile. The checker reports stable `(rule, file, locator)` fingerprints and every offending element in the initial scan.
+     - Run at most three full-project scans: initial → batch verification → final. Between the second and third scans, re-check only affected SVGs.
+     - Batch-fix native/XML/icon issues first, brand/font/palette/spec-lock second, and overflow/title-zone last.
+     - Try at most two direct fixes for the same fingerprint. A persistent finding gets one type-specific fallback: render then fix/explicitly annotate intentional visual geometry; inspect inherited brand attributes; or resolve/replace the single unsupported icon/element.
+     - If the fingerprint survives fallback, report it as a blocker and stop; never continue a blind repair loop or export with errors. The final scan must report `0 errors`.
   3. **Chart Verification**: after the project quality gate passes, chart decks run `verify-charts`. Re-check only SVGs changed by chart verification. Non-chart decks proceed directly to export.
 
 ### 3.1 Chart Plot-Area Marker (MANDATORY on every chart page)

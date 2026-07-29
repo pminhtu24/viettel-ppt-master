@@ -351,7 +351,16 @@ python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
 ```
 
 - Run the commands above only after every SVG page has been generated (`custom_override`: omit chrome normalization). This deterministic chrome step is allowed post-processing, not scripted page generation.
-- Any `error` MUST be fixed before proceeding — return to Visual Construction, regenerate the affected page, then re-run the project checker.
+- Treat `(rule code, SVG file, element locator)` as the stable finding fingerprint. Bounds/value changes do not create a new finding.
+- Run the checker on the full project at most three times: **initial scan** → batch-fix all reported findings → **batch verification** → targeted per-file repair → **final scan**. Between batch verification and the final scan, check only the SVG being repaired. Chart-verification re-checks do not count against these three generation scans.
+- Fix in batches: native/XML/icon compatibility first, brand/font/palette/spec-lock second, then text overflow/title-zone. Do not reproduce `_estimate_svg_text_width()` or write inline scripts to expand/remap icons.
+- A fingerprint gets at most two direct repair attempts. If it persists, stop guessing and use its fallback once:
+  - text overflow/title-zone: render the affected SVG/slide; fix confirmed visual breakage, or mark intentional layout with `data-allow-overflow="true"` on the text / `data-allow-title-zone="true"` on the shape or ancestor group;
+  - brand/font/palette/spec-lock: inspect inherited attributes and brand chrome; annotations are forbidden;
+  - unresolved icon/native element: choose an existing icon under `templates/icons/` or replace that one icon with SVG primitives; do not rewrite the deck in bulk;
+  - XML/missing image: repair the exact structure/reference reported by the checker.
+- If the same fingerprint remains after its fallback, record the file, locator, rule, and attempted fixes as a blocker; do not export and do not continue the loop.
+- Any `error` MUST be fixed before proceeding. The final project scan must report `0 errors`.
 - `warning` entries (low-res image, non-PPT-safe font tail, long text without a wrap contract, etc.): fix when straightforward, otherwise acknowledge and release.
 - After the project checker passes, chart decks run [`verify-charts`](workflows/verify-charts.md). If chart verification changes an SVG, re-run the checker for that SVG before export. Non-chart decks proceed directly to export.
 
