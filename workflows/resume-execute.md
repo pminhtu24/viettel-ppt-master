@@ -49,7 +49,7 @@ Then jump to `### Step 6: Executor Phase` and run the documented pipeline:
 - Design Parameter Confirmation
 - Pre-generation Batch Read (every layout / chart SVG referenced in `spec_lock`)
 - Per-page `spec_lock` re-read + sequential page generation
-- Per-page chrome normalization and quality gate; fix each SVG before continuing
+- Full-deck chrome normalization and project quality gate after all SVGs are generated
 - Chart verification when applicable; re-check only chart SVGs changed by verification
 - Step 7: Native PPTX export (`svg_to_pptx`)
 

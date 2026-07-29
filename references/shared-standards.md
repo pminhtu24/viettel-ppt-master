@@ -291,7 +291,7 @@ Wrap logically related elements in top-level `<g id="...">` groups. Produces Pow
 
 ## 5. Native PPTX Export
 
-**Hard precondition**: every SVG has passed its per-file gate. Chart decks must also pass `verify-charts`; re-check only SVGs changed by chart verification.
+**Hard precondition**: the completed SVG project has passed `svg_quality_checker.py`. Chart decks must also pass `verify-charts`; re-check only SVGs changed by chart verification.
 
 ```bash
 python3 scripts/svg_to_pptx.py <project_path>

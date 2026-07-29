@@ -2,10 +2,11 @@
 
 ## Recommended Pipeline
 
-During skill-driven generation, check each SVG immediately. After every page passes, verify charts when applicable and export the native deck:
+During skill-driven generation, generate the full SVG deck before normalizing Viettel chrome and running the project quality check. After the project passes, verify charts when applicable and export the native deck:
 
 ```bash
-python3 scripts/svg_quality_checker.py <project_path>/svg_output/<page>.svg
+python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel  # viettel_default only
+python3 scripts/svg_quality_checker.py <project_path>
 python3 scripts/svg_to_pptx.py <project_path>
 ```
 
@@ -37,7 +38,7 @@ Checks include canvas/viewBox consistency, banned elements, text overflow contra
 
 ## `svg_position_calculator.py`
 
-Use after per-file quality checks for supported data charts:
+Use after the project quality check for supported data charts:
 
 ```bash
 python3 scripts/svg_position_calculator.py calc bar --data "A:185,B:142" --area "130,155,1200,480" --bar-width 120

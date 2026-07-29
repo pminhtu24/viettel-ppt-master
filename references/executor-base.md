@@ -217,16 +217,16 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
 - **Proximity**: group related elements with tight spacing; separate unrelated groups
 - **Spec adherence**: follow color, layout, canvas format, and typography in the spec
 - **Template structure**: if templates exist, inherit the visual framework
-- **Viettel brand chrome**: if the deck uses `viettel_default` or the execution lock specifies a Viettel brand profile, normalize every newly written page with `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel --file svg_output/<page>.svg --slide-number <N>` before its per-file quality check. This gives layout, chart, and framework pages the same logo/page-number contract before validation without rescanning earlier pages.
+- **Viettel brand chrome**: if the deck uses `viettel_default` or the execution lock specifies a Viettel brand profile, normalize the completed deck with `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` before the project quality check. This gives layout, chart, and framework pages the same logo/page-number contract before validation.
 - **Viettel logo clearance**: the fixed logo reserves `x=1060-1224, y=20-82`. Header/title text, subtitles, chart labels, and callouts MUST NOT enter this slot. Content-page titles should use `data-box="88,36,960,58" data-wrap="true"` or manual line breaks so long titles wrap before the logo.
 - **Viettel page number ownership**: each slide has exactly one page-number treatment. If a page inherits a Viettel shell, do not draw another bottom-right number; pre-check chrome normalization adds one only when the shell does not already own it.
 - **Brand font runtime honesty**: if font preflight reports that the lead brand font is missing, keep the declared stack in the SVG/PPTX source but tell the user `brand fidelity degraded`. Do not rewrite the deck to hide the fallback state.
 - **Main-agent ownership**: SVG generation must run in the main agent (not sub-agents) — pages share upstream context for cross-page visual continuity
 - **Generation rhythm**: lock global design context first, then generate pages sequentially in one continuous context. No batched groups (e.g., 5 at a time).
-- **Phased sequential generation** (mandatory):
-  1. **Visual Construction Phase**: generate one SVG page. Chart pages MUST embed plot-area markers per §3.1 below.
-  2. **Per-page Quality Gate**: for `viettel_default`, run `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel --file svg_output/<page>.svg --slide-number <N>`; then run `python3 scripts/svg_quality_checker.py <new_svg_file>` for every profile. Fix every error and re-check that file before generating the next page. Treat the cover and first normal non-cover page as calibration gates.
-  3. **Chart Verification**: after all pages pass individually, chart decks run `verify-charts`. Re-check only SVGs changed by chart verification. Non-chart decks proceed directly to export.
+- **Phased continuous generation** (mandatory):
+  1. **Visual Construction Phase**: generate all SVG pages sequentially in one continuous pass. Chart pages MUST embed plot-area markers per §3.1 below.
+  2. **Project Quality Gate**: after every page is generated, run `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` for `viettel_default`, then run `python3 scripts/svg_quality_checker.py <project_path>` for every profile. Fix every error and re-run the project checker before proceeding.
+  3. **Chart Verification**: after the project quality gate passes, chart decks run `verify-charts`. Re-check only SVGs changed by chart verification. Non-chart decks proceed directly to export.
 
 ### 3.1 Chart Plot-Area Marker (MANDATORY on every chart page)
 
@@ -426,7 +426,7 @@ If `spec_lock.md` is absent, consult [`strategist.md`](strategist.md) §g — do
 
 ## 8. Next Steps After Completion
 
-> **Auto-continuation**: After all SVGs pass their per-page gates and chart verification passes when applicable, proceed directly to native PPTX export.
+> **Auto-continuation**: After the project quality gate and chart verification pass when applicable, proceed directly to native PPTX export.
 
 ```bash
 python3 scripts/svg_to_pptx.py <project_path>

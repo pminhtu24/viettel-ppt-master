@@ -11,7 +11,7 @@ This workflow is **independent**: it reads `design_spec.md` and the generated SV
 ## When to Run
 
 - The deck contains one or more data visualization charts where source values determine SVG geometry: bar lengths/heights, point positions, arc angles, polygon vertices, connector endpoints, bubble centers/radii, or flow widths/paths.
-- SVGs are generated to `<project_path>/svg_output/` and each page has passed its per-file quality gate.
+- SVGs are generated to `<project_path>/svg_output/` and the project quality check has passed.
 - Native PPTX export (`svg_to_pptx.py`) has **not yet** run.
 
 The calculator has direct CLI models for simple bars, lines/scatter, pie/donut, radar, and grid layouts. Composite/derived charts are **not automatically out of scope**: if their geometry reduces to repeated direct calculations, include them as `decomposable-calc`; if the calculator has no layout model but the SVG geometry is still data-driven, include them as `manual-verify` so they are not silently skipped.
