@@ -342,9 +342,8 @@ Implementation rules:
 **Layout Structure**:
 
 - White background with left brand rail
-- Large watermark chapter number (light gray)
+- Large, clearly visible chapter number (medium gray)
 - Centered chapter title with red accent bar
-- Chapter badge (red square with number)
 - Logo fixed at top-right
 
 **Areas**:
@@ -352,11 +351,10 @@ Implementation rules:
 |------|----------|---------|
 | Brand Rail | x: 0-18, full height | Red vertical rail |
 | Logo | top-right corner | Viettel logo image |
-| Watermark Number | x=110, y=206 | Light gray {{CHAPTER_NUM}} |
+| Chapter Number | x=110, y=206 | Medium gray {{CHAPTER_NUM}} |
 | Accent Bar | x=110, y=238 | Red horizontal bar (90×10) |
 | Title | x=110, y=328 | Chapter title ({{CHAPTER_TITLE}}) |
 | Description | x=112, y=376 | Chapter subtitle ({{CHAPTER_DESC}}) |
-| Chapter Badge | x=952, y=208 | Red square with number |
 | Divider | y=620 | Gray horizontal line |
 | Page Number | bottom-right | {{PAGE_NUM}} |
 
@@ -371,15 +369,12 @@ Implementation rules:
 **Signature Elements**:
 
 ```xml
-<!-- Watermark number (light gray) -->
-<text x="110" y="206" font-size="96" font-weight="700" fill="#F2F2F2">{{CHAPTER_NUM}}</text>
+<!-- Chapter number (medium gray) -->
+<text x="110" y="206" font-size="96" font-weight="700" fill="#999999">{{CHAPTER_NUM}}</text>
 
 <!-- Red accent bar -->
 <rect x="110" y="238" width="90" height="10" rx="5" fill="#EE0033"/>
 
-<!-- Chapter badge -->
-<rect x="952" y="208" width="144" height="144" rx="10" fill="#EE0033" data-allow-title-zone="true"/>
-<text x="1024" y="300" text-anchor="middle" data-box="970,238,108,76" data-wrap="true" font-size="56" font-weight="700" fill="#FFFFFF">{{CHAPTER_NUM}}</text>
 ```
 
 ---
@@ -492,7 +487,7 @@ Implementation rules:
 | ------- | ---------------- | --------------- | -------------------------------- |
 | Cover   | `01_cover.svg`   | Opening slide   | Brand rails + logo + title       |
 | TOC     | `02_toc.svg`     | Navigation      | Numbered items with red circles  |
-| Chapter | `02_chapter.svg` | Section divider | Watermark number + chapter badge |
+| Chapter | `02_chapter.svg` | Section divider | Prominent chapter number + title |
 | Content | `03_content.svg` | Main content    | Dashed frame + footer            |
 | Ending  | `04_ending.svg`  | Closing         | Thank you card + copyright       |
 
