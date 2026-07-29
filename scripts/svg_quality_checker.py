@@ -43,6 +43,13 @@ except ImportError:
     _load_animation_config = None
     _validate_animation_config = None
 
+try:
+    from svg_to_pptx.drawingml_converter import (
+        prepare_svg_for_native_conversion as _prepare_svg_for_native_conversion,
+    )
+except ImportError:
+    _prepare_svg_for_native_conversion = None
+
 
 HEX_VALUE_RE = re.compile(r"#[0-9A-Fa-f]{3,8}")
 VIETTEL_BRAND_PROFILE = "viettel_default"
@@ -173,6 +180,37 @@ def _parse_translate(transform: str) -> tuple[float, float]:
     if not match:
         return 0.0, 0.0
     return float(match.group(1)), float(match.group(2) or 0.0)
+
+
+def _element_locators(root: ET.Element) -> Dict[int, str]:
+    """Return stable element locators, preferring explicit SVG ids."""
+    locators: Dict[int, str] = {}
+
+    def visit(elem: ET.Element, path: str) -> None:
+        elem_id = elem.get('id')
+        locators[id(elem)] = f"#{elem_id}" if elem_id else path
+        counts: Dict[str, int] = {}
+        for child in list(elem):
+            tag = _local_name(child.tag)
+            counts[tag] = counts.get(tag, 0) + 1
+            visit(child, f"{path}/{tag}[{counts[tag]}]")
+
+    visit(root, _local_name(root.tag))
+    return locators
+
+
+def _fmt_bounds(item: Dict) -> str:
+    """Format an x1/y1/x2/y2 dictionary compactly for diagnostics."""
+    return (
+        f"({item['x1']:.1f},{item['y1']:.1f})"
+        f"-({item['x2']:.1f},{item['y2']:.1f})"
+    )
+
+
+def _text_excerpt(value: str, limit: int = 72) -> str:
+    """Return a single-line diagnostic excerpt."""
+    value = re.sub(r'\s+', ' ', value).strip()
+    return value if len(value) <= limit else value[:limit - 1] + '…'
 
 
 def _parse_placeholders_fallback(block: str) -> Dict[str, Tuple[str, ...]]:
@@ -349,6 +387,7 @@ class SVGQualityChecker:
 
                 # 2. Check forbidden elements
                 self._check_forbidden_elements(content, result)
+                self._check_native_export_compatibility(content, result)
 
                 # 3. Check fonts
                 self._check_fonts(content, result)
@@ -507,10 +546,6 @@ class SVGQualityChecker:
         if '<foreignobject' in content_lower:
             result['errors'].append(
                 "Detected forbidden <foreignObject> element (use separate <text> lines or data-box/data-wrap)")
-        has_symbol = '<symbol' in content_lower
-        has_use = re.search(r'<use\b', content_lower) is not None
-        if has_symbol and has_use:
-            result['errors'].append("Detected forbidden <symbol> + <use> complex usage (use basic shapes or simple <use> instead)")
         # marker-start / marker-end are conditionally allowed (see shared-standards.md §1.1).
         # The converter maps qualifying <marker> defs to native DrawingML <a:headEnd>/<a:tailEnd>.
         # We only warn when a marker is used without an obvious <defs> definition in the same file.
@@ -545,6 +580,21 @@ class SVGQualityChecker:
             result['errors'].append("Detected forbidden <g opacity> (set opacity on each child element individually)")
         if re.search(r'<image[^>]*\sopacity\s*=', content_lower):
             result['errors'].append("Detected forbidden <image opacity> (use overlay mask approach)")
+
+    def _check_native_export_compatibility(self, content: str, result: Dict):
+        """Use the native converter's own preflight as the support contract."""
+        if _prepare_svg_for_native_conversion is None:
+            result['errors'].append(
+                "[native-preflight] native SVG compatibility preflight is unavailable"
+            )
+            return
+        try:
+            root = ET.fromstring(content)
+        except ET.ParseError:
+            return
+
+        _, issues = _prepare_svg_for_native_conversion(root)
+        result['errors'].extend(issues)
 
     def _check_fonts(self, content: str, result: Dict):
         """Check font usage.
@@ -750,23 +800,33 @@ class SVGQualityChecker:
         This is intentionally conservative and visual-output oriented. SVG text
         has no intrinsic width, and the native PPTX converter used to emit all
         text as wrap="none"; a page can pass XML checks while PowerPoint renders
-        labels outside cards. We estimate text bounds, locate the nearest card /
-        panel rectangle that contains the text anchor, and fail when the text
-        exceeds that container by a meaningful amount.
+        labels outside cards. Every finding names the exact text and container
+        so Executor can fix or explicitly acknowledge it without reproducing
+        this estimator in an ad-hoc script.
         """
         try:
             root = ET.fromstring(content)
         except ET.ParseError:
             return
 
+        locators = _element_locators(root)
         containers: List[Dict] = []
         texts: List[Dict] = []
         shapes: List[Dict] = []
 
-        def visit(elem: ET.Element, tx: float = 0.0, ty: float = 0.0):
+        def visit(
+            elem: ET.Element,
+            tx: float = 0.0,
+            ty: float = 0.0,
+            allow_title_zone: bool = False,
+        ):
             dx, dy = _parse_translate(elem.get('transform', ''))
             tx += dx
             ty += dy
+            allow_title_zone = (
+                allow_title_zone or
+                elem.get('data-allow-title-zone') == 'true'
+            )
 
             tag = _local_name(elem.tag)
             if tag == 'rect':
@@ -778,10 +838,12 @@ class SVGQualityChecker:
                 stroke = (_get_svg_attr(elem, 'stroke') or '').upper()
                 rx = _float_attr(elem, 'rx', _float_attr(elem, 'ry', 0.0))
                 rect = {
-                    'x': x, 'y': y, 'w': w, 'h': h,
+                    'tag': tag,
+                    'locator': locators[id(elem)],
+                    'x': x, 'y': y, 'x1': x, 'y1': y, 'w': w, 'h': h,
                     'x2': x + w, 'y2': y + h,
                     'fill': fill, 'stroke': stroke, 'rx': rx,
-                    'allow_title_zone': elem.get('data-allow-title-zone') == 'true',
+                    'allow_title_zone': allow_title_zone,
                 }
                 # Containers are real cards / panels, not bars or decorative
                 # strips. Width threshold avoids mistaking chart bars for cards.
@@ -804,11 +866,16 @@ class SVGQualityChecker:
                 rx = _float_attr(elem, 'r', _float_attr(elem, 'rx', 0.0))
                 ry = _float_attr(elem, 'r', _float_attr(elem, 'ry', 0.0))
                 shapes.append({
-                    'x': cx - rx, 'y': cy - ry, 'w': rx * 2, 'h': ry * 2,
+                    'tag': tag,
+                    'locator': locators[id(elem)],
+                    'x': cx - rx, 'y': cy - ry,
+                    'x1': cx - rx, 'y1': cy - ry,
+                    'w': rx * 2, 'h': ry * 2,
                     'x2': cx + rx, 'y2': cy + ry,
                     'fill': (_get_svg_attr(elem, 'fill') or '').upper(),
                     'stroke': (_get_svg_attr(elem, 'stroke') or '').upper(),
                     'rx': 0,
+                    'allow_title_zone': allow_title_zone,
                 })
 
             elif tag == 'text':
@@ -848,6 +915,7 @@ class SVGQualityChecker:
                                 pass
 
                     texts.append({
+                        'locator': locators[id(elem)],
                         'text': text,
                         'x': x, 'y': y,
                         'x1': box_x, 'y1': box_y,
@@ -860,51 +928,73 @@ class SVGQualityChecker:
                     })
 
             for child in list(elem):
-                visit(child, tx, ty)
+                visit(child, tx, ty, allow_title_zone)
 
         visit(root)
 
         content_right = 1208
         content_bottom = 640
-        overflow_count = 0
-        unbounded_long_count = 0
+        unbounded_long: List[str] = []
 
         for text in texts:
+            reasons: List[str] = []
             # Text outside the slide content safe area is usually accidental
             # unless it is a footer/header label.
             if 120 < text['y'] < content_bottom and text['x2'] > content_right + 8:
-                overflow_count += 1
+                reasons.append(
+                    f"safe-area overflow(right={text['x2'] - content_right:.1f}px, "
+                    f"limit={content_right:.1f})"
+                )
 
             container = self._find_text_container(text, containers)
             if container:
                 pad = max(6.0, text['font_size'] * 0.35)
-                if (
-                    text['x1'] < container['x'] + pad - 10 or
-                    text['x2'] > container['x2'] - pad + 10 or
-                    text['y1'] < container['y'] + pad - 10 or
-                    text['y2'] > container['y2'] - pad + 10
-                ):
-                    overflow_count += 1
+                limits = {
+                    'left': container['x'] + pad - 10,
+                    'right': container['x2'] - pad + 10,
+                    'top': container['y'] + pad - 10,
+                    'bottom': container['y2'] - pad + 10,
+                }
+                overflow = []
+                if text['x1'] < limits['left']:
+                    overflow.append(f"left={limits['left'] - text['x1']:.1f}px")
+                if text['x2'] > limits['right']:
+                    overflow.append(f"right={text['x2'] - limits['right']:.1f}px")
+                if text['y1'] < limits['top']:
+                    overflow.append(f"top={limits['top'] - text['y1']:.1f}px")
+                if text['y2'] > limits['bottom']:
+                    overflow.append(f"bottom={text['y2'] - limits['bottom']:.1f}px")
+                if overflow:
+                    reasons.append(
+                        f"container={container['locator']} "
+                        f"bounds={_fmt_bounds(container)} "
+                        f"overflow({', '.join(overflow)})"
+                    )
             else:
                 if len(text['text']) >= 80 and not text['has_wrap_contract'] and text['font_size'] >= 12:
-                    unbounded_long_count += 1
+                    unbounded_long.append(text['locator'])
 
+            if reasons:
+                result['errors'].append(
+                    f"[text-overflow] locator={text['locator']} "
+                    f"text={_text_excerpt(text['text'])!r} "
+                    f"anchor=({text['x']:.1f},{text['y']:.1f}) "
+                    f"estimated={_fmt_bounds(text)}; "
+                    + "; ".join(reasons)
+                )
         title_intrusions = self._count_title_zone_intrusions(shapes)
 
-        if overflow_count:
-            result['errors'].append(
-                f"Detected {overflow_count} text layout overflow risk(s): text extends outside its card/panel or safe area. "
-                f"Use separate <text> lines or data-box=\"x,y,w,h\" data-wrap=\"true\"."
-            )
-        if unbounded_long_count:
+        if unbounded_long:
             result['warnings'].append(
-                f"Detected {unbounded_long_count} long text line(s) without a wrap contract. "
+                f"Long text without a wrap contract at: {', '.join(unbounded_long)}. "
                 f"Use separate <text> lines or data-box/data-wrap so PPTX export cannot render past the intended block."
             )
-        if title_intrusions:
+        for shape in title_intrusions:
             result['errors'].append(
-                f"Detected {title_intrusions} content shape(s) intruding into the title/header zone. "
-                f"Keep chart marks and content cards below the title divider or reduce chart scale."
+                f"[title-zone] locator={shape['locator']} tag=<{shape['tag']}> "
+                f"bounds={_fmt_bounds(shape)} enters reserved y=115.0-"
+                f"{shape['title_zone_bottom']:.1f}; move it below the divider or "
+                f"mark the intentional shape/group data-allow-title-zone=\"true\""
             )
 
     def _find_text_container(self, text: Dict, containers: List[Dict]) -> Dict | None:
@@ -919,9 +1009,9 @@ class SVGQualityChecker:
         matches.sort(key=lambda item: item[0])
         return matches[0][1]
 
-    def _count_title_zone_intrusions(self, shapes: List[Dict]) -> int:
-        """Count non-background shapes that enter the reserved title area."""
-        count = 0
+    def _count_title_zone_intrusions(self, shapes: List[Dict]) -> List[Dict]:
+        """Return non-background shapes that enter the reserved title area."""
+        issues: List[Dict] = []
         neutral_fills = {'', 'NONE', '#FFFFFF', '#F2F2F2', '#E6E6E6'}
         title_zone_bottom = 225.0
         for shape in shapes:
@@ -942,8 +1032,9 @@ class SVGQualityChecker:
             if fill in neutral_fills:
                 continue
             if shape['y'] < title_zone_bottom and shape['y2'] > 115 and shape['w'] >= 60 and shape['h'] >= 28:
-                count += 1
-        return count
+                shape['title_zone_bottom'] = title_zone_bottom
+                issues.append(shape)
+        return issues
 
     def _check_viettel_brand_layout(self, content: str, svg_path: Path, result: Dict):
         """Enforce Viettel brand invariants that generic SVG checks miss."""
@@ -982,29 +1073,29 @@ class SVGQualityChecker:
             )
 
         logo_box = {'x1': 1060.0, 'y1': 20.0, 'x2': 1224.0, 'y2': 82.0}
-        logo_text_overlaps = 0
-        bottom_page_numbers = 0
+        logo_text_overlaps: List[str] = []
+        bottom_page_numbers: List[str] = []
 
         for text in self._iter_text_bounds(root):
             if self._boxes_intersect(text, logo_box):
-                logo_text_overlaps += 1
+                logo_text_overlaps.append(text['locator'])
             if self._is_bottom_right_page_number(text):
-                bottom_page_numbers += 1
+                bottom_page_numbers.append(text['locator'])
 
         if logo_text_overlaps:
             result['errors'].append(
-                f"Viettel logo clearance violation: {logo_text_overlaps} header text box(es) overlap "
+                f"[brand-logo-clearance] locators={', '.join(logo_text_overlaps)} overlap "
                 "the reserved top-right logo slot (x=1060-1224, y=20-82). "
                 "Wrap titles inside data-box=\"88,36,960,58\" data-wrap=\"true\" or shorten/manual-break the title."
             )
-        if bottom_page_numbers > 1:
+        if len(bottom_page_numbers) > 1:
             result['errors'].append(
-                f"Viettel page number duplication: detected {bottom_page_numbers} bottom-right page-number text elements. "
+                f"[brand-page-number] duplicate locators={', '.join(bottom_page_numbers)}. "
                 "Keep exactly one shell/footer page number; do not add another in brand chrome or page content."
             )
-        if 'cover' not in svg_path.stem.lower() and bottom_page_numbers == 0:
+        if 'cover' not in svg_path.stem.lower() and not bottom_page_numbers:
             result['errors'].append(
-                "Viettel brand violation: missing bottom-right page number on a non-cover page"
+                "[brand-page-number] missing bottom-right page number on a non-cover page"
             )
 
         self._check_viettel_fonts_and_colors(root, result)
@@ -1022,12 +1113,13 @@ class SVGQualityChecker:
 
     def _check_viettel_fonts_and_colors(self, root: ET.Element, result: Dict) -> None:
         """Validate the locked Viettel font stack, palette, and blue scopes."""
-        invalid_fonts = 0
-        missing_fonts = 0
-        invalid_weights: set[str] = set()
-        invalid_colors: set[str] = set()
-        blue_text = 0
-        unscoped_blue = 0
+        locators = _element_locators(root)
+        invalid_fonts: Dict[str, set[str]] = defaultdict(set)
+        missing_fonts: set[str] = set()
+        invalid_weights: Dict[str, set[str]] = defaultdict(set)
+        invalid_colors: Dict[str, set[str]] = defaultdict(set)
+        blue_text: set[str] = set()
+        unscoped_blue: set[str] = set()
 
         def visit(
             elem: ET.Element,
@@ -1035,68 +1127,71 @@ class SVGQualityChecker:
             inherited_weight: str = '',
             blue_scope: str = '',
         ) -> None:
-            nonlocal invalid_fonts, missing_fonts, blue_text, unscoped_blue
-
             scope = (elem.get('data-viettel-blue-scope') or blue_scope).strip().lower()
             font = html.unescape(_get_svg_attr(elem, 'font-family', inherited_font)).strip()
             weight = _get_svg_attr(elem, 'font-weight', inherited_weight).strip().lower()
             tag = _local_name(elem.tag)
             is_text = tag in {'text', 'tspan'}
+            locator = locators[id(elem)]
             if is_text:
                 if not font:
-                    missing_fonts += 1
+                    missing_fonts.add(locator)
                 elif font != VIETTEL_FONT_STACK:
-                    invalid_fonts += 1
+                    invalid_fonts[font].add(locator)
                 if weight not in VIETTEL_ALLOWED_FONT_WEIGHTS:
-                    invalid_weights.add(weight)
+                    invalid_weights[weight or '(missing)'].add(locator)
 
             for attr in ('fill', 'stroke', 'stop-color'):
                 value = _get_svg_attr(elem, attr).strip().upper()
                 if not HEX_VALUE_RE.fullmatch(value):
                     continue
                 if value not in VIETTEL_ALLOWED_COLORS:
-                    invalid_colors.add(value)
+                    invalid_colors[value].add(locator)
                 if value == VIETTEL_DEEP_BLUE:
                     if is_text:
-                        blue_text += 1
+                        blue_text.add(locator)
                     elif scope not in VIETTEL_BLUE_SCOPES:
-                        unscoped_blue += 1
+                        unscoped_blue.add(locator)
 
             for child in list(elem):
                 visit(child, font, weight, scope)
 
         visit(root)
 
-        if missing_fonts or invalid_fonts:
-            parts = []
-            if missing_fonts:
-                parts.append(f"{missing_fonts} text element(s) without an effective font-family")
-            if invalid_fonts:
-                parts.append(f"{invalid_fonts} text element(s) outside the exact locked stack")
+        if missing_fonts:
             result['errors'].append(
-                "Viettel typography violation: " + ", ".join(parts) +
-                f"; required stack is {VIETTEL_FONT_STACK}"
+                f"[brand-font] value=(missing) locators={', '.join(sorted(missing_fonts))}; "
+                f"required={VIETTEL_FONT_STACK}"
             )
-        if invalid_weights:
+        for value, value_locators in sorted(invalid_fonts.items()):
             result['errors'].append(
-                "Viettel typography violation: forbidden font-weight value(s) " +
-                ", ".join(sorted(invalid_weights)) +
-                "; allowed weights are 400 Book/Regular, 500 Medium, and 700 Bold"
+                f"[brand-font] value={value!r} "
+                f"locators={', '.join(sorted(value_locators))}; "
+                f"required={VIETTEL_FONT_STACK}"
             )
-        if invalid_colors:
+        for value, value_locators in sorted(invalid_weights.items()):
             result['errors'].append(
-                "Viettel palette violation: color(s) outside the approved palette: " +
-                ", ".join(sorted(invalid_colors))
+                f"[brand-font-weight] value={value!r} "
+                f"locators={', '.join(sorted(value_locators))}; "
+                "allowed=400,500,700"
+            )
+        for value, value_locators in sorted(invalid_colors.items()):
+            result['errors'].append(
+                f"[brand-color] value={value} "
+                f"locators={', '.join(sorted(value_locators))}; "
+                "outside the approved Viettel palette"
             )
         if blue_text:
             result['errors'].append(
-                f"Viettel deep-blue violation: {blue_text} text element(s) use {VIETTEL_DEEP_BLUE}; "
+                f"[brand-deep-blue-text] value={VIETTEL_DEEP_BLUE} "
+                f"locators={', '.join(sorted(blue_text))}; "
                 "deep blue is never a text color"
             )
         if unscoped_blue:
             result['errors'].append(
-                f"Viettel deep-blue violation: {unscoped_blue} mark(s) use {VIETTEL_DEEP_BLUE} outside "
-                'data-viettel-blue-scope="chart|diagram|icon|background"'
+                f"[brand-deep-blue-scope] value={VIETTEL_DEEP_BLUE} "
+                f"locators={', '.join(sorted(unscoped_blue))}; "
+                'add data-viettel-blue-scope="chart|diagram|icon|background"'
             )
 
     def _looks_like_viettel_svg(self, content: str) -> bool:
@@ -1110,6 +1205,7 @@ class SVGQualityChecker:
 
     def _iter_text_bounds(self, root: ET.Element) -> List[Dict]:
         texts: List[Dict] = []
+        locators = _element_locators(root)
 
         def visit(elem: ET.Element, tx: float = 0.0, ty: float = 0.0):
             dx, dy = _parse_translate(elem.get('transform', ''))
@@ -1153,6 +1249,7 @@ class SVGQualityChecker:
                                 pass
 
                     texts.append({
+                        'locator': locators[id(elem)],
                         'text': text,
                         'x': x,
                         'y': y,
@@ -1353,24 +1450,36 @@ class SVGQualityChecker:
                 except (ValueError, TypeError):
                     body_px = None
 
-        # Scan SVG for used values
-        color_drifts = set()
-        for attr in ('fill', 'stroke', 'stop-color'):
-            pattern = re.compile(rf'\b{attr}\s*=\s*["\'](#[0-9A-Fa-f]{{3,8}})["\']')
-            for m in pattern.finditer(content):
-                val = m.group(1).upper()
+        # Scan SVG for used values while retaining stable element locators.
+        try:
+            root = ET.fromstring(content)
+        except ET.ParseError:
+            return
+        locators = _element_locators(root)
+        color_drifts: Dict[str, set[str]] = defaultdict(set)
+        font_drifts: Dict[str, set[str]] = defaultdict(set)
+        size_drifts: Dict[str, set[str]] = defaultdict(set)
+
+        for elem in root.iter():
+            locator = locators[id(elem)]
+            for attr in ('fill', 'stroke', 'stop-color'):
+                raw = elem.get(attr, '').strip()
+                if not HEX_VALUE_RE.fullmatch(raw):
+                    continue
+                val = raw.upper()
                 if val not in allowed_colors:
-                    color_drifts.add(val)
+                    color_drifts[val].add(locator)
 
-        font_drifts = set()
-        for m in re.finditer(r'font-family\s*=\s*["\']([^"\']+)["\']', content):
-            val = html.unescape(m.group(1).strip())
-            if allowed_fonts and val not in allowed_fonts:
-                font_drifts.add(val)
+            raw_font = elem.get('font-family')
+            if raw_font:
+                val = html.unescape(raw_font.strip())
+                if allowed_fonts and val not in allowed_fonts:
+                    font_drifts[val].add(locator)
 
-        size_drifts = set()
-        for m in re.finditer(r'font-size\s*=\s*["\']([^"\']+)["\']', content):
-            val = self._normalize_size(m.group(1))
+            raw_size = elem.get('font-size')
+            if not raw_size:
+                continue
+            val = self._normalize_size(raw_size)
             if not allowed_sizes or val in allowed_sizes:
                 continue
             # Intermediate values are allowed when they sit inside the ramp
@@ -1382,7 +1491,7 @@ class SVGQualityChecker:
                         continue
                 except ValueError:
                     pass
-            size_drifts.add(val)
+            size_drifts[val].add(locator)
 
         # Record in run-wide aggregation
         fname = svg_path.name
@@ -1393,19 +1502,21 @@ class SVGQualityChecker:
         for v in size_drifts:
             self._drift_summary['sizes'][v].add(fname)
 
-        # Per-file warning (one condensed line; details live in summary)
-        parts = []
-        if color_drifts:
-            parts.append(f"{len(color_drifts)} color(s)")
-        if font_drifts:
-            parts.append(f"{len(font_drifts)} font-family value(s)")
-        if size_drifts:
-            parts.append(f"{len(size_drifts)} font-size value(s)")
-        if parts:
-            message = (
-                f"spec_lock drift: {', '.join(parts)} not in spec_lock.md "
-                "(see drift summary for details)"
+        details = []
+        for value, value_locators in sorted(color_drifts.items()):
+            details.append(
+                f"color {value} at {', '.join(sorted(value_locators))}"
             )
+        for value, value_locators in sorted(font_drifts.items()):
+            details.append(
+                f"font-family {value!r} at {', '.join(sorted(value_locators))}"
+            )
+        for value, value_locators in sorted(size_drifts.items()):
+            details.append(
+                f"font-size {value!r} at {', '.join(sorted(value_locators))}"
+            )
+        if details:
+            message = "[spec-lock-drift] " + "; ".join(details)
             if self._get_brand_profile(svg_path, content) == VIETTEL_BRAND_PROFILE:
                 result['errors'].append(message)
             else:
@@ -1415,7 +1526,7 @@ class SVGQualityChecker:
         """Locate image_sources.json for a project SVG.
 
         Quality checks run primarily on <project>/svg_output/*.svg, but this
-        also supports SVGs checked from project root or svg_final.
+        also supports SVGs checked from the project root.
         """
         bases = (svg_path.parent, svg_path.parent.parent, svg_path.parent.parent.parent)
         for base in bases:
@@ -1489,15 +1600,19 @@ class SVGQualityChecker:
         """Categorize issue type"""
         if 'Invalid XML' in error_msg:
             return 'XML well-formedness'
+        elif '[native-' in error_msg:
+            return 'Native export compatibility'
         elif 'viewBox' in error_msg:
             return 'viewBox issues'
         elif 'foreignObject' in error_msg:
             return 'foreignObject'
+        elif '[brand-' in error_msg or '[spec-lock-drift]' in error_msg:
+            return 'Brand/spec issues'
         elif 'font' in error_msg.lower():
             return 'Font issues'
-        elif 'text layout overflow' in error_msg.lower() or 'wrap contract' in error_msg.lower():
+        elif '[text-overflow]' in error_msg or 'text layout overflow' in error_msg.lower() or 'wrap contract' in error_msg.lower():
             return 'Text layout overflow'
-        elif 'title/header zone' in error_msg.lower():
+        elif '[title-zone]' in error_msg or 'title/header zone' in error_msg.lower():
             return 'Title zone intrusion'
         else:
             return 'Other'

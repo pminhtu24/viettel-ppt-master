@@ -36,7 +36,7 @@ Every row requires `Acquire Via`, `Status`, and `Reference`.
 5. After a second failure, set `Status: Needs-Manual`, report the filename and reason, then continue.
 6. Confirm no web row remains `Pending`.
 
-`project/images/image_sources.json` is the single source of truth for license and attribution data. Do not place credits in speaker notes, SVG metadata, or a separate appendix.
+`project/images/image_sources.json` is the single source of truth for license and attribution data. Do not place credits in SVG metadata or a separate appendix.
 
 ## 4. Executor handoff
 

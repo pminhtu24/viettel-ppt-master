@@ -289,25 +289,14 @@ Wrap logically related elements in top-level `<g id="...">` groups. Produces Pow
 
 ---
 
-## 5. Post-processing Pipeline (3 Steps)
+## 5. Native PPTX Export
 
-Must be executed in order — skipping or adding extra flags is FORBIDDEN:
+**Hard precondition**: the completed SVG project has passed `svg_quality_checker.py`. Chart decks must also pass `verify-charts`; re-check only SVGs changed by chart verification.
 
 ```bash
-# 1. Split speaker notes into per-page note files
-python3 scripts/total_md_split.py <project_path>
-
-# 2. SVG post-processing (icon embedding, image crop/embed, text flattening, rounded rect to path)
-python3 scripts/finalize_svg.py <project_path>
-
-# 3. Export PPTX (from svg_final/, embeds speaker notes by default)
 python3 scripts/svg_to_pptx.py <project_path>
 # Output:
-#   exports/<project_name>_<timestamp>.pptx           ← native pptx (canonical output)
-#
-# Add --svg-snapshot to also emit:
-#   backup/<timestamp>/<project_name>_svg.pptx        ← SVG snapshot pptx
-#   backup/<timestamp>/svg_output/                    ← Executor SVG source backup
+#   exports/<project_name>_<timestamp>.pptx
 ```
 
 **Optional animation flags** (only when the user asks):
@@ -317,29 +306,9 @@ python3 scripts/svg_to_pptx.py <project_path>
 - `--animation-config <path>` — optional object-level animation sidecar. Default: `<project>/animations.json` when present.
 - `--auto-advance <seconds>` — kiosk-style auto-play
 
-**Optional recorded narration** (only when the user asks for narrated/video export):
-
-```bash
-python3 scripts/notes_to_audio.py <project_path> --voice zh-CN-XiaoxiaoNeural
-python3 scripts/svg_to_pptx.py <project_path> --recorded-narration audio
-```
-
-- `notes_to_audio.py` reads split `notes/*.md` files and writes one audio file per slide to `audio/`. Default `edge` output is MP3; configured cloud providers may output MP3 or WAV depending on provider settings.
-- `--recorded-narration audio` prepares PowerPoint's recorded timings and narrations: every slide needs matching `m4a` / `mp3` / `wav` audio, every duration must be readable by `ffprobe`, and `on-click` object animation is rejected.
-- `--recorded-narration audio` embeds matching audio, keeps speaker notes, and sets slide timings from audio duration.
-- `--narration-audio-dir audio` is the lower-level embedding path for partial audio coverage; it does not prepare a complete recorded-timings export.
-- Long-audio import and automatic long-audio splitting are not supported.
-
 Full reference: [`animations.md`](animations.md).
 
-**Prohibited**:
-- NEVER use `cp` as a substitute for `finalize_svg.py`
-- NEVER force `-s output` for the legacy/preview pptx (PowerPoint's internal SVG parser drops icons and rounded corners). Default auto-split already gives native the high-fidelity source it needs without affecting legacy.
-- NEVER use `--only` (it suppresses one of the two output files)
-
-> Source-directory split: by default `svg_to_pptx.py` reads `svg_output/` for the native pptx (preserves icon `<use>`, image `preserveAspectRatio` → `srcRect`, rounded rect `rx/ry` → `prstGeom roundRect`) and `svg_final/` for the legacy/preview pptx (PowerPoint's internal SVG parser needs the flattened form). Pass `-s output` or `-s final` only when you specifically want both products to read from a single source.
-
-**Re-run rule**: Any change to `svg_output/` after post-processing requires re-running Steps 2-3. Step 1 only re-runs if `notes/total.md` changed.
+The exporter reads `svg_output/` directly, expands internal icon placeholders in memory, and maps SVG geometry to editable DrawingML. Any later SVG change requires re-running the affected per-file gate and export.
 
 ---
 
@@ -726,11 +695,8 @@ Back2: (370-8.1+3.7, 430-8.8-3.4) = (365.6, 417.8)
 
 ```
 project/
-├── svg_output/    # Raw SVGs (Executor output, contains placeholders)
-├── svg_final/     # Post-processed final SVGs (finalize_svg.py output)
+├── svg_output/    # Canonical SVG source
 ├── images/        # User-provided and web-sourced image assets
-├── notes/         # Speaker notes (.md files matching SVG names)
-│   └── total.md   # Complete speaker notes document (before splitting)
 ├── templates/     # Project templates (if any)
-└── *.pptx         # Exported PPT file
+└── exports/       # Native PPTX output
 ```

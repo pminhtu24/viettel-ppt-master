@@ -1,0 +1,12 @@
+.gitignore
+contents/
+projects/
+__pycache__/
+viettel-ppt-master/workflows/generate-slide-flow.png
+diagrams/
+AGENTS.md
+CLAUDE.md
+.claude/
+/scripts/test_apply_brand_chrome.py
+/scripts/test_native_export.py
+/scripts/test_svg_quality_checker.py

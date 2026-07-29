@@ -9,7 +9,7 @@ description: >
 
 > Multi-role SVG presentation workflow. Converts source documents into high-quality SVG pages and exports them to PPTX.
 
-**Core Pipeline**: `Source Document → Create Project → [Template] → Strategist → [Web Image Acquisition] → Executor Live Preview → Quality Check → Post-processing → Export`
+**Core Pipeline**: `Source Document → Create Project → [Template] → Strategist → [Web Image Acquisition] → Executor Live Preview → Quality Check → [Chart Verification] → Native PPTX Export → Rendered Visual QA`
 
 > [!CAUTION]
 >
@@ -19,13 +19,14 @@ description: >
 >
 > 1. **SERIAL EXECUTION** — Steps MUST be executed in order; the output of each step is the input for the next. Non-BLOCKING adjacent steps may proceed continuously once prerequisites are met, without waiting for the user to say "continue"
 > 2. **BLOCKING = HARD STOP** — Steps marked ⛔ BLOCKING require a full stop; the AI MUST wait for an explicit user response before proceeding and MUST NOT make any decisions on behalf of the user
-> 3. **NO CROSS-PHASE BUNDLING** — Cross-phase bundling is FORBIDDEN. (Note: the Eight Confirmations in Step 4 are ⛔ BLOCKING — the AI MUST present recommendations and wait for explicit user confirmation before proceeding. Once the user confirms, all subsequent non-BLOCKING steps — design spec output, SVG generation, speaker notes, and post-processing — may proceed automatically without further user confirmation)
+> 3. **NO CROSS-PHASE BUNDLING** — Cross-phase bundling is FORBIDDEN. (Note: the Eight Confirmations in Step 4 are ⛔ BLOCKING — the AI MUST present recommendations and wait for explicit user confirmation before proceeding. Once the user confirms, all subsequent non-BLOCKING steps — design spec output, SVG generation, quality gates, and export — may proceed automatically without further user confirmation)
 > 4. **GATE BEFORE ENTRY** — Each Step has prerequisites (🚧 GATE) listed at the top; these MUST be verified before starting that Step
 > 5. **NO SPECULATIVE EXECUTION** — "Pre-preparing" content for subsequent Steps is FORBIDDEN (e.g., writing SVG code during the Strategist phase)
 > 6. **NO SUB-AGENT SVG GENERATION** — Executor Step 6 SVG generation is context-dependent and MUST be completed by the current main agent end-to-end. Delegating page SVG generation to sub-agents is FORBIDDEN
 > 7. **SEQUENTIAL PAGE GENERATION ONLY** — In Executor Step 6, after the global design context is confirmed, SVG pages MUST be generated sequentially page by page in one continuous pass. Grouped page batches (for example, 5 pages at a time) are FORBIDDEN
 > 8. **SPEC_LOCK RE-READ PER PAGE** — Before generating each SVG page, Executor MUST `read_file <project_path>/spec_lock.md`. All colors / fonts / icons / images MUST come from this file — no values from memory or invented on the fly. Executor MUST also look up the current page's `page_rhythm` (`anchor` / `dense` / `breathing`), optional `page_backgrounds` (section-only Viettel background layer, if any), `page_layouts` (which template SVG to inherit, if any), and `page_charts` (which chart template to adapt, if any). Empty / absent entries are intentional Strategist signals; missing `page_backgrounds` means no decorative background for that page — see executor-base.md §2.1. This rule exists to resist context-compression drift on long decks and to break the uniform "every page is a card grid" default
 > 9. **SVG MUST BE HAND-WRITTEN, NOT SCRIPT-GENERATED** — Every SVG page is written by the main agent directly, one page at a time (see rules 6 and 7). Writing or running a Python / Node / shell script that produces the SVG files in batch — looping over pages, templating from data, or emitting them via a generator — is FORBIDDEN, including under "save tokens", "quick draft", or "user is in a hurry" pretexts. The script-generation path was tried on a feature branch and abandoned: cross-page visual consistency depends on per-page authoring with full upstream context, which a generator script cannot reproduce
+> 10. **CHECK AFTER FULL-DECK GENERATION** — Generate every SVG page sequentially in one continuous pass before running brand-chrome normalization or quality checks. After generation, normalize deterministic Viettel chrome when applicable, run `svg_quality_checker.py` on the project, and fix every error before chart verification or export
 
 > [!IMPORTANT]
 >
@@ -69,8 +70,6 @@ description: >
 | `${SKILL_DIR}/scripts/analyze_images.py`           | Image analysis                                                                                                                          |
 | `${SKILL_DIR}/scripts/image_search.py`             | Openly licensed web-image search with attribution metadata                                                                              |
 | `${SKILL_DIR}/scripts/svg_quality_checker.py`      | SVG quality check                                                                                                                       |
-| `${SKILL_DIR}/scripts/total_md_split.py`           | Speaker notes splitting                                                                                                                 |
-| `${SKILL_DIR}/scripts/finalize_svg.py`             | SVG post-processing (unified entry)                                                                                                     |
 | `${SKILL_DIR}/scripts/svg_to_pptx.py`              | Export to PPTX                                                                                                                          |
 | `${SKILL_DIR}/scripts/update_spec.py`              | Propagate a `spec_lock.md` color / font_family change across all generated SVGs                                                         |
 | `${SKILL_DIR}/scripts/check_fonts.py`              | Preflight host font availability, fallback usage, and local bundle install hints                                                        |
@@ -137,7 +136,7 @@ When the user provides non-Markdown content, convert immediately:
 > together with `image_manifest.json` and are first-class assets in §VIII Image Resource List.
 >
 > **Do NOT convert EMF/WMF to PNG.** The PPT Master pipeline preserves them as external
-> references (`finalize_svg.py` skips them) and `svg_to_pptx.py` embeds them as
+> references and `svg_to_pptx.py` embeds them as
 > PPTX-native media via `image/x-emf` / `image/x-wmf` MIME — PowerPoint renders them at full vector fidelity.
 > Converting via LibreOffice/Inkscape introduces CJK font substitution drift and
 > rasterization loss; the original EMF/WMF is always higher fidelity than the converted PNG.
@@ -346,19 +345,26 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 
 **Visual Construction Phase**: generate SVG pages sequentially, one at a time, in one continuous pass → `<project_path>/svg_output/`
 
-**Quality Check Gate (Mandatory)** — after all SVGs, BEFORE annotation handling and speaker notes:
-
 ```bash
+python3 ${SKILL_DIR}/scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel  # viettel_default only
 python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
 ```
 
-- Any `error` (banned SVG features, viewBox mismatch, spec_lock drift, text overflow, title-zone content intrusion, etc.) MUST be fixed before proceeding — return to Visual Construction, regenerate that page, re-run check.
+- Run the commands above only after every SVG page has been generated (`custom_override`: omit chrome normalization). This deterministic chrome step is allowed post-processing, not scripted page generation.
+- Treat `(rule code, SVG file, element locator)` as the stable finding fingerprint. Bounds/value changes do not create a new finding.
+- Run the checker on the full project at most three times: **initial scan** → batch-fix all reported findings → **batch verification** → targeted per-file repair → **final scan**. Between batch verification and the final scan, check only the SVG being repaired. Chart-verification re-checks do not count against these three generation scans.
+- Fix in batches: native/XML/icon compatibility first, brand/font/palette/spec-lock second, then text overflow/title-zone. Do not reproduce `_estimate_svg_text_width()` or write inline scripts to expand/remap icons.
+- A fingerprint gets at most two direct repair attempts. If it persists, stop guessing and use its fallback once:
+  - text overflow/title-zone: render the affected SVG/slide; fix confirmed visual breakage, or mark intentional layout with `data-allow-overflow="true"` on the text / `data-allow-title-zone="true"` on the shape or ancestor group;
+  - brand/font/palette/spec-lock: inspect inherited attributes and brand chrome; annotations are forbidden;
+  - unresolved icon/native element: choose an existing icon under `templates/icons/` or replace that one icon with SVG primitives; do not rewrite the deck in bulk;
+  - XML/missing image: repair the exact structure/reference reported by the checker.
+- If the same fingerprint remains after its fallback, record the file, locator, rule, and attempted fixes as a blocker; do not export and do not continue the loop.
+- Any `error` MUST be fixed before proceeding. The final project scan must report `0 errors`.
 - `warning` entries (low-res image, non-PPT-safe font tail, long text without a wrap contract, etc.): fix when straightforward, otherwise acknowledge and release.
-- Run against `svg_output/` (not after `finalize_svg.py` — finalize rewrites SVG and masks violations).
+- After the project checker passes, chart decks run [`verify-charts`](workflows/verify-charts.md). If chart verification changes an SVG, re-run the checker for that SVG before export. Non-chart decks proceed directly to export.
 
-**Logic Construction Phase**: generate speaker notes → `<project_path>/notes/total.md`
-
-**✅ Checkpoint — Confirm all SVGs and notes are fully generated and quality-checked. Proceed directly to Step 7 post-processing**:
+**✅ Checkpoint — Confirm all SVGs are fully generated and quality-checked. Proceed directly to export**:
 
 ```markdown
 ## ✅ Executor Phase Complete
@@ -366,61 +372,21 @@ python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
 - [x] Live preview started and kept available at the reported URL
 - [x] All SVGs generated to svg_output/
 - [x] svg_quality_checker.py passed (0 errors)
-- [x] Speaker notes generated at notes/total.md
 ```
-
-> **Chart pages?** If this deck contains data charts (bar / line / pie / radar / etc.), run the standalone [`verify-charts`](workflows/verify-charts.md) workflow before Step 7 to calibrate coordinates. AI models routinely introduce 10–50 px errors when mapping data to pixel positions; verify-charts eliminates that class of error. Skip if no chart pages.
 
 ---
 
-### Step 7: Post-processing & Export
+### Step 7: Native PPTX Export
 
-🚧 **GATE**: Step 6 complete; all SVGs generated to `svg_output/`; speaker notes `notes/total.md` generated.
-
-> ⚠️ Run the three sub-steps **one at a time** — each must complete successfully before the next.
-> ❌ **NEVER** combine them into a single code block or shell invocation.
-
-Canonical three-command pipeline (mirrors `references/shared-standards.md` §5):
-
-**Step 7.1** — Split speaker notes:
-
-```bash
-python3 ${SKILL_DIR}/scripts/total_md_split.py <project_path>
-```
-
-**Step 7.2** — SVG post-processing (icon embedding / image crop & embed / text flattening / rounded rect to path):
-
-```bash
-python3 ${SKILL_DIR}/scripts/finalize_svg.py <project_path> --brand-chrome viettel --strip-comments
-```
-
-For an explicit `custom_override` run only, omit Viettel brand chrome:
-
-```bash
-python3 ${SKILL_DIR}/scripts/finalize_svg.py <project_path>
-```
-
-`--brand-chrome viettel` applies the logo layer to both `svg_output/` and `svg_final/`, so native PPTX export and SVG snapshot stay consistent. `--strip-comments` removes template XML comments, including non-visible Chinese notes from imported templates.
-
-**Step 7.3** — Export PPTX (embeds speaker notes by default):
+🚧 **GATE**: Step 6 complete; the project quality check passed, and chart verification passed when applicable.
 
 ```bash
 python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>
 # Output:
-#   exports/<project_name>_<timestamp>.pptx           ← native pptx (canonical output, reads svg_output/)
-#
-# Add --svg-snapshot to also emit the SVG-image preview pptx + svg_output/ backup:
-#   backup/<timestamp>/<project_name>_svg.pptx        ← SVG preview pptx (reads svg_final/)
-#   backup/<timestamp>/svg_output/                    ← Executor SVG source backup
+#   exports/<project_name>_<timestamp>.pptx
 ```
 
-> The native pptx consumes `svg_output/` directly so the converter can preserve
-> high-fidelity primitives (icon `<use>` placeholders, image `preserveAspectRatio`
-> → `srcRect`, rounded rect `rx/ry` → `prstGeom roundRect`). The SVG snapshot is
-> opt-in via `--svg-snapshot` — live preview already provides the SVG visual
-> reference, so the snapshot pptx is only needed when you want a self-contained
-> file to share or to rebuild without re-running the LLM. Pass `-s output` or
-> `-s final` to force a single source if you need it.
+The exporter reads `svg_output/` directly and produces editable native DrawingML.
 
 **Optional animation flags** (the defaults already enable rich entrance animations — adjust only when the user asks for something different):
 
@@ -434,18 +400,9 @@ python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>
 
 Run the standalone [`customize-animations`](workflows/customize-animations.md) workflow. Default export already has global entrance animation; do not create `animations.json` unless object-level customization was requested.
 
-**Optional recorded narration** (only when the user asks for narrated/video export):
-
-Run the standalone [`generate-audio`](workflows/generate-audio.md) workflow. The AI picks a narration backend (`edge` by default, or a configured cloud provider such as ElevenLabs / MiniMax / Qwen / CosyVoice for high-quality or cloned voices), asks the user once (backend + voice + rate/settings + embed-or-not, all with recommended values), then executes `notes_to_audio.py` and (if chosen) re-exports the PPTX with `--recorded-narration audio`.
-
-Do NOT call `notes_to_audio.py` directly without going through the workflow — `--voice` / `--voice-id` is required and the workflow produces the locale/provider-aware recommendation that makes the choice meaningful.
-
 Full effect list, anchor logic, and limits: [`references/animations.md`](references/animations.md).
 
-> ❌ **NEVER** substitute `cp` for `finalize_svg.py` — finalize performs multiple critical processing steps
-> ❌ **NEVER** force `-s output` for the legacy/preview pptx (PowerPoint's internal SVG parser drops icons and rounded corners). The default auto-split already gives native the high-fidelity source it needs without touching legacy.
-
-**Step 7.4 — Rendered Visual QA (Mandatory)**:
+**Step 7.1 — Rendered Visual QA (Mandatory)**:
 
 After PPTX export, render the produced PPTX to PDF/images and inspect the rendered slides before declaring completion:
 
@@ -455,8 +412,6 @@ pdftoppm -jpeg -r 120 <output.pdf> <exports_dir>/qa_slide
 ```
 
 Review the generated slide images for text overflow, clipped labels, chart marks entering title/footer zones, and footer/source collisions. If any issue is found, fix the corresponding SVG in `svg_output/`, rerun `svg_quality_checker.py`, re-export, and rerender affected slides. Do not report success from SVG validation alone.
-
-> ❌ **NEVER** use `--only` (it suppresses one of the two output files)
 
 > **Post-export annotation window**: the preview service from Step 6 typically remains running after export. If the user submitted annotations in the browser (during Executor or after export) and now asks to apply them — they may quote the browser prompt (`Annotations saved. ... apply my annotations`), say "apply my annotations" / "apply annotations" / equivalent — run [`live-preview`](workflows/live-preview.md) Step 2 to apply and re-export. Annotations submitted during generation are also handled here, not earlier.
 
@@ -492,5 +447,5 @@ Before switching roles, **MUST first read** the corresponding reference file. Ou
 
 ## Notes
 
-- Local preview: `python3 -m http.server -d <project_path>/svg_final 8000`
+- Local preview: `python3 -m http.server -d <project_path> 8000` then open `/svg_output/`
 - **Troubleshooting**: on generation issues (layout overflow, export errors, blank images, etc.), check `docs/faq.md` for known solutions

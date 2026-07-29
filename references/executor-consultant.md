@@ -150,32 +150,6 @@ Text: 14-16px, one-sentence summary of the page's core takeaway
 
 ---
 
-## Speaker Notes Style
-
-### Narrative Tone
-
-Consultant-style speaker notes use a **conclusion-driven** approach — state the conclusion first, then present supporting evidence. Professional, concise, and persuasive tone.
-
-### Notes Writing Guidelines
-
-Notes are pure spoken narration (TTS). No bracketed markers, no `Key points:` / `Duration:` lines — see [executor-base.md §8](executor-base.md#8-speaker-notes-generation-framework).
-
-- **Conclusion first**: The first sentence of each page's notes is the core takeaway.
-- **Conversational data**: 30% → "roughly one-third", 85% → "more than eight out of ten", 2.5x → "two and a half times". Spell out percentages as words when the spoken form is more natural.
-- **Evidence follows immediately**: After the conclusion, provide 2-3 supporting data points or facts in flowing prose.
-- **Natural transitions**: Open each page after the first with a sentence that bridges from the prior page ("Building on that scan…", "Based on those findings…").
-- **Professional terminology**: Use terms like "insight", "driver", "key lever".
-
-### Notes Example
-
-```markdown
-# 03_key_findings
-
-Based on our market scan, we have distilled three key findings, and the most important is that the growth engine is shifting from acquisition to retention. New customer acquisition cost rose nearly forty percent year-over-year, yet improved repurchase rates contributed more than sixty percent of revenue growth. On top of that, lower-tier market growth significantly outpaces tier-one and tier-two cities, and the twenty-five to thirty-five female user segment now carries an ARPU nearly twice the overall average.
-```
-
----
-
 ## Self-check Supplement (Consultant-specific)
 
 - [ ] Data matches source data — no fabrication
@@ -183,5 +157,3 @@ Based on our market scan, we have distilled three key findings, and the most imp
 - [ ] Page titles are assertion-based, not descriptive
 - [ ] KPI cards have trend arrows and comparison annotations
 - [ ] Chart colors are unified, using monochromatic scheme rather than rainbow
-- [ ] Notes are conclusion-first with conversational data
-- [ ] Notes contain no bracketed stage markers and no `Key points:` / `Duration:` meta-lines (TTS reads everything verbatim)

@@ -74,36 +74,8 @@ Annotation layer → ~0.7-0.8x  (e.g., 12-14px @ body=18)   light gray, bottom-a
 
 ---
 
-## Speaker Notes Style
-
-### Narrative Tone
-
-General style speaker notes use **conversational narration** — like talking with the audience, not reading a report. Natural tone with rhythm, using rhetorical devices where appropriate.
-
-### Notes Writing Guidelines
-
-Notes are pure spoken narration (TTS). No bracketed markers, no `Key points:` / `Duration:` lines — see [executor-base.md §8](executor-base.md#8-speaker-notes-generation-framework).
-
-- **Tell stories**: Use a "scenario-conflict-resolution" arc for each page's narrative.
-- **Use metaphors**: Make abstract concepts tangible ("It's like adding a turbocharger to the system").
-- **Create suspense**: Pose questions at the right moment and answer them on the next page — written as plain rhetorical questions, not as `[Interactive]` tags.
-- **Conversational data**: 30% → "nearly one-third", 2.5x → "more than doubled". Spell out percentages as words when the spoken form is more natural.
-- **Natural transitions**: Open each page after the first with a sentence that bridges from the prior page.
-
-### Notes Example
-
-```markdown
-# 03_key_advantages
-
-Having covered the market landscape, you might be wondering — where is our opportunity? Our core advantages can be summed up in three words: fast, accurate, efficient. Fast, because deployment time has been cut from three months to two weeks. Accurate, because recognition accuracy now reaches ninety-seven point three percent, far exceeding the industry average of eighty-two. And efficient, because overall costs have been reduced by nearly a third — a combination that, if you were the decision-maker, would be hard to ignore.
-```
-
----
-
 ## Self-check Supplement (General-specific)
 
 - [ ] Visual rhythm is reasonable: data-dense pages alternate with breathing pages
 - [ ] Decorative elements are moderate: serving content, not overshadowing it
 - [ ] Image-text ratio is appropriate: not just text walls, visual highlights present
-- [ ] Notes are conversational: reads like speaking, not reading a script
-- [ ] Notes contain no bracketed stage markers and no `Key points:` / `Duration:` meta-lines (TTS reads everything verbatim)

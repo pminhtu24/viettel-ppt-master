@@ -11,8 +11,8 @@ This workflow is **independent**: it reads `design_spec.md` and the generated SV
 ## When to Run
 
 - The deck contains one or more data visualization charts where source values determine SVG geometry: bar lengths/heights, point positions, arc angles, polygon vertices, connector endpoints, bubble centers/radii, or flow widths/paths.
-- SVGs are generated to `<project_path>/svg_output/` and `svg_quality_checker.py` has passed.
-- Post-processing (`finalize_svg.py`, `svg_to_pptx.py`) has **not yet** run.
+- SVGs are generated to `<project_path>/svg_output/` and the project quality check has passed.
+- Native PPTX export (`svg_to_pptx.py`) has **not yet** run.
 
 The calculator has direct CLI models for simple bars, lines/scatter, pie/donut, radar, and grid layouts. Composite/derived charts are **not automatically out of scope**: if their geometry reduces to repeated direct calculations, include them as `decomposable-calc`; if the calculator has no layout model but the SVG geometry is still data-driven, include them as `manual-verify` so they are not silently skipped.
 
@@ -100,10 +100,10 @@ For each page in the Step 1 list:
 
 6. **Scale-aware comparison.** Compare calculator output against the SVG's existing coordinates. Before declaring a mismatch, verify that every calculator invocation used the same axis range, plot area, center/radius, start angle, or size scale that the SVG visually declares. For `calc bar`, the output header must show `Value scale: axis ticks (...)` when the SVG has explicit ticks; if it shows `auto (max*1.1)`, go back to step 4 and re-run with the correct `--value-range`. **Do NOT update the SVG with mismatched-scale output.** Only update SVG attributes when the scale is confirmed to match and coordinates genuinely differ. Update by hand (do NOT use regex / bulk replacement — coordinates are positional and easy to swap incorrectly).
 
-After updating any page, re-run the quality checker on the project to confirm nothing broke:
+After updating any page, re-run the quality checker only on that SVG:
 
 ```bash
-python3 skills/viettel-ppt-master/scripts/svg_quality_checker.py <project_path>
+python3 skills/viettel-ppt-master/scripts/svg_quality_checker.py <project_path>/svg_output/<page>.svg
 ```
 
 ---
@@ -256,10 +256,4 @@ verify-charts: 19_flow.svg | type=sankey | mode=manual-verify | link widths cons
 
 ## After verification
 
-Continue with post-processing & export ([SKILL.md Step 7](../SKILL.md)):
-
-```bash
-python3 skills/viettel-ppt-master/scripts/total_md_split.py <project_path>
-python3 skills/viettel-ppt-master/scripts/finalize_svg.py <project_path>
-python3 skills/viettel-ppt-master/scripts/svg_to_pptx.py <project_path>
-```
+After all chart pages have been checked and every changed SVG has passed its per-file checker, return to the main workflow and run [SKILL.md Step 7](../SKILL.md). Do not export from `verify-charts`.

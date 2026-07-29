@@ -447,21 +447,68 @@ def _collect_unsupported_visuals(root: ET.Element) -> list[str]:
 
     def walk(elem: ET.Element, path: str, in_defs: bool = False) -> None:
         tag = _local_tag(elem)
-        current = f'{path}/{tag}'
+        locator = f"#{elem.get('id')}" if elem.get('id') else path
         if in_defs:
             return
         if tag in _NON_VISUAL_TAGS:
             return
+        if tag == 'use':
+            icon = elem.get('data-icon')
+            if icon:
+                issues.append(
+                    f"[native-icon] locator={locator} unresolved data-icon={icon!r}"
+                )
+            else:
+                issues.append(
+                    f"[native-use] locator={locator} unsupported <use> without data-icon"
+                )
+            return
         if (tag not in _CONVERTERS
                 and tag not in _NON_VISUAL_TAGS
                 and tag not in _SUPPORTED_VISUAL_CHILD_TAGS):
-            issues.append(current)
-        for idx, child in enumerate(list(elem), start=1):
-            walk(child, f'{current}[{idx}]', in_defs=(tag == 'defs'))
+            issues.append(
+                f"[native-element] locator={locator} unsupported visual <{tag}>"
+            )
+        counts: dict[str, int] = {}
+        for child in list(elem):
+            child_tag = _local_tag(child)
+            counts[child_tag] = counts.get(child_tag, 0) + 1
+            walk(
+                child,
+                f'{path}/{child_tag}[{counts[child_tag]}]',
+                in_defs=(tag == 'defs'),
+            )
 
-    for idx, child in enumerate(list(root), start=1):
-        walk(child, f'/svg[{idx}]')
+    counts: dict[str, int] = {}
+    for child in list(root):
+        tag = _local_tag(child)
+        counts[tag] = counts.get(tag, 0) + 1
+        walk(child, f'svg/{tag}[{counts[tag]}]')
     return issues
+
+
+def prepare_svg_for_native_conversion(
+    root: ET.Element,
+    icons_dir: Path | None = None,
+) -> tuple[int, list[str]]:
+    """Expand supported icon placeholders and report native incompatibilities.
+
+    The checker and exporter both call this function so a page that passes the
+    project quality gate cannot discover a different SVG support policy later
+    during native PPTX export. The supplied tree is mutated in memory.
+    """
+    if icons_dir is None:
+        icons_dir = (
+            Path(__file__).resolve().parent.parent.parent
+            / 'templates'
+            / 'icons'
+        )
+
+    expanded = 0
+    if icons_dir.exists():
+        from .use_expander import expand_use_data_icons
+        expanded = expand_use_data_icons(root, icons_dir)
+    return expanded, _collect_unsupported_visuals(root)
 
 
 def convert_svg_to_slide_shapes(
@@ -491,26 +538,19 @@ def convert_svg_to_slide_shapes(
     # Expand <use data-icon="..."/> placeholders in-memory so this dispatcher
     # can consume svg_output/ directly. Standard renderers and this converter
     # both ignore data-icon, so without expansion icons would silently drop.
-    # The on-disk finalize_svg pipeline does the same expansion for svg_final/;
-    # running this here makes the two pipelines behaviourally aligned.
-    icons_dir = Path(__file__).resolve().parent.parent.parent / 'templates' / 'icons'
-    if icons_dir.exists():
-        from .use_expander import expand_use_data_icons
-        expanded = expand_use_data_icons(root, icons_dir)
-        if verbose and expanded:
-            print(f'  Expanded {expanded} <use data-icon="..."/> placeholder(s)')
+    # Expansion happens in memory so svg_output remains canonical.
+    expanded, unsupported = prepare_svg_for_native_conversion(root)
+    if verbose and expanded:
+        print(f'  Expanded {expanded} <use data-icon="..."/> placeholder(s)')
 
     # Flatten positional <tspan> (those with x/y/non-zero dy) into independent
     # <text> elements. DrawingML runs cannot reposition mid-paragraph, so a
     # dy-stacked block of tspans would otherwise collapse onto one baseline,
-    # and an x-anchored tspan would render in the wrong column. finalize_svg
-    # does the same flattening on disk; doing it here keeps native pptx output
-    # correct when reading raw svg_output/.
+    # and an x-anchored tspan would render in the wrong column.
     from .tspan_flattener import flatten_positional_tspans
     if flatten_positional_tspans(tree) and verbose:
         print('  Flattened positional <tspan> into independent <text>')
 
-    unsupported = _collect_unsupported_visuals(root)
     if unsupported:
         preview = '; '.join(unsupported[:8])
         suffix = '' if len(unsupported) <= 8 else f'; +{len(unsupported) - 8} more'

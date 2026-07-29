@@ -9,7 +9,7 @@ PPT Master's exported PPTX supports **page transitions** (slide-to-slide) and **
 | Page transition | `fade`, 0.4s | Calm baseline that suits most decks |
 | Per-element animation | `mixed` effect + `after-previous` trigger, 0.4s duration + 0.5s stagger | Groups cascade in automatically on slide entry — zero interaction, with a measured pace for typical content decks |
 
-To regenerate a deck with different settings, rerun `svg_to_pptx.py` against the same `svg_output/` (or `svg_final/`) — no need to rerun the LLM. To turn per-element animation off entirely, pass `-a none`.
+To regenerate a deck with different settings, rerun `svg_to_pptx.py` against the same `svg_output/` — no need to rerun the LLM. To turn per-element animation off entirely, pass `-a none`.
 
 ## Custom Object-Level Animation
 
@@ -81,7 +81,7 @@ Flags:
 
 Enabled by default (`mixed` effect + `after-previous` trigger). Three Start modes are available — these mirror PowerPoint's animation-pane "Start" dropdown:
 
-- **`on-click`** — entering a slide → first click reveals the first semantic group; each subsequent click reveals the next group in z-order. Suits live presentations where the speaker paces reveals. Forbidden with `--recorded-narration` because video-ready exports need click-free playback.
+- **`on-click`** — entering a slide → first click reveals the first semantic group; each subsequent click reveals the next group in z-order. Suits live presentations where the presenter paces reveals.
 - **`with-previous`** — all groups start together on slide entry, playing their entrance animation in parallel. Stagger ignored.
 - **`after-previous`** (default) — first group fires on slide entry, subsequent groups cascade after the previous one finishes, with `--animation-stagger` extra spacing. Suits kiosk playback, recorded walkthroughs, or anyone who wants visual flow without clicking.
 
@@ -121,8 +121,6 @@ Flags:
 - `--animation-stagger` — gap between elements in `after-previous` mode (seconds, default `0.5`). Ignored otherwise.
 - `--animation-config` — sidecar path. Default: `<project>/animations.json` when present.
 
-> Note: `--recorded-narration` rejects `on-click`; use `after-previous` or `with-previous` for video-ready narrated decks.
-
 ## Anchor Logic — Top-Level `<g id="...">`
 
 Per-element animations are anchored on **top-level `<g id="...">` content groups** in the SVG (e.g. `<g id="cover-title">`, `<g id="card-1">`). One group = one click reveal.
@@ -140,9 +138,8 @@ Executors should wrap logical sections in `<g id>` regardless of whether you pla
 
 ## Limitations
 
-- **Native shapes mode only.** Per-element animation needs editable shape anchors. `--only legacy` produces one image per slide and has no element granularity to animate; that mode is unaffected by `-a/--animation` and only honors `-t/--transition`.
+- Per-element animation needs editable top-level shape anchors.
 - **Office version drift on element animations.** Effects use the `<p:animEffect filter=...>` path (vs. `presetID` lookup tables) to stay stable across Office versions. Most filters render identically in PowerPoint 2016+; older Office may downgrade some filters to plain Appear.
-- **PNG fallback (compat mode) is for visual rendering only.** Transitions and animations live in the slide XML, not in the PNG, so disabling compat mode does not affect either layer.
 
 ## Quick Reference
 

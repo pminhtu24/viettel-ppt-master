@@ -344,16 +344,7 @@ Catalog read: 71 templates
 
 ---
 
-## X. Speaker Notes Requirements
-
-One speaker note file per page, saved to `notes/`:
-
-- **Filename**: match SVG name (e.g., `01_cover.md`)
-- **Content**: script key points, timing cues, transition phrases
-
----
-
-## XI. Technical Constraints Reminder
+## X. Technical Constraints Reminder
 
 ### SVG Generation Must Follow:
 

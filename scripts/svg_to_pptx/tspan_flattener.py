@@ -6,10 +6,8 @@ the same paragraph". Every ``<tspan>`` carrying ``x``, ``y`` or non-zero
 inline — without flattening, a 4-line dy-stacked block collapses onto a
 single baseline and an x-anchored tspan jumps to the wrong column.
 
-The on-disk ``finalize_svg`` pipeline solves this by promoting each
-positional tspan to an independent ``<text>`` element. This module
-performs the same transformation in memory so ``svg_to_pptx`` can consume
-``svg_output/`` directly without that disk step.
+This module promotes each positional tspan to an independent ``<text>``
+element in memory so ``svg_to_pptx`` can consume ``svg_output/`` directly.
 
 Public API:
     flatten_positional_tspans(tree) -> bool
@@ -17,8 +15,7 @@ Public API:
         with an independent ``<text>``, and return whether anything
         changed.
 
-Heavy lifting is delegated to ``svg_finalize.flatten_tspan`` so the two
-pipelines stay behaviourally aligned.
+Heavy lifting is delegated to ``svg_finalize.flatten_tspan``.
 """
 
 from __future__ import annotations

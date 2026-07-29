@@ -120,14 +120,13 @@ python3 scripts/source_to_md/ppt_to_md.py sales_deck.pptx
 python3 scripts/source_to_md/ppt_to_md.py sales_deck.pptx -o output.md
 python3 scripts/source_to_md/ppt_to_md.py ./decks
 python3 scripts/source_to_md/ppt_to_md.py ./decks -o ./markdown
-python3 scripts/source_to_md/ppt_to_md.py template.ppsx -o notes/template.md
+python3 scripts/source_to_md/ppt_to_md.py template.ppsx -o output/template.md
 ```
 
 Behavior:
 - extracts slide text in reading order
 - converts PowerPoint tables to Markdown tables
 - exports embedded pictures to a sibling `_files/` directory
-- appends speaker notes when present
 
 Dependency:
 

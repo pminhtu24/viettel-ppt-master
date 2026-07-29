@@ -151,31 +151,6 @@ MBB-level color usage is extremely restrained — color serves information:
 
 ---
 
-## Speaker Notes Style
-
-### Narrative Tone
-
-Targeting **executives / decision-makers**. Pyramid structure — every sentence carries information. Composed, authoritative, and insightful tone.
-
-### Notes Writing Guidelines
-
-Notes are pure spoken narration (TTS). No bracketed markers, no `Key points:` / `Duration:` / `Flex:` lines — see [executor-base.md §8](executor-base.md#8-speaker-notes-generation-framework).
-
-- **Pyramid structure**: Conclusion → Arguments → Details, written as flowing prose.
-- **Data contextualization**: Every number is paired with a comparison reference in the same sentence ("twenty-three percent — nearly double the industry average of twelve").
-- **Executive language**: "The strategic implication is…", "The core insight is…".
-- **Natural transitions**: Open each page after the first with a sentence that bridges from the prior page.
-
-### Notes Example
-
-```markdown
-# 03_strategic_path
-
-Having clarified the problem and the opportunity, we arrive at the most critical part — our response path. The recommendation is a three-phase strategy: focus, expand, and scale. In phase one, over the next six months, we concentrate resources on conquering Eastern China, which contributes nearly two-thirds of industry growth yet sees our penetration rate at only half of Competitor A's. Phase two replicates that template to Southern and Northern China, and phase three leverages a digital platform for nationwide coverage over an eighteen-month horizon.
-```
-
----
-
 ## MBB-level Quality Checklist Supplement
 
 ### Content Level
@@ -191,9 +166,3 @@ Having clarified the problem and the opportunity, we arrive at the most critical
 - [ ] **Ample whitespace**: Not crowded; information can "breathe"
 - [ ] **Visual hierarchy**: Conclusion > Arguments > Details, differentiated by font size/weight
 - [ ] **Brand consistency**: Gradient top bar and footer unified throughout
-
-### Notes Level
-
-- [ ] **Pyramid structure**: Every page is conclusion-first
-- [ ] **Pure spoken prose**: No bracketed stage markers, no `Key points:` / `Duration:` / `Flex:` meta-lines (TTS reads everything verbatim)
-- [ ] **Data contextualized in prose**: Every number is paired with a comparison reference in the same sentence

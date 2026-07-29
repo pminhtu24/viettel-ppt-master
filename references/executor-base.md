@@ -50,7 +50,7 @@ When the project's chosen template is a `mirror` template (`design_spec.md` fron
 
 1. **Per-page reference selection** — Strategist selects one mirror page per project page via `spec_lock.md page_layouts` (e.g., `P04: 015_content`). The basename is the mirror filename without extension; Strategist made this choice by reading `design_spec.md §V Page Roster` descriptions, not by guessing.
 2. **Copy, don't fill** — open the referenced mirror SVG (already in context from §1.0). **Copy it as the starting point for the project page**, then edit text elements in place to express the project's content for `P<NN>`. Preserve every non-text element verbatim: backgrounds, decorative shapes, sprite-cropped images, charts, icon usage, color values, font families, geometry, sprite `<svg viewBox>` wrappers, `<image>` references.
-3. **What you may edit** — the visible text content of `<text>` / `<tspan>` elements that express slide-specific content (title, body, captions, KPI labels, dates, page numbers). Replace the source deck's example text with the project's text for this page from `design_spec.md §IX` and `notes/<NN>_*.md`.
+3. **What you may edit** — the visible text content of `<text>` / `<tspan>` elements that express slide-specific content (title, body, captions, KPI labels, dates, page numbers). Replace the source deck's example text with the project's text for this page from `design_spec.md §IX` and the imported source Markdown.
 4. **What you must not touch** — element positions, sizes, fonts, colors, fills, strokes, gradients, image hrefs, `<g>` grouping, sprite-sheet `<svg viewBox>` wrappers, decorative `<rect>` / `<path>` / `<circle>` / `<polygon>` shapes, `<use data-icon="...">` markers, embedded chart data structures. Mirror's value is preserving the source deck's visual identity — any geometric / decorative drift defeats the purpose.
 5. **Content fit** — the mirror page was chosen by Strategist because its layout matches the content slot. If the project's content for `P<NN>` legitimately needs more / fewer items than the mirror page provides (e.g. mirror shows 3 KPI cards, project has 4 metrics), keep the mirror page's visual rhythm and either drop one metric to fit or split across two pages — do **not** restructure the mirror page's grid. If neither works, surface a `warning: P<NN> content does not fit mirror reference <basename>; suggest different reference page` and proceed with the closest-fit edit.
 6. **No `{{}}` substitution** — mirror SVGs do not contain placeholder markers. Do not search for `{{TITLE}}` / `{{CONTENT_AREA}}` etc.; do not invent placeholders. The whole mirror contract is "verbatim source + in-place text edit".
@@ -190,7 +190,7 @@ Example:
       fill="#44494D">Mức tăng trưởng hai chữ số liên tục trên quy mô lớn</text>
 ```
 
-`svg_quality_checker.py` treats text overflow and title-zone content intrusion as errors. Fix the SVG source before `finalize_svg.py`; post-processing can mask the source of the problem.
+`svg_quality_checker.py` treats text overflow and title-zone content intrusion as errors. Fix the SVG source before export.
 
 **Per-page template lookup — `page_layouts` section**:
 
@@ -217,16 +217,20 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
 - **Proximity**: group related elements with tight spacing; separate unrelated groups
 - **Spec adherence**: follow color, layout, canvas format, and typography in the spec
 - **Template structure**: if templates exist, inherit the visual framework
-- **Viettel brand chrome**: if the deck uses `viettel_default` or the execution lock specifies a Viettel brand profile, keep the top-right logo visible on every page. Layout-shell pages may already contain the logo; chart/framework pages MUST receive it during post-processing via `finalize_svg.py --brand-chrome viettel --strip-comments`.
+- **Viettel brand chrome**: if the deck uses `viettel_default` or the execution lock specifies a Viettel brand profile, normalize the completed deck with `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` before the project quality check. This gives layout, chart, and framework pages the same logo/page-number contract before validation.
 - **Viettel logo clearance**: the fixed logo reserves `x=1060-1224, y=20-82`. Header/title text, subtitles, chart labels, and callouts MUST NOT enter this slot. Content-page titles should use `data-box="88,36,960,58" data-wrap="true"` or manual line breaks so long titles wrap before the logo.
-- **Viettel page number ownership**: each slide has exactly one page-number treatment. If a page inherits a Viettel shell, do not draw an additional bottom-right slide number; post-processing adds page numbers only to pages that do not already contain the shell footer/page-number treatment.
+- **Viettel page number ownership**: each slide has exactly one page-number treatment. If a page inherits a Viettel shell, do not draw another bottom-right number; pre-check chrome normalization adds one only when the shell does not already own it.
 - **Brand font runtime honesty**: if font preflight reports that the lead brand font is missing, keep the declared stack in the SVG/PPTX source but tell the user `brand fidelity degraded`. Do not rewrite the deck to hide the fallback state.
 - **Main-agent ownership**: SVG generation must run in the main agent (not sub-agents) — pages share upstream context for cross-page visual continuity
 - **Generation rhythm**: lock global design context first, then generate pages sequentially in one continuous context. No batched groups (e.g., 5 at a time).
-- **Phased batch generation** (recommended):
-  1. **Visual Construction Phase**: generate all SVG pages sequentially for visual consistency. Use layout judgment for chart marks during the draft. **MUST embed plot-area markers** per §3.1 below on every chart page — coordinate calibration is a post-generation step (see [`workflows/verify-charts.md`](../workflows/verify-charts.md)) that depends on these markers.
-  2. **Quality Check Gate**: run `python3 scripts/svg_quality_checker.py <project_path>` on `svg_output/`. Any `error` (banned features, viewBox mismatch, spec_lock drift, non-PPT-safe font, etc.) MUST be fixed on the offending page before proceeding — regenerate and re-check. Address `warning`s when straightforward. Do NOT defer to after `finalize_svg.py` — finalize rewrites SVG and masks some violations.
-  3. **Logic Construction Phase**: after SVGs pass the quality check, batch-generate speaker notes for narrative continuity.
+- **Phased continuous generation** (mandatory):
+  1. **Visual Construction Phase**: generate all SVG pages sequentially in one continuous pass. Chart pages MUST embed plot-area markers per §3.1 below.
+  2. **Project Quality Gate**: after every page is generated, run `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` for `viettel_default`, then run `python3 scripts/svg_quality_checker.py <project_path>` for every profile. The checker reports stable `(rule, file, locator)` fingerprints and every offending element in the initial scan.
+     - Run at most three full-project scans: initial → batch verification → final. Between the second and third scans, re-check only affected SVGs.
+     - Batch-fix native/XML/icon issues first, brand/font/palette/spec-lock second, and overflow/title-zone last.
+     - Try at most two direct fixes for the same fingerprint. A persistent finding gets one type-specific fallback: render then fix/explicitly annotate intentional visual geometry; inspect inherited brand attributes; or resolve/replace the single unsupported icon/element.
+     - If the fingerprint survives fallback, report it as a blocker and stop; never continue a blind repair loop or export with errors. The final scan must report `0 errors`.
+  3. **Chart Verification**: after the project quality gate passes, chart decks run `verify-charts`. Re-check only SVGs changed by chart verification. Non-chart decks proceed directly to export.
 
 ### 3.1 Chart Plot-Area Marker (MANDATORY on every chart page)
 
@@ -310,7 +314,7 @@ Strategist chooses the library and inventory; Executor only implements. Library 
 >
 > **stroke-width** (stroke-style libraries only, currently `tabler-outline`): allowed values `{1.5, 2, 3}`. If `spec_lock.md icons.stroke_width` is declared, all placeholders MUST use that value deck-wide. Default `2` if absent (legacy). Ignored on non-stroke libraries.
 >
-> Icons are auto-embedded by `finalize_svg.py` — no need to run `embed_icons.py` manually.
+> The native exporter expands icons in memory — no need to run `embed_icons.py` manually.
 
 **Searching for icons** — use terminal, zero token cost:
 ```bash
@@ -408,7 +412,7 @@ Use `attribution_text` from the manifest entry as the **starting point**, then c
 
 `svg_quality_checker.py` treats missing CC BY / CC BY-SA inline attribution as an **error**. Fix the offending SVG before post-processing.
 
-**The manifest is the single source of truth for credits.** Do not duplicate license info into speaker notes or any other artifact.
+**The manifest is the single source of truth for credits.** Do not duplicate license info into SVG metadata or another artifact.
 
 ---
 
@@ -424,73 +428,12 @@ If `spec_lock.md` is absent, consult [`strategist.md`](strategist.md) §g — do
 
 ---
 
-## 8. Speaker Notes Generation Framework
+## 8. Next Steps After Completion
 
-### Task 1. Generate Complete Speaker Notes Document
-
-After all SVG pages are finalized, enter Logic Construction Phase and write the full notes to `notes/total.md`. Batch-writing (not per-page) lets transitions plan coherently.
-
-**Pure spoken narration**: notes are read aloud verbatim by `notes_to_audio.py` (TTS). Write only what should be spoken. No visible markers, no labeled meta-lines, no enumerated key-point lists, no duration annotations — anything you write outside the heading will be vocalized.
-
-**Per-page structure**: `# <number>_<page_title>` heading (the `#` heading line is the only thing stripped before TTS), pages separated by `---`. Body is 2–5 natural sentences carrying the page's core message. Page-to-page transitions live inside the opening sentence as natural prose ("接下来……" / "Having framed X, let's turn to Y") — no bracketed `[过渡]` / `[Transition]` tags.
-
-**Concrete examples** — same shape applies to any language; just write naturally in that language.
-
-中文 deck：
-
-```
-# 02_市场格局
-
-在明确了行业背景之后，我们来看具体的市场格局。当前线上零售集中度持续上升，前三大平台合计份额已经达到百分之六十八，腰部玩家正在被快速挤压，留给新进入者的窗口期不超过十八个月。这意味着我们的策略必须聚焦，而不是铺开。
-```
-
-英文 deck：
-
-```
-# 02_market_landscape
-
-Having framed the industry backdrop, let's look at the actual market landscape. Online retail concentration keeps rising — the top three platforms now hold sixty-eight percent of combined share, mid-tier players are being squeezed fast, and the window for new entrants is under eighteen months. This means our strategy has to focus, not spread.
-```
-
-> 日本語 / 한국어 / 其他语言：照搬同样的结构，用对应语言自然书写即可。
-
-**Number readability**: TTS reads digits and symbols literally. Prefer fully-spelled forms in the language being spoken when literal pronunciation would be awkward (e.g. Chinese "百分之六十八" reads better than "68%"; "1-2分钟" reads as "一减二分钟"). Plain integers and percentages in English are fine as-is.
-
-**Common mistakes to avoid**:
-- Leaving any bracketed stage marker (`[过渡]` / `[Transition]` / `[Pause]` / `[Data]` / `[Scan Room]` / `[Interactive]` / `[Benchmark]` etc.) in the text — they will be read aloud literally.
-- Adding `要点：① …` / `Key points: (1) …` / `时长：2分钟` / `Duration: 2 minutes` / `Flex: …` lines — TTS will speak "要点 一 …".
-- Mixing languages within one deck's notes.
-
-### Task 2. Split Into Per-Page Note Files
-
-Auto-split `notes/total.md` into per-page files in `notes/`.
-
-**Naming**: match SVG names (`01_cover.svg` → `notes/01_cover.md`); `slide01.md` also supported (legacy).
-
----
-
-## 9. Next Steps After Completion
-
-> **Auto-continuation**: After Visual Construction Phase (all SVG pages) and Logic Construction Phase (all notes) are complete, the Executor proceeds directly to the post-processing pipeline.
-
-**Post-processing & Export** (same canonical pipeline as [shared-standards.md §5](shared-standards.md)):
+> **Auto-continuation**: After the project quality gate and chart verification pass when applicable, proceed directly to native PPTX export.
 
 ```bash
-# 1. Split speaker notes
-python3 scripts/total_md_split.py <project_path>
-
-# 2. SVG post-processing for the default Viettel profile
-python3 scripts/finalize_svg.py <project_path> --brand-chrome viettel --strip-comments
-
-# Explicit custom_override only
-python3 scripts/finalize_svg.py <project_path>
-
-# 3. Export PPTX
 python3 scripts/svg_to_pptx.py <project_path>
 # Output:
-#   exports/<project_name>_<timestamp>.pptx           ← native pptx (canonical output)
-#
-# Add --svg-snapshot to also emit:
-#   backup/<timestamp>/<project_name>_svg.pptx        ← SVG snapshot pptx
-#   backup/<timestamp>/svg_output/                    ← Executor SVG source backup
+#   exports/<project_name>_<timestamp>.pptx
 ```

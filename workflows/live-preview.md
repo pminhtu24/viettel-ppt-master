@@ -59,9 +59,13 @@ Triggered by the user signals listed in "When to Run".
 3. For each listed annotation:
    - Edit the targeted element in `<project_path>/svg_output/<file>` per the annotation text.
    - Remove `data-edit-target` and `data-edit-annotation` from that element.
-4. Re-export:
+4. For each distinct edited SVG, derive `<N>` from its numeric filename prefix, then normalize and check only that file (`custom_override`: omit chrome normalization):
    ```bash
-   python3 ${SKILL_DIR}/scripts/finalize_svg.py <project_path>
+   python3 ${SKILL_DIR}/scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel --file svg_output/<file> --slide-number <N>
+   python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>/svg_output/<file>
+   ```
+   Fix every error before continuing. After all edited files pass, re-export directly:
+   ```bash
    python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>
    ```
 5. Tell the user (in their language): annotations applied, new PPTX exported, preview is still running. If the browser still shows the old slide, refresh or reselect the page.
