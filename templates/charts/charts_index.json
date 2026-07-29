@@ -28,7 +28,7 @@
       "summary": "Pick for two mirrored datasets sharing a common axis (age pyramid, A/B, income vs expense). Skip for >2 sides (use grouped_bar_chart)."
     },
     "donut_chart": {
-      "summary": "Pick for 3-6 part proportions where a center KPI/total deserves emphasis. Skip if no center value to feature (use pie_chart)."
+      "summary": "Pick only for a 2-slice KPI (primary + remainder) or a MECE 3-6-part composition with a center total. Use horizontal_bar_chart for multi-select data or >=7 flat groups; use treemap_chart for hierarchical composition."
     },
     "dual_axis_line_chart": {
       "summary": "Pick when 2 metrics with different units/scales must be compared over time. Skip if both metrics share the same unit (use line_chart)."
@@ -73,7 +73,7 @@
       "summary": "Pick to show 80/20 contribution: descending bars + cumulative line. Skip if cumulative line is not the message (use bar_chart)."
     },
     "pie_chart": {
-      "summary": "Pick for simple 3-6 part proportions of one whole. Skip for >=7 parts (use donut_chart or treemap_chart) or hierarchical composition (use treemap_chart)."
+      "summary": "Pick for a MECE 3-6-part composition of one whole when no center KPI is needed. Use horizontal_bar_chart for multi-select data or >=7 flat groups; use treemap_chart for hierarchical composition."
     },
     "hub_inward_arrows": {
       "summary": "Pick for 1 center subject + 4-5 surrounding forces with arrows pointing inward — Porter's Five Forces (central rivalry, threat of new entrants/substitutes, bargaining power of buyers/suppliers), threat-model with central asset, pressure-on-core diagrams. Skip for outward radiation from center capability (use hub_spoke) or non-directional cluster (use mind_map)."

@@ -79,13 +79,15 @@ For each page in the Step 1 list:
    python3 skills/viettel-ppt-master/scripts/svg_position_calculator.py calc line \
      --data "x1:y1,x2:y2,..." --area "x_min,y_min,x_max,y_max" --y-range "0,max"
 
-   # pie_chart — default start angle is -90 (12 o'clock); pass --start-angle only if the SVG starts elsewhere
+   # percentage pie_chart — raw percentages must total 100 ±0.1
    python3 skills/viettel-ppt-master/scripts/svg_position_calculator.py calc pie \
-     --data "Slice1:Value1,Slice2:Value2" --center "cx,cy" --radius 200 --start-angle -90
+     --data "Slice1:Value1,Slice2:Value2" --expect-total 100 \
+     --center "cx,cy" --radius 200 --start-angle -90
 
-   # donut_chart (pie with inner-radius)
+   # percentage donut_chart (pie with inner-radius)
    python3 skills/viettel-ppt-master/scripts/svg_position_calculator.py calc pie \
-     --data "Slice1:Value1,Slice2:Value2" --center "cx,cy" --radius 200 --inner-radius 120 --start-angle -90
+     --data "Slice1:Value1,Slice2:Value2" --expect-total 100 \
+     --center "cx,cy" --radius 200 --inner-radius 120 --start-angle -90
 
    # radar_chart (separate subcommand) — pass --max-value from the outermost ring tick
    python3 skills/viettel-ppt-master/scripts/svg_position_calculator.py calc radar \
@@ -98,7 +100,9 @@ For each page in the Step 1 list:
    M first_x,first_y ... L last_x,last_y L last_x,y_max L first_x,y_max Z
    ```
 
-6. **Scale-aware comparison.** Compare calculator output against the SVG's existing coordinates. Before declaring a mismatch, verify that every calculator invocation used the same axis range, plot area, center/radius, start angle, or size scale that the SVG visually declares. For `calc bar`, the output header must show `Value scale: axis ticks (...)` when the SVG has explicit ticks; if it shows `auto (max*1.1)`, go back to step 4 and re-run with the correct `--value-range`. **Do NOT update the SVG with mismatched-scale output.** Only update SVG attributes when the scale is confirmed to match and coordinates genuinely differ. Update by hand (do NOT use regex / bulk replacement — coordinates are positional and easy to swap incorrectly).
+6. **Donut/pie semantic gate.** Before comparing paths, verify `total`, `sectors`, `legend`, `colors`, and `center` against the contract in [shared-standards.md](../references/shared-standards.md#arc-paths--donut--pie-charts). Any failed field blocks export. Use `--expect-total 100` only when the source values are percentages; omit it for absolute values that should be normalized.
+
+7. **Scale-aware comparison.** Compare calculator output against the SVG's existing coordinates. Before declaring a mismatch, verify that every calculator invocation used the same axis range, plot area, center/radius, start angle, or size scale that the SVG visually declares. For `calc bar`, the output header must show `Value scale: axis ticks (...)` when the SVG has explicit ticks; if it shows `auto (max*1.1)`, go back to step 4 and re-run with the correct `--value-range`. **Do NOT update the SVG with mismatched-scale output.** Only update SVG attributes when the scale is confirmed to match and coordinates genuinely differ. Update by hand (do NOT use regex / bulk replacement — coordinates are positional and easy to swap incorrectly).
 
 After updating any page, re-run the quality checker only on that SVG:
 
@@ -234,7 +238,7 @@ Output one line per page from the Step 1 list. Receipt count MUST equal Step 1 l
 ```
 verify-charts: 03_market_share.svg | type=bar | mode=direct-calc | scale=0-100 (from ticks) | calc=ran | svg=updated
 verify-charts: 07_growth.svg | type=line | mode=direct-calc | scale=0-120 (from ticks) | calc=ran | svg=unchanged (already accurate)
-verify-charts: 11_share_split.svg | type=pie | mode=direct-calc | scale=N/A | calc=ran | svg=updated | marker=added (was missing)
+verify-charts: 11_share_split.svg | type=pie | mode=direct-calc | scale=N/A | total=100/100 pass | sectors=6/6 pass | legend=6/6 pass | colors=6/6 pass | center=N/A pass | calc=ran | svg=updated | marker=added (was missing)
 verify-charts: 14_revenue_mix.svg | type=stacked-bar | mode=decomposable-calc | scale=0-200 (from ticks) | calc=ran×3 | svg=updated (per stacked recipe)
 verify-charts: 15_unit_economics.svg | type=stacked-area | mode=manual-verify | scale=N/A | reason=percent-stacked, recipe does not apply
 verify-charts: 16_before_after.svg | type=dumbbell | mode=decomposable-calc | scale=0-100 (from ticks) | calc=ran×2 | svg=unchanged
@@ -251,6 +255,8 @@ verify-charts: 27_release_plan.svg | type=gantt | mode=decomposable-calc | scale
 verify-charts: 28_score_distribution.svg | type=boxplot | mode=decomposable-calc | scale=0-100 (from ticks) | calc=ran×4 (Q1/Q3/whiskers) | svg=updated
 verify-charts: 19_flow.svg | type=sankey | mode=manual-verify | link widths consistent with values | svg=unchanged
 ```
+
+For every donut/pie page, the receipt must include all five fields exactly as shown: `total`, `sectors`, `legend`, `colors`, and `center`. A missing or failed field leaves the verification gate open and blocks export.
 
 ---
 

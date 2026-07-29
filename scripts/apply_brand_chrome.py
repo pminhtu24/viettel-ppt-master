@@ -40,10 +40,15 @@ def _has_viettel_top_bar(svg: str) -> bool:
 
 
 def _has_viettel_logo(svg: str) -> bool:
+    """Recognize the branded asset regardless of small layout adjustments.
+
+    >>> _has_viettel_logo('<image href="../images/viettel-logo.png" x="1076"/>')
+    True
+    >>> _has_viettel_logo('<image href="../images/customer.png"/>')
+    False
+    """
     return bool(re.search(
-        r'<image\b(?=[^>]*(?:href|xlink:href)=["\'][^"\']*viettel-logo\.png["\'])'
-        r'(?=[^>]*\bx=["\']1088["\'])(?=[^>]*\by=["\']28["\'])'
-        r'(?=[^>]*\bwidth=["\']128["\'])(?=[^>]*\bheight=["\']42["\'])',
+        r'<image\b[^>]*(?:href|xlink:href)=["\'][^"\']*viettel-logo\.png["\']',
         svg,
         re.IGNORECASE,
     ))

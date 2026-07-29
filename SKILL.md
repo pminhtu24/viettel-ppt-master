@@ -404,14 +404,19 @@ Full effect list, anchor logic, and limits: [`references/animations.md`](referen
 
 **Step 7.1 — Rendered Visual QA (Mandatory)**:
 
-After PPTX export, render the produced PPTX to PDF/images and inspect the rendered slides before declaring completion:
+After the final PPTX export, render the full deck exactly once into a dedicated QA directory:
 
 ```bash
-python3 /home/tupham/.codex/skills/pptx/scripts/office/soffice.py --headless --convert-to pdf <output.pptx> --outdir <exports_dir>
-pdftoppm -jpeg -r 120 <output.pdf> <exports_dir>/qa_slide
+mkdir -p <exports_dir>/qa
+python3 /home/tupham/.codex/skills/pptx/scripts/office/soffice.py --headless --convert-to pdf <output.pptx> --outdir <exports_dir>/qa
+pdftoppm -jpeg -r 120 <exports_dir>/qa/<output_stem>.pdf <exports_dir>/qa/qa_slide
 ```
 
-Review the generated slide images for text overflow, clipped labels, chart marks entering title/footer zones, and footer/source collisions. If any issue is found, fix the corresponding SVG in `svg_output/`, rerun `svg_quality_checker.py`, re-export, and rerender affected slides. Do not report success from SVG validation alone.
+- Open **every** generated JPG with an image-capable viewer (`view_image`, `image_info`, or the environment's equivalent). Generic `file_read` errors on binary images and does not count as inspection.
+- Review for text overflow, clipped labels, missing or duplicated assets, layer-order errors, chart marks entering title/footer zones, and footer/source collisions.
+- If inspection is unavailable or any image fails to open, QA is incomplete: stop, preserve `<exports_dir>/qa/`, and report the blocker. Never infer success from file creation or SVG validation alone.
+- If an issue is found, fix the corresponding SVG, rerun `svg_quality_checker.py`, re-export, regenerate the PDF, and use `pdftoppm -f N -l N` to rerender only the affected slide(s). Do not repeat a full-deck JPG render.
+- After every slide has been visually inspected and all affected slides pass reinspection, delete only the dedicated `<exports_dir>/qa/` directory. Keep the final PPTX; keep a PDF only when the user requested one.
 
 > **Post-export annotation window**: the preview service from Step 6 typically remains running after export. If the user submitted annotations in the browser (during Executor or after export) and now asks to apply them — they may quote the browser prompt (`Annotations saved. ... apply my annotations`), say "apply my annotations" / "apply annotations" / equivalent — run [`live-preview`](workflows/live-preview.md) Step 2 to apply and re-export. Annotations submitted during generation are also handled here, not earlier.
 

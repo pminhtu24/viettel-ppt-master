@@ -21,6 +21,7 @@ Common Commands (can be copied and used directly)
 4. Quick calculation:
    python scripts/svg_position_calculator.py calc bar --data "East:185,South:142"
    python scripts/svg_position_calculator.py calc pie --data "A:35,B:25,C:20"
+   python scripts/svg_position_calculator.py calc pie --data "A:81,B:19" --expect-total 100
    python scripts/svg_position_calculator.py calc line --data "0:50,10:80,20:120"
    python scripts/svg_position_calculator.py calc grid --rows 2 --cols 3
 
@@ -328,6 +329,19 @@ class PieSlice:
     start_y: float
     end_x: float
     end_y: float
+
+
+def _matches_expected_total(total: float, expected: Optional[float]) -> bool:
+    """Check an optional pie total contract.
+
+    >>> _matches_expected_total(99.95, 100)
+    True
+    >>> _matches_expected_total(99.89, 100)
+    False
+    >>> _matches_expected_total(66, None)
+    True
+    """
+    return expected is None or math.isclose(total, expected, rel_tol=0, abs_tol=0.1)
 
 
 class PieChartCalculator:
@@ -1345,6 +1359,8 @@ Common commands:
     pie_parser.add_argument('--radius', type=float, default=200, help='Radius')
     pie_parser.add_argument('--inner-radius', type=float, default=0, help='Inner radius (donut chart)')
     pie_parser.add_argument('--start-angle', type=float, default=-90, help='Start angle')
+    pie_parser.add_argument('--expect-total', type=float,
+                            help='Require the raw data total to match this value within ±0.1')
 
     # Radar chart
     radar_parser = calc_subparsers.add_parser('radar', help='Radar chart')
@@ -1434,9 +1450,17 @@ Common commands:
             center = parse_tuple(args.center)
             calc = PieChartCalculator(center, args.radius)
             data = parse_data_string(args.data)
+            total = sum(data.values())
+            if not _matches_expected_total(total, args.expect_total):
+                parser.error(
+                    f'calc pie data total is {total:g}; expected '
+                    f'{args.expect_total:g} ±0.1'
+                )
             slices = calc.calculate(data, start_angle=args.start_angle, inner_radius=args.inner_radius)
 
             print(f"\n=== Pie Chart Slice Calculation ===")
+            if args.expect_total is not None:
+                print(f"Data total: {total:g} (expected {args.expect_total:g} ±0.1)")
             print(calc.format_table(slices))
 
         elif args.chart_type == 'radar':

@@ -44,6 +44,7 @@ Use after the project quality check for supported data charts:
 python3 scripts/svg_position_calculator.py calc bar --data "A:185,B:142" --area "130,155,1200,480" --bar-width 120
 python3 scripts/svg_position_calculator.py calc line --data "0:50,10:80,20:120" --area "120,120,1200,600" --y-range "0,150"
 python3 scripts/svg_position_calculator.py calc pie --data "A:35,B:25,C:20" --center "420,400" --radius 200
+# Add --expect-total 100 when the inputs are percentages.
 python3 scripts/svg_position_calculator.py analyze <svg_file>
 ```
 

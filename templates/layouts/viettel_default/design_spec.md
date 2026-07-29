@@ -74,13 +74,14 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 
 | Order | Value     | Usage                                      |
 | ----- | --------- | ------------------------------------------ |
-| 1     | `#EE0033` | Primary data series, key metrics          |
-| 2     | `#12436D` | Secondary data series, comparisons        |
-| 3     | `#28A197` | Tertiary series, positive trends          |
-| 4     | `#F46A25` | Warning series, risk data                 |
-| 5     | `#6B7280` | Neutral/background series                 |
+| 1     | `#EE0033` | Primary data series, key metrics           |
+| 2     | `#12436D` | Secondary data series, comparisons         |
+| 3     | `#28A197` | Tertiary series, positive trends           |
+| 4     | `#F46A25` | Warning series, risk data                  |
+| 5     | `#7C3AED` | Sixth categorical option; chart-only       |
+| 6     | `#6B7280` | Neutral series; always `Other` when present |
 
-> Use chart colors in rotation order for data visualizations (bar charts, line charts, pie charts).
+> Use chart colors in rotation order for categorical data. Each donut/pie slice uses one unique color; `Other` is always last and `#6B7280`.
 
 > **Deep-blue hard rule**: `#12436D` is never a text, card, rail, footer,
 > divider, ad-hoc background, or unregistered decorative color. Every SVG
@@ -609,11 +610,13 @@ KPI, and table pages omit `page_backgrounds` and keep the clean Viettel shell.
 ### Chart Usage Rules
 
 1. Use `#EE0033` only for the primary series, key metric, or threshold signal.
-2. Use `#12436D`, `#28A197`, and `#F46A25` for secondary series, positive trends, and warnings. Place every `#12436D` mark inside a `data-viettel-blue-scope="chart|diagram|icon"` group.
-3. Long labels such as CVE IDs, malware names, agency names, and sector names stay outside bars; values sit at the bar end.
-4. KPI cards use a two-line structure: large number on line 1, unit/context on line 2.
-5. Tables and ranked lists with more than 8 rows should use `basic_table`, `consulting_table`, or split slides; do not shrink body text below 11px to fit.
-6. A chart page may omit `page_layouts` if the catalog chart needs the full content area; post-processing must add Viettel brand chrome.
+2. Use `#12436D`, `#28A197`, `#F46A25`, `#7C3AED`, and `#6B7280` in categorical order. Place every `#12436D` mark inside a `data-viettel-blue-scope="chart|diagram|icon"` group.
+3. Donut is limited to a 2-slice KPI or a MECE 3-6-slice composition; pie is limited to a MECE 3-6-slice composition without a center KPI. Use horizontal bars for multi-select data or at least 7 flat groups, and treemap for hierarchical data.
+4. KPI donut uses `#EE0033` for the primary slice and `#E5E7EB` for the remainder. Composition donuts/pies use unique categorical colors, put `Other` last in `#6B7280`, directly label every slice, and keep legend/card colors identical to slice colors.
+5. Long labels such as CVE IDs, malware names, agency names, and sector names stay outside bars; values sit at the bar end.
+6. KPI cards use a two-line structure: large number on line 1, unit/context on line 2.
+7. Tables and ranked lists with more than 8 rows should use `basic_table`, `consulting_table`, or split slides; do not shrink body text below 11px to fit.
+8. A chart page may omit `page_layouts` if the catalog chart needs the full content area; post-processing must add Viettel brand chrome.
 
 ---
 
