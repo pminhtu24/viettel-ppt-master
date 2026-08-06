@@ -19,6 +19,8 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
+from check_fonts import ensure_viettel_fonts
+
 try:
     from project_utils import (
         CANVAS_FORMATS,
@@ -214,6 +216,18 @@ class ProjectManager:
                 for font_file in sorted(asset.iterdir()):
                     if font_file.is_file() and font_file.name in VIETTEL_FONT_FILES:
                         shutil.copy2(font_file, fonts_dir / font_file.name)
+
+        font_report = ensure_viettel_fonts(project_path)
+        if font_report["auto_installed"]:
+            print(
+                "Auto-installed Viettel fonts: "
+                + ", ".join(font_report["auto_installed"])
+            )
+        if font_report["status"] != "installed":
+            detail = font_report["install_error"] or (
+                "missing after install: " + ", ".join(font_report["missing_after"])
+            )
+            print(f"[WARN] brand fidelity degraded: {detail}")
 
     def _source_dir(self, project_path: Path) -> Path:
         sources_dir = project_path / SOURCE_DIRNAME

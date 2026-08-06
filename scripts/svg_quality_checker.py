@@ -73,6 +73,14 @@ VIETTEL_ALLOWED_COLORS = {
     "#F46A25",
     "#FFFFFF",
 }
+
+
+def _normalize_font_stack(value: str) -> tuple[str, ...]:
+    return tuple(
+        part.strip().strip("\"'").casefold()
+        for part in html.unescape(value).split(',')
+        if part.strip()
+    )
 NON_RENDER_TAGS = {
     "defs",
     "title",
@@ -1136,7 +1144,7 @@ class SVGQualityChecker:
             if is_text:
                 if not font:
                     missing_fonts.add(locator)
-                elif font != VIETTEL_FONT_STACK:
+                elif _normalize_font_stack(font) != _normalize_font_stack(VIETTEL_FONT_STACK):
                     invalid_fonts[font].add(locator)
                 if weight not in VIETTEL_ALLOWED_FONT_WEIGHTS:
                     invalid_weights[weight or '(missing)'].add(locator)
@@ -1427,7 +1435,7 @@ class SVGQualityChecker:
         if typo:
             default_font = html.unescape(typo.get('font_family', '').strip())
             if default_font:
-                allowed_fonts.add(default_font)
+                allowed_fonts.add(_normalize_font_stack(default_font))
             for k, v in typo.items():
                 if k == 'font_family' or not k.endswith('_family'):
                     continue
@@ -1435,7 +1443,7 @@ class SVGQualityChecker:
                 # Skip placeholder text like "same as body (omit if identical)"
                 if not v_clean or v_clean.lower().startswith('same as'):
                     continue
-                allowed_fonts.add(v_clean)
+                allowed_fonts.add(_normalize_font_stack(v_clean))
 
         # Sizes: declared slots are anchors; body is the ramp baseline.
         allowed_sizes = set()
@@ -1473,7 +1481,7 @@ class SVGQualityChecker:
             raw_font = elem.get('font-family')
             if raw_font:
                 val = html.unescape(raw_font.strip())
-                if allowed_fonts and val not in allowed_fonts:
+                if allowed_fonts and _normalize_font_stack(val) not in allowed_fonts:
                     font_drifts[val].add(locator)
 
             raw_size = elem.get('font-size')

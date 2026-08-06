@@ -13,10 +13,55 @@ from .pptx_dimensions import CANVAS_FORMATS, get_project_info
 from .pptx_discovery import find_svg_files
 from .pptx_slide_xml import TRANSITIONS
 
+from check_fonts import build_report
+from svg_quality_checker import SVGQualityChecker
+
 try:
     from pptx_animations import ANIMATIONS as _ANIMATIONS
 except ImportError:
     _ANIMATIONS = {}
+
+
+def _font_gate_errors(
+    project_path: Path,
+    svg_files: list[Path],
+    *,
+    report: dict[str, object] | None = None,
+    allow_font_fallback: bool = False,
+) -> list[str]:
+    """Return font problems that would otherwise become silent PPT fallbacks."""
+    if not (project_path / "spec_lock.md").exists():
+        return []
+
+    report = report or build_report(project_path)
+    errors = []
+    face_report = report.get("viettel_faces")
+    if (
+        not allow_font_fallback
+        and isinstance(face_report, dict)
+        and face_report["missing_after"]
+    ):
+        detail = face_report["install_error"] or "automatic installation did not register all faces"
+        errors.append(
+            f"missing FS Magistral faces: {', '.join(face_report['missing_after'])} ({detail})"
+        )
+    for stack in report["stacks"]:
+        if not allow_font_fallback and stack["status"] != "installed":
+            errors.append(
+                f"{stack['key']} requires {stack['stack']}, but the host would use "
+                f"{stack['active_family'] or 'no font'}"
+            )
+
+    checker = SVGQualityChecker()
+    for svg_file in svg_files:
+        result = checker.check_file(str(svg_file))
+        messages = [*result["errors"], *result["warnings"]]
+        for message in messages:
+            if "[brand-font]" in message or (
+                "[spec-lock-drift]" in message and "font-family" in message
+            ):
+                errors.append(f"{svg_file.name}: {message}")
+    return errors
 
 
 def main() -> None:
@@ -57,6 +102,11 @@ Per-element entrance animation:
         help="Canvas format; defaults to project metadata or SVG viewBox",
     )
     parser.add_argument("-q", "--quiet", action="store_true", help="Reduce output")
+    parser.add_argument(
+        "--allow-font-fallback",
+        action="store_true",
+        help="Export despite missing host fonts; SVG font drift remains forbidden",
+    )
 
     def non_negative_float(value: str) -> float:
         try:
@@ -98,6 +148,22 @@ Per-element entrance animation:
     svg_files, source_dir = find_svg_files(project_path)
     if not svg_files:
         parser.error(f"no SVG files found in {project_path / 'svg_output'}")
+
+    font_report = build_report(project_path) if (project_path / "spec_lock.md").exists() else None
+    font_errors = _font_gate_errors(
+        project_path,
+        svg_files,
+        report=font_report,
+        allow_font_fallback=args.allow_font_fallback,
+    )
+    if font_errors:
+        parser.error(
+            "font gate failed; export stopped to prevent Arial/Calibri substitution:\n  - "
+            + "\n  - ".join(font_errors)
+            + f"\nRun: python3 scripts/check_fonts.py {project_path}"
+        )
+    if args.allow_font_fallback and font_report and font_report["summary"]["brand_fidelity"] == "degraded":
+        print("[WARN] brand fidelity degraded: exporting with a host font fallback")
 
     if args.output:
         output_path = Path(args.output)

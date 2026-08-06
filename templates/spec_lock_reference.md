@@ -62,7 +62,7 @@
 >
 > **Stack length discipline.** Keep the default Viettel family declaration exactly `"FS Magistral"`. For explicit non-Viettel overrides, 3-4 fonts per stack is the sweet spot. Converter only writes the **first** Latin and **first** CJK font into PPTX — everything after is silently dropped. macOS-only families (`Songti SC`, `Menlo`, `Monaco`, `Helvetica`) are auto-mapped to Windows equivalents via `FONT_FALLBACK_WIN` (see `scripts/svg_to_pptx/drawingml_utils.py`); stacking both is redundant.
 >
-> **Bundled-font exception**: a template may intentionally lock `font_family` to non-preinstalled brand fonts when it also ships a local `fonts/` bundle and the workflow runs `scripts/check_fonts.py` before SVG generation. In that case, keep the exact brand stack in `spec_lock.md`; if the host falls through to a later family, the run must report `brand fidelity degraded` instead of silently pretending the brand font is available.
+> **Bundled-font exception**: a template may intentionally lock `font_family` to a bundled brand font. Keep the exact stack in `spec_lock.md`; `scripts/check_fonts.py` searches first and automatically installs the trusted bundled faces when needed. If installation still fails, report `brand fidelity degraded` without changing the locked stack.
 
 ## text_fit
 

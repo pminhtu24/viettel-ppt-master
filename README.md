@@ -104,4 +104,4 @@ Nếu deck có chart dữ liệu, workflow `verify-charts` sẽ được dùng �
 pip install -r requirements.txt
 ```
 
-Nếu font Viettel chưa cài trên host, skill vẫn tiếp tục sinh deck nhưng sẽ báo `brand fidelity degraded`; font bundle nằm trong `templates/layouts/viettel_default/fonts/`, có thể yêu cầu Agent cài các fonts vào máy.
+Skill tìm đủ FS Magistral Book, Medium và Bold trên host trước. Nếu thiếu bất kỳ face nào, skill tự cài cả ba từ `templates/layouts/viettel_default/fonts/` vào phạm vi user, không hỏi thêm. SVG luôn giữ `"FS Magistral"`; exporter chặn font fallback mặc định và chỉ cho phép chủ động bỏ qua bằng `--allow-font-fallback`.

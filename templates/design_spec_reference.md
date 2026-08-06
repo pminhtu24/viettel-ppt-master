@@ -108,7 +108,7 @@
 >
 > The converter (`drawingml_utils.py parse_font_family`) maps these to PPTX `<a:latin>` / `<a:ea>` regardless of order — but browser preview and SVG native rendering reflect stack order. Pick the order matching your design intent.
 
-> **Bundled brand fonts**: when a template ships a local `fonts/` bundle, keep the intended brand stack in `design_spec.md` / `spec_lock.md` exactly as designed, even if the host may not have those fonts yet. The runtime workflow must then run `scripts/check_fonts.py` after `spec_lock.md` generation. If the leading family is absent on the host, execution continues with fallback rendering but MUST report `brand fidelity degraded`; installation from the local bundle is opt-in and requires explicit user approval.
+> **Bundled brand fonts**: keep the intended stack in `design_spec.md` / `spec_lock.md`. For Viettel, `scripts/check_fonts.py` first searches for Book, Medium, and Bold; if any is missing, it automatically installs all three trusted bundled faces for the current user without asking, then re-checks.
 
 ### Font Size Hierarchy
 

@@ -55,7 +55,7 @@ description: >
 > - Use FS Magistral Bold (`font-weight="700"`) for cover/chapter/page titles, section and card headers, KPI/hero numbers, callouts, and highlighted text. Use Book/Regular (`400`) for body, descriptions, captions, sources, and footers; Medium (`500`) is reserved for secondary subtitles/labels.
 > - Viettel red `#EE0033` is the brand accent. Deep blue `#12436D` is restricted to chart, diagram/infographic, icon marks, and cataloged builtin backgrounds whose `backgrounds_index.json` item explicitly sets `deep_blue_background: true`. Never use it for text, cards, rails, footer, dividers, ad-hoc backgrounds, or unregistered decoration.
 > - Do NOT propose alternative brand colors, font combinations, typefaces, or competing templates unless the run is an explicit `custom_override`.
-> - If the host lacks a Viettel font, keep the same declared stack and report `brand fidelity degraded`; do not silently substitute another design font in the recommendation or `spec_lock.md`.
+> - Before generation, search the full host font catalog for FS Magistral Book, Medium, and Bold. If any face is missing, automatically install all three trusted bundled faces for the current user without asking. If installation still fails, keep `"FS Magistral"` in SVG, report `brand fidelity degraded`, and block export unless the user explicitly passes `--allow-font-fallback`.
 
 ## Main Pipeline Scripts
 
@@ -72,7 +72,7 @@ description: >
 | `${SKILL_DIR}/scripts/svg_quality_checker.py`      | SVG quality check                                                                                                                       |
 | `${SKILL_DIR}/scripts/svg_to_pptx.py`              | Export to PPTX                                                                                                                          |
 | `${SKILL_DIR}/scripts/update_spec.py`              | Propagate a `spec_lock.md` color / font_family change across all generated SVGs                                                         |
-| `${SKILL_DIR}/scripts/check_fonts.py`              | Preflight host font availability, fallback usage, and local bundle install hints                                                        |
+| `${SKILL_DIR}/scripts/check_fonts.py`              | Search for and, when needed, auto-install the three bundled FS Magistral faces                                                          |
 
 For complete tool documentation, see `${SKILL_DIR}/scripts/README.md`.
 
@@ -225,9 +225,9 @@ python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>
 ```
 
 - `installed` → proceed normally
-- `fallback in use` / `missing` → continue generation, but tell the user `brand fidelity degraded`
-- local bundle present in `<project_path>/fonts/` → tell the user the font is installable from the local bundle and ask explicit permission before attempting host installation
-- default policy: do **not** auto-install fonts
+- all three faces found → proceed without changing the host
+- any face missing → automatically install Book, Medium, and Bold from the trusted local bundle, then re-check
+- still missing after installation → continue SVG generation with the locked family and report `brand fidelity degraded`; export remains blocked unless explicitly run with `--allow-font-fallback`
 
 **Mandatory — split-mode note** (not a ninth confirmation): after listing the eight confirmation details, you MUST append exactly one short line (rendered in the user's language, prefixed with 💡) about generation mode. Pick the variant by qualitative read of Phase A signals — recommended page count, source-material bulk, whether `topic-research` ran with substantial web-fetch accumulation:
 
@@ -338,7 +338,7 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 
 **Per-page spec_lock re-read (Mandatory)**: before **each** SVG page, `read_file <project_path>/spec_lock.md` and use only its colors / fonts / icons / images, plus the per-page `page_rhythm` / optional `page_backgrounds` / `page_layouts` / `page_charts` lookups (resolves to background/template/chart SVGs already loaded in the batch read above). Missing `page_backgrounds` means no decorative background for that page. Resists context-compression drift on long decks. See executor-base.md §2.1.
 
-**Font-preflight gate (Mandatory for bundled brand fonts)**: before the first SVG page, if `<project_path>/fonts/` exists or `spec_lock.md typography` leads with a non-preinstalled brand font, run `python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>`. If the result is `fallback in use` or `missing`, surface `brand fidelity degraded` and continue only after making that runtime state explicit to the user. Installing from the local bundle is opt-in and requires explicit user approval.
+**Font-preflight gate (Mandatory for bundled brand fonts)**: before the first SVG page, run `python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>`. It searches the full host catalog for FS Magistral Book, Medium, and Bold and automatically installs all three trusted bundled faces when any is missing; do not ask the user. If the re-check still reports missing faces, surface `brand fidelity degraded` but continue generating SVG with the exact locked family. The exporter repeats installation and validation, blocks missing host faces by default, and always rejects Arial/Calibri drift; only explicit `--allow-font-fallback` bypasses the missing-host-face block.
 
 > ⚠️ **Main-agent only**: SVG generation MUST stay in the current main agent — page design depends on full upstream context. Do NOT delegate to sub-agents.
 > ⚠️ **Generation rhythm**: generate pages sequentially, one at a time, in the same continuous context. Do NOT batch (e.g., 5 per group).

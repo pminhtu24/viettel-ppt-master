@@ -143,7 +143,7 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 
 #### Font Combinations
 
-> **Viettel typography default (HARD rule for this skill).** Unless the user explicitly requests a non-Viettel brand override, typography is locked to the single family `"FS Magistral"`. During Eight Confirmations, state this fixed rule for visibility but do NOT ask the user to choose or approve a typeface. Do NOT propose alternative font combinations or substitute generic PPT-safe stacks. If the host lacks FS Magistral, runtime preflight handles it as `brand fidelity degraded`; the design decision remains unchanged.
+> **Viettel typography default (HARD rule for this skill).** Unless the user explicitly requests a non-Viettel brand override, typography is locked to the single family `"FS Magistral"`. During Eight Confirmations, state this fixed rule for visibility but do NOT ask the user to choose or approve a typeface. Do NOT propose alternative font combinations or substitute generic PPT-safe stacks. Runtime preflight searches for Book, Medium, and Bold and automatically installs the trusted bundle when needed, without asking the user.
 >
 > **Viettel weight lock (HARD rule).** Use FS Magistral Bold (`700`) for cover/chapter/page titles, section headers, card headers, KPI/hero numbers, callouts, highlighted labels, and any text intended to stand out. Use Book/Regular (`400`) for body copy, descriptions, captions, sources, footers, and ordinary chart labels. Use Medium (`500`) only for secondary subtitles or labels. Do not use `600`, `800`, or `900` in normal Viettel runs; the target display face is Bold, not ExtraBold.
 
@@ -156,7 +156,7 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 > - Mono → `Consolas` / `"Courier New"`
 > - Display → `Impact` / `"Arial Black"`
 >
-> The locked Viettel family is the default bundled-brand exception for this skill. Keep `"FS Magistral"` even when it is not pre-installed; `scripts/check_fonts.py` reports runtime availability before generation. Other non-pre-installed stacks are acceptable only when the Design Spec notes "requires install or PPTX embed".
+> The locked Viettel family is the default bundled-brand exception for this skill. Keep `"FS Magistral"` in the design lock; `scripts/check_fonts.py` searches and auto-installs its three required bundled faces. Other non-pre-installed stacks are acceptable only when the Design Spec notes "requires install or PPTX embed".
 
 **Forbidden — similar-but-not-identical pairings across roles** (do not split title vs body across these; within one stack as cross-platform fallback they remain encouraged):
 

@@ -144,7 +144,7 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 
 > Keep the single font family exactly as declared in `spec_lock.md`. Do not introduce ad-hoc fonts in page SVGs.
 > For Viettel decks, Strategist MUST write `"FS Magistral"` into `spec_lock.md ## typography` as `font_family`. Do not ask the user to choose typography. Use only weights `400`, `500`, and `700`; prominent text uses `700`, never `800`/ExtraBold.
-> Viettel template projects ship a local `fonts/` bundle. After project setup, run `scripts/check_fonts.py <project_path>`; if the result is `fallback in use` or `missing`, continue with the same stack but report `brand fidelity degraded`. Installation from the local bundle is opt-in and requires explicit user approval.
+> Viettel template projects ship a local `fonts/` bundle. After project setup, run `scripts/check_fonts.py <project_path>`; it searches for Book, Medium, and Bold first and automatically installs all three trusted bundled faces when any is missing. Do not ask the user. If re-check still fails, keep `"FS Magistral"` in SVG and report `brand fidelity degraded`.
 
 ---
 
