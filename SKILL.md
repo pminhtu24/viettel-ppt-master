@@ -370,6 +370,8 @@ python3 ${SKILL_DIR}/scripts/apply_brand_chrome.py <project_path> --brand-chrome
 python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
 ```
 
+Chrome normalization also removes marked background groups and near-full-height Viettel-red left rails from every page except cover, chapter, and ending before the final scan.
+
 - `custom_override` omits chrome normalization but still runs the final scan. The final project scan must report `0 errors` before native export.
 
 **✅ Checkpoint — Confirm all SVGs are fully generated and quality-checked. Proceed directly to export**:

@@ -232,7 +232,7 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
      - Try at most two direct fixes for the same fingerprint. A persistent finding gets one type-specific fallback: render then fix/explicitly annotate intentional visual geometry; inspect inherited brand attributes; or resolve/replace the single unsupported icon/element.
      - If a non-deferred fingerprint survives fallback, report it as a blocker and stop; never continue a blind repair loop or export with errors.
   3. **Chart Verification**: after project repair, chart decks run `verify-charts`. Re-check only SVGs changed by chart verification.
-  4. **Chrome + Final Scan**: run `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` once for `viettel_default`, then run the final full-project checker. `custom_override` skips chrome only. The final scan must report `0 errors` before native export.
+  4. **Chrome + Final Scan**: run `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` once for `viettel_default`. It removes marked background groups and near-full-height Viettel-red left rails from non-cover/chapter/ending pages before normalizing chrome. Then run the final full-project checker. `custom_override` skips chrome only. The final scan must report `0 errors` before native export.
 
 ### 3.1 Chart Plot-Area Marker (MANDATORY on every chart page)
 

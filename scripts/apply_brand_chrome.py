@@ -9,6 +9,11 @@ import shutil
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
+try:
+    from update_spec import parse_lock as _parse_spec_lock
+except ImportError:  # pragma: no cover - standalone fallback
+    _parse_spec_lock = None
+
 
 COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 VIETTEL_FONT_STACK = '&quot;FS Magistral&quot;'
@@ -100,6 +105,118 @@ def _float_attr(elem: ET.Element, name: str) -> float:
         return 0.0
 
 
+def _allows_viettel_background(svg_file: Path, slide_number: int | None) -> bool:
+    match = re.match(r"(\d+)", svg_file.stem)
+    page_number = int(match.group(1)) if match else slide_number
+    page_key = f"P{page_number:02d}" if page_number is not None else ""
+    layout = ""
+    lock_path = svg_file.parent.parent / "spec_lock.md"
+    if page_key and _parse_spec_lock is not None and lock_path.exists():
+        try:
+            layout = _parse_spec_lock(lock_path).get("page_layouts", {}).get(page_key, "")
+        except OSError:
+            pass
+    identity = (layout or svg_file.stem).casefold()
+    return bool(re.search(r"(?:^|[_-])(cover|chapter|ending)(?:$|[_-])", identity))
+
+
+def _style_value(elem: ET.Element, name: str) -> str:
+    if elem.get(name):
+        return elem.get(name, "").strip()
+    for item in elem.get("style", "").split(";"):
+        key, separator, value = item.partition(":")
+        if separator and key.strip().casefold() == name:
+            return value.strip()
+    return ""
+
+
+def _translated_position(
+    elem: ET.Element, parent_map: dict[ET.Element, ET.Element]
+) -> tuple[float, float]:
+    x = _float_attr(elem, "x")
+    y = _float_attr(elem, "y")
+    current: ET.Element | None = elem
+    while current is not None:
+        for match in re.finditer(
+            r"translate\(\s*(-?[\d.]+)(?:[\s,]+(-?[\d.]+))?\s*\)",
+            current.get("transform", ""),
+            re.IGNORECASE,
+        ):
+            x += float(match.group(1))
+            y += float(match.group(2) or 0)
+        current = parent_map.get(current)
+    return x, y
+
+
+def sanitize_viettel_background(svg: str, *, allow_background: bool) -> str:
+    """Remove forbidden background layers and full-height red rails.
+
+    >>> marked = ('<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">'
+    ...           '<g data-viettel-background-id="bg_signal_arc">'
+    ...           '<rect x="0" y="0" width="18" height="720" fill="#EE0033"/>'
+    ...           '</g><rect id="keep" x="80" y="80" width="20" height="20"/></svg>')
+    >>> clean = sanitize_viettel_background(marked, allow_background=False)
+    >>> 'data-viettel-background-id' in clean, 'id="keep"' in clean
+    (False, True)
+    >>> sanitize_viettel_background(marked, allow_background=True) == marked
+    True
+    >>> styled = ('<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">'
+    ...           '<g transform="translate(4 0)"><rect id="rail" x="0" y="0" '
+    ...           'width="12" height="700" style="fill:#ee0033"/></g></svg>')
+    >>> 'id="rail"' in sanitize_viettel_background(styled, allow_background=False)
+    False
+    """
+    if allow_background:
+        return svg
+    try:
+        parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
+        root = ET.fromstring(svg, parser=parser)
+    except ET.ParseError:
+        return svg
+
+    view_box = root.get("viewBox", "").replace(",", " ").split()
+    try:
+        canvas_height = float(view_box[3]) if len(view_box) == 4 else _float_attr(root, "height")
+    except ValueError:
+        canvas_height = _float_attr(root, "height")
+    canvas_height = canvas_height or 720.0
+    parent_map = {child: parent for parent in root.iter() for child in parent}
+    removals: list[ET.Element] = []
+
+    for elem in root.iter():
+        if elem.get("data-viettel-background-id") is not None:
+            removals.append(elem)
+            continue
+        if _local_name(elem.tag) != "rect":
+            continue
+        fill = re.sub(r"\s+", "", _style_value(elem, "fill")).upper()
+        x, y = _translated_position(elem, parent_map)
+        width = _float_attr(elem, "width")
+        height = _float_attr(elem, "height")
+        if (
+            fill in {"#EE0033", "RGB(238,0,51)"}
+            and -8 <= x <= 24
+            and y <= 72
+            and 4 <= width <= 40
+            and height >= canvas_height * 0.8
+        ):
+            removals.append(elem)
+
+    if not removals:
+        return svg
+    for elem in removals:
+        parent = parent_map.get(elem)
+        if parent is not None and elem in parent:
+            parent.remove(elem)
+    namespace = root.tag.partition("}")[0].lstrip("{") if "}" in root.tag else ""
+    if namespace:
+        ET.register_namespace("", namespace)
+    serialized = ET.tostring(root, encoding="unicode")
+    if _local_name(root.tag) == "svg" and serialized.rstrip().endswith("/>"):
+        serialized = re.sub(r"\s*/>\s*$", "></svg>", serialized)
+    return serialized
+
+
 def viettel_chrome_svg(
     slide_number: int | None = None,
     *,
@@ -166,6 +283,10 @@ def process_svg_file(
     if strip_comments:
         updated = strip_svg_comments(updated)
     if brand_chrome == "viettel":
+        updated = sanitize_viettel_background(
+            updated,
+            allow_background=_allows_viettel_background(svg_file, slide_number),
+        )
         updated = apply_viettel_chrome(updated, slide_number)
     if updated == original:
         return False
