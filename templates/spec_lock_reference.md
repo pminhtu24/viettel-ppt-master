@@ -127,12 +127,11 @@
 
 - P01: bg_red_corner_sweep
 - P03: bg_red_folded_stage
-- P06: bg_wave_ribbon_soft
 - P07: bg_signal_arc
 
-> Optional section-only entries for `brand.profile: viettel_default`. Key: `P<NN>` matching §IX. Value: a background id from `templates/backgrounds/backgrounds_index.json`, without `.svg`.
+> Optional cover/chapter/ending entries for `brand.profile: viettel_default`. Key: `P<NN>` matching §IX. Value: a background id from `templates/backgrounds/backgrounds_index.json`, without `.svg`.
 >
-> **Default Viettel policy**: only cover, chapter, section-divider, ending, and low-content breathing pages get a background layer. Dense content, chart, KPI, and table pages MUST omit `page_backgrounds` and use the standard clean Viettel shell.
+> **Default Viettel policy**: only cover, chapter, and ending pages get a background layer or full-height red rail. Content, TOC, chart, KPI, table, section-divider, and breathing pages MUST omit `page_backgrounds` and use the standard clean Viettel shell.
 >
 > **Layering rule**: background SVGs are copied as decorative layers only. Executor must keep exactly one full-canvas opaque page base rect, placed before the background layer; omit any copied background/layout full-canvas white/base rect that would appear after the background.
 >
@@ -140,7 +139,7 @@
 >
 > **Selection source**: read `templates/backgrounds/backgrounds_index.json`. Match by section/page role, `page_rhythm`, content topic, and `safe_text_zone`. Avoid repeating the same background on adjacent section pages when another suitable option exists.
 >
-> **Deep-blue builtin exception**: an item may use `#12436D` only when its index row sets `deep_blue_background: true`. Executor must preserve the item's `safe_text_zone` and wrap its copied decorative elements in `<g data-viettel-blue-scope="background" data-viettel-background-id="<id>">`. This exception never permits deep-blue text or ad-hoc background decoration.
+> **Background marker**: wrap every copied background in `<g data-viettel-background-id="<id>">`. When its index row sets `deep_blue_background: true`, also add `data-viettel-blue-scope="background"`. The deep-blue exception never permits deep-blue text or ad-hoc background decoration.
 >
 > **Missing entry** → Executor applies no decorative background. This is expected for content-heavy pages.
 
@@ -149,6 +148,7 @@
 - P01: 01_cover
 - P03: 02a_chapter
 - P04: 03a_content_abstract
+- P07: 04_ending
 
 > One entry per page **that uses a template SVG**. Key: `P<NN>` matching §IX. Value: the template's SVG basename without extension (e.g., `01_cover`, `03a_content_image_text`) — Executor resolves it to `templates/<chosen_template>/<value>.svg`. Modern templates ship many content-page variants (`03a_content_abstract`, `03b_content_image_text`, `03c_content_three_items` …); the page-type → single-file mapping in `executor-base.md §1` no longer covers them, so this section is the per-page truth.
 >

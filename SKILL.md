@@ -24,9 +24,9 @@ description: >
 > 5. **NO SPECULATIVE EXECUTION** — "Pre-preparing" content for subsequent Steps is FORBIDDEN (e.g., writing SVG code during the Strategist phase)
 > 6. **NO SUB-AGENT SVG GENERATION** — Executor Step 6 SVG generation is context-dependent and MUST be completed by the current main agent end-to-end. Delegating page SVG generation to sub-agents is FORBIDDEN
 > 7. **SEQUENTIAL PAGE GENERATION ONLY** — In Executor Step 6, after the global design context is confirmed, SVG pages MUST be generated sequentially page by page in one continuous pass. Grouped page batches (for example, 5 pages at a time) are FORBIDDEN
-> 8. **SPEC_LOCK RE-READ PER PAGE** — Before generating each SVG page, Executor MUST `read_file <project_path>/spec_lock.md`. All colors / fonts / icons / images MUST come from this file — no values from memory or invented on the fly. Executor MUST also look up the current page's `page_rhythm` (`anchor` / `dense` / `breathing`), optional `page_backgrounds` (section-only Viettel background layer, if any), `page_layouts` (which template SVG to inherit, if any), and `page_charts` (which chart template to adapt, if any). Empty / absent entries are intentional Strategist signals; missing `page_backgrounds` means no decorative background for that page — see executor-base.md §2.1. This rule exists to resist context-compression drift on long decks and to break the uniform "every page is a card grid" default
+> 8. **SPEC_LOCK RE-READ PER PAGE** — Before generating each SVG page, Executor MUST `read_file <project_path>/spec_lock.md`. All colors / fonts / icons / images MUST come from this file — no values from memory or invented on the fly. Executor MUST also look up the current page's `page_rhythm` (`anchor` / `dense` / `breathing`), optional `page_backgrounds` (cover/chapter/ending-only Viettel background layer, if any), `page_layouts` (which template SVG to inherit, if any), and `page_charts` (which chart template to adapt, if any). Empty / absent entries are intentional Strategist signals; missing `page_backgrounds` means no decorative background for that page — see executor-base.md §2.1. This rule exists to resist context-compression drift on long decks and to break the uniform "every page is a card grid" default
 > 9. **SVG MUST BE HAND-WRITTEN, NOT SCRIPT-GENERATED** — Every SVG page is written by the main agent directly, one page at a time (see rules 6 and 7). Writing or running a Python / Node / shell script that produces the SVG files in batch — looping over pages, templating from data, or emitting them via a generator — is FORBIDDEN, including under "save tokens", "quick draft", or "user is in a hurry" pretexts. The script-generation path was tried on a feature branch and abandoned: cross-page visual consistency depends on per-page authoring with full upstream context, which a generator script cannot reproduce
-> 10. **CHECK AFTER FULL-DECK GENERATION** — Generate every SVG page sequentially in one continuous pass before running brand-chrome normalization or quality checks. After generation, normalize deterministic Viettel chrome when applicable, run `svg_quality_checker.py` on the project, and fix every error before chart verification or export
+> 10. **CHECK AFTER FULL-DECK GENERATION** — Generate every SVG page sequentially in one continuous pass, then run the initial project checker and repair pass. After chart verification, normalize deterministic Viettel chrome and run the final full-project checker; export requires `0 errors`
 
 > [!IMPORTANT]
 >
@@ -34,7 +34,7 @@ description: >
 >
 > - **Response language**: match the user's input and source materials. Explicit user override takes precedence.
 > - **Template format**: `design_spec.md` MUST follow its original English template structure (section headings, field names) regardless of conversation language. Content values may be in the user's language.
-> - **Viettel section rhythm**: when a Viettel deck has clear source headings or 8+ slides with multiple narrative blocks, Strategist should create meaningful section dividers from the source structure. These are the only normal pages that receive decorative backgrounds; dense content/chart/KPI/table pages keep the clean Viettel shell.
+> - **Viettel section rhythm**: when a Viettel deck has clear source headings or 8+ slides with multiple narrative blocks, Strategist should create meaningful chapter pages from the source structure. Decorative backgrounds and full-height red rails are restricted to cover, chapter, and ending pages; every other page keeps the clean Viettel shell.
 
 > [!IMPORTANT]
 >
@@ -346,23 +346,31 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 **Visual Construction Phase**: generate SVG pages sequentially, one at a time, in one continuous pass → `<project_path>/svg_output/`
 
 ```bash
-python3 ${SKILL_DIR}/scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel  # viettel_default only
 python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
 ```
 
-- Run the commands above only after every SVG page has been generated (`custom_override`: omit chrome normalization). This deterministic chrome step is allowed post-processing, not scripted page generation.
+- Run the initial project scan only after every SVG page has been generated.
 - Treat `(rule code, SVG file, element locator)` as the stable finding fingerprint. Bounds/value changes do not create a new finding.
-- Run the checker on the full project at most three times: **initial scan** → batch-fix all reported findings → **batch verification** → targeted per-file repair → **final scan**. Between batch verification and the final scan, check only the SVG being repaired. Chart-verification re-checks do not count against these three generation scans.
+- Run the checker on the full project at most three times: **initial scan** → batch-fix all reported findings → **batch verification** → targeted per-file repair → post-chrome **final scan**. Between batch verification and the final scan, check only the SVG being repaired. Chart-verification re-checks do not count against these three generation scans.
 - Fix in batches: native/XML/icon compatibility first, brand/font/palette/spec-lock second, then text overflow/title-zone. Do not reproduce `_estimate_svg_text_width()` or write inline scripts to expand/remap icons.
+- Before chrome normalization, defer only missing top bar/logo/page-number findings that `apply_brand_chrome.py` can add deterministically. Duplicate chrome, logo-clearance, background, rail, palette, and font errors are never deferred.
 - A fingerprint gets at most two direct repair attempts. If it persists, stop guessing and use its fallback once:
   - text overflow/title-zone: render the affected SVG/slide; fix confirmed visual breakage, or mark intentional layout with `data-allow-overflow="true"` on the text / `data-allow-title-zone="true"` on the shape or ancestor group;
   - brand/font/palette/spec-lock: inspect inherited attributes and brand chrome; annotations are forbidden;
   - unresolved icon/native element: choose an existing icon under `templates/icons/` or replace that one icon with SVG primitives; do not rewrite the deck in bulk;
   - XML/missing image: repair the exact structure/reference reported by the checker.
 - If the same fingerprint remains after its fallback, record the file, locator, rule, and attempted fixes as a blocker; do not export and do not continue the loop.
-- Any `error` MUST be fixed before proceeding. The final project scan must report `0 errors`.
+- All non-deferred errors MUST be fixed before chart verification.
 - `warning` entries (low-res image, non-PPT-safe font tail, long text without a wrap contract, etc.): fix when straightforward, otherwise acknowledge and release.
-- After the project checker passes, chart decks run [`verify-charts`](workflows/verify-charts.md). If chart verification changes an SVG, re-run the checker for that SVG before export. Non-chart decks proceed directly to export.
+- After the project repair pass, chart decks run [`verify-charts`](workflows/verify-charts.md). If chart verification changes an SVG, re-run the checker for that SVG.
+- After chart verification (or immediately for non-chart decks), normalize `viettel_default` chrome once, then run the final full-project scan:
+
+```bash
+python3 ${SKILL_DIR}/scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel
+python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
+```
+
+- `custom_override` omits chrome normalization but still runs the final scan. The final project scan must report `0 errors` before native export.
 
 **✅ Checkpoint — Confirm all SVGs are fully generated and quality-checked. Proceed directly to export**:
 

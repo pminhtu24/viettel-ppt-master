@@ -86,17 +86,17 @@ Before generating each page, output which template is used:
 
 For `viettel_default`, projects normally include background SVGs at
 `templates/backgrounds/`. These files are decorative layers, not page layouts,
-and should be used only for section-like pages through `spec_lock.md ##
-page_backgrounds`.
+and may be used only for cover, chapter, and ending pages through
+`spec_lock.md ## page_backgrounds`.
 
 Rules:
 
 - Read `templates/backgrounds/backgrounds_index.json` once during the pre-generation batch read.
 - Read only the `templates/backgrounds/<id>.svg` files listed in `spec_lock.md page_backgrounds`; if the section is absent, read no background SVGs.
-- Copy the selected background SVG's decorative body elements near the top of the output SVG, immediately after the single base page `<rect>` and before shell chrome/content. Wrap the copied elements in `<g data-viettel-blue-scope="background" data-viettel-background-id="<id>">` when the selected index item has `deep_blue_background: true`; otherwise use an ordinary background group. Do not copy the background SVG as the entire page, and do not copy any full-canvas opaque white/base `<rect>` from the background file.
+- Copy the selected background SVG's decorative body elements near the top of the output SVG, immediately after the single base page `<rect>` and before shell chrome/content. Always wrap them in `<g data-viettel-background-id="<id>">`; also add `data-viettel-blue-scope="background"` when the selected index item has `deep_blue_background: true`. Do not copy the background SVG as the entire page, and do not copy any full-canvas opaque white/base `<rect>` from the background file.
 - When inheriting a layout SVG and applying `page_backgrounds`, the final XML order MUST be: `<defs>` if needed → one base page `<rect>` → optional decorative background layer (without its white/base rect) → template chrome/content/page elements. Never paste a layout/template full-canvas white rect after the decorative background layer.
-- Keep the normal Viettel logo, top accent/rail, footer, page number, title safe area, and text-fit rules.
-- Backgrounds are reserved for cover, chapter, section-divider, ending, and low-content `breathing` pages. Dense content, chart, KPI, and table pages should omit `page_backgrounds` and use the clean Viettel shell.
+- Keep the normal Viettel logo, top accent, footer, page number, title safe area, and text-fit rules. Preserve a full-height rail only on cover/chapter/ending pages.
+- Backgrounds and full-height red rails are reserved for cover, chapter, and ending pages. Content, TOC, chart, KPI, table, section-divider, and `breathing` pages must omit `page_backgrounds` and use the clean Viettel shell.
 - Treat backgrounds as supporting atmosphere: if background marks compete with content, reduce opacity, cover them with a pale content surface, or switch to a lower-intensity background. Do not use SVG `<filter>` / blur effects; simulate softness with pale fills, broad geometry, gradients, and low opacity.
 - Deep blue `#12436D` remains forbidden for ad-hoc background/decorative layers. The only exception is a cataloged builtin background whose `backgrounds_index.json` item sets `deep_blue_background: true`; preserve its declared safe text zone and scoped wrapper exactly.
 
@@ -149,9 +149,10 @@ Before drawing each Viettel page, look up its optional entry in
 `page_backgrounds` (key format `P<NN>` matching §IX of `design_spec.md`) and
 apply a background layer only when an entry exists:
 
-- Entry present (e.g., `P04: bg_clean_white_rail`) → copy the corresponding background SVG decorative body elements already loaded in §1.0 into the output SVG's background layer, excluding any full-canvas opaque white/base `<rect>`.
-- Missing entry on `viettel_default` → apply no decorative background. This is expected for dense content, chart, KPI, and table pages.
-- Whole section absent on `viettel_default` → apply no decorative backgrounds. This is valid for decks with no section-like pages.
+- Entry present on a cover/chapter/ending page (e.g., `P03: bg_clean_white_rail`) → copy the corresponding background SVG decorative body elements already loaded in §1.0 into a `<g data-viettel-background-id="bg_clean_white_rail">`, excluding any full-canvas opaque white/base `<rect>`.
+- Entry present on any other page type → emit `error: page_backgrounds <P<NN>> is allowed only for cover/chapter/ending` and do not copy it.
+- Missing entry on `viettel_default` → apply no decorative background. This is required for content, TOC, chart, KPI, table, section-divider, and `breathing` pages.
+- Whole section absent on `viettel_default` → apply no decorative backgrounds. This is valid for decks whose cover/chapter/ending pages use only their layout shells.
 - Entry missing from `templates/backgrounds/backgrounds_index.json` or missing file → emit `warning: page_backgrounds <P<NN>> references missing background <id> — skipping decorative background`.
 - Under `custom_override`, ignore `page_backgrounds` unless the custom template explicitly defines its own background library.
 
@@ -217,20 +218,21 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
 - **Proximity**: group related elements with tight spacing; separate unrelated groups
 - **Spec adherence**: follow color, layout, canvas format, and typography in the spec
 - **Template structure**: if templates exist, inherit the visual framework
-- **Viettel brand chrome**: if the deck uses `viettel_default` or the execution lock specifies a Viettel brand profile, normalize the completed deck with `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` before the project quality check. This gives layout, chart, and framework pages the same logo/page-number contract before validation.
+- **Viettel brand chrome**: if the deck uses `viettel_default` or the execution lock specifies a Viettel brand profile, normalize the completed deck with `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` after repair/chart verification and immediately before the final project scan. This gives layout, chart, and framework pages the same top-bar/logo/page-number contract in the SVGs that native export consumes.
 - **Viettel logo clearance**: the fixed logo reserves `x=1060-1224, y=20-82`. Header/title text, subtitles, chart labels, and callouts MUST NOT enter this slot. Content-page titles should use `data-box="88,36,960,58" data-wrap="true"` or manual line breaks so long titles wrap before the logo.
-- **Viettel page number ownership**: each slide has exactly one page-number treatment. If a page inherits a Viettel shell, do not draw another bottom-right number; pre-check chrome normalization adds one only when the shell does not already own it.
+- **Viettel page number ownership**: each slide has exactly one page-number treatment. If a page inherits a Viettel shell, do not draw another bottom-right number; chrome normalization adds one only when the shell does not already own it.
 - **Brand font runtime honesty**: if automatic installation still leaves a required face missing, keep the declared stack and tell the user `brand fidelity degraded`. SVG generation may continue; export is blocked by default. Never rewrite the deck to Arial/Calibri.
 - **Main-agent ownership**: SVG generation must run in the main agent (not sub-agents) — pages share upstream context for cross-page visual continuity
 - **Generation rhythm**: lock global design context first, then generate pages sequentially in one continuous context. No batched groups (e.g., 5 at a time).
 - **Phased continuous generation** (mandatory):
   1. **Visual Construction Phase**: generate all SVG pages sequentially in one continuous pass. Chart pages MUST embed plot-area markers per §3.1 below.
-  2. **Project Quality Gate**: after every page is generated, run `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` for `viettel_default`, then run `python3 scripts/svg_quality_checker.py <project_path>` for every profile. The checker reports stable `(rule, file, locator)` fingerprints and every offending element in the initial scan.
+  2. **Project Quality Gate**: after all pages are generated, run `python3 scripts/svg_quality_checker.py <project_path>` for every profile. The checker reports stable `(rule, file, locator)` fingerprints and every offending element in the initial scan. Before normalization, defer only missing top bar/logo/page-number findings that `apply_brand_chrome.py` can add; every other error must be repaired.
      - Run at most three full-project scans: initial → batch verification → final. Between the second and third scans, re-check only affected SVGs.
      - Batch-fix native/XML/icon issues first, brand/font/palette/spec-lock second, and overflow/title-zone last.
      - Try at most two direct fixes for the same fingerprint. A persistent finding gets one type-specific fallback: render then fix/explicitly annotate intentional visual geometry; inspect inherited brand attributes; or resolve/replace the single unsupported icon/element.
-     - If the fingerprint survives fallback, report it as a blocker and stop; never continue a blind repair loop or export with errors. The final scan must report `0 errors`.
-  3. **Chart Verification**: after the project quality gate passes, chart decks run `verify-charts`. Re-check only SVGs changed by chart verification. Non-chart decks proceed directly to export.
+     - If a non-deferred fingerprint survives fallback, report it as a blocker and stop; never continue a blind repair loop or export with errors.
+  3. **Chart Verification**: after project repair, chart decks run `verify-charts`. Re-check only SVGs changed by chart verification.
+  4. **Chrome + Final Scan**: run `python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel` once for `viettel_default`, then run the final full-project checker. `custom_override` skips chrome only. The final scan must report `0 errors` before native export.
 
 ### 3.1 Chart Plot-Area Marker (MANDATORY on every chart page)
 

@@ -59,6 +59,7 @@ VIETTEL_FONT_STACK = '"FS Magistral"'
 VIETTEL_ALLOWED_FONT_WEIGHTS = {"", "normal", "400", "500", "bold", "700"}
 VIETTEL_DEEP_BLUE = "#12436D"
 VIETTEL_BLUE_SCOPES = {"chart", "diagram", "icon", "background"}
+VIETTEL_RAIL_PAGE_ROLES = {"cover", "chapter", "ending"}
 VIETTEL_ALLOWED_COLORS = {
     "#000000",
     "#12436D",
@@ -1106,7 +1107,63 @@ class SVGQualityChecker:
                 "[brand-page-number] missing bottom-right page number on a non-cover page"
             )
 
+        self._check_viettel_background_contract(root, svg_path, result)
         self._check_viettel_fonts_and_colors(root, result)
+
+    def _check_viettel_background_contract(
+        self, root: ET.Element, svg_path: Path, result: Dict
+    ) -> None:
+        """Allow full-height red rails only on cover, chapter, and ending pages."""
+        lock = self._get_spec_lock(svg_path) or {}
+        match = re.match(r'^(\d{1,3})', svg_path.stem)
+        page_key = f"P{int(match.group(1)):02d}" if match else ''
+        layout = lock.get('page_layouts', {}).get(page_key, '').casefold()
+        identity = layout or svg_path.stem.casefold()
+        role = next(
+            (candidate for candidate in VIETTEL_RAIL_PAGE_ROLES if candidate in identity),
+            None,
+        )
+
+        declared = lock.get('page_backgrounds', {}).get(page_key, '').strip()
+        markers = {
+            value.strip()
+            for elem in root.iter()
+            if (value := elem.get('data-viettel-background-id')) and value.strip()
+        }
+        if declared and role not in VIETTEL_RAIL_PAGE_ROLES:
+            result['errors'].append(
+                f"[brand-background-role] {page_key or svg_path.stem} declares {declared!r}, "
+                "but Viettel backgrounds are limited to cover/chapter/ending pages"
+            )
+        if declared and markers != {declared}:
+            result['errors'].append(
+                f"[brand-background-marker] {page_key or svg_path.stem} declares {declared!r}, "
+                f"but SVG markers are {sorted(markers) or 'missing'}"
+            )
+        elif not declared and markers:
+            result['errors'].append(
+                f"[brand-background-unexpected] {page_key or svg_path.stem} has undeclared "
+                f"background marker(s): {', '.join(sorted(markers))}"
+            )
+
+        locators = _element_locators(root)
+        rails = []
+        for elem in root.iter():
+            if _local_name(elem.tag) != 'rect':
+                continue
+            if (
+                abs(_float_attr(elem, 'x')) < 0.01 and
+                abs(_float_attr(elem, 'y')) < 0.01 and
+                abs(_float_attr(elem, 'width') - 18) < 0.01 and
+                abs(_float_attr(elem, 'height') - 720) < 0.01 and
+                _get_svg_attr(elem, 'fill').upper() == '#EE0033'
+            ):
+                rails.append(locators[id(elem)])
+        if rails and role not in VIETTEL_RAIL_PAGE_ROLES:
+            result['errors'].append(
+                f"[brand-rail] locator(s)={', '.join(rails)} full-height red rail is "
+                "allowed only on cover/chapter/ending pages"
+            )
 
     def _get_brand_profile(self, svg_path: Path, content: str) -> str | None:
         """Resolve explicit project brand profile, then fall back for templates."""

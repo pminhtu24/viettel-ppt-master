@@ -164,9 +164,10 @@
 
 ### Section Divider Planning (viettel_default)
 
-> Section dividers are the primary place for Viettel decorative backgrounds.
-> Strategist should create them from source structure when the deck has real
-> narrative breaks, not only when the user explicitly asks.
+> Chapter pages may use Viettel decorative backgrounds. Other section dividers
+> remain valid narrative devices but use the clean shell. Strategist should
+> create them from source structure when the deck has real narrative breaks,
+> not only when the user explicitly asks.
 
 Create a section/chapter divider when:
 
@@ -181,7 +182,7 @@ Rules:
 - For 8-12 slide decks, target 1-3 dividers excluding cover/ending when the source supports them.
 - For 13+ slide decks, target 2-5 dividers when the source supports them.
 - Mark true chapter/section openers as `anchor`; mark standalone transition/emphasis pages as `breathing`.
-- Only section-like pages may appear in `page_backgrounds`; dense content, chart, KPI, and table pages must omit backgrounds.
+- Only cover, chapter, and ending pages may appear in `page_backgrounds`; every other page type must omit backgrounds.
 
 ### Spacing Specification
 
@@ -274,7 +275,7 @@ Catalog read: 71 templates
 
 ### Viettel Section Background Assignment (viettel_default)
 
-> For `brand.profile: viettel_default`, Strategist MUST read `templates/backgrounds/backgrounds_index.json` and assign background ids only to cover, chapter, section-divider, ending, and low-content breathing pages. Dense content, chart, KPI, and table pages MUST omit `page_backgrounds` so the standard clean shell stays behind content.
+> For `brand.profile: viettel_default`, Strategist MUST read `templates/backgrounds/backgrounds_index.json` and assign background ids only to cover, chapter, and ending pages. Content, TOC, chart, KPI, table, section-divider, and breathing pages MUST omit `page_backgrounds` so the standard clean shell stays behind content.
 >
 > Softness rule: choose backgrounds that are already visually softened by pale fills, low opacity, wide geometry, and calm safe zones. Do not request SVG filters or blur effects.
 >

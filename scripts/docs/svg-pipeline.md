@@ -2,11 +2,13 @@
 
 ## Recommended Pipeline
 
-During skill-driven generation, generate the full SVG deck before normalizing Viettel chrome and running the project quality check. After the project passes, verify charts when applicable and export the native deck:
+During skill-driven generation, generate the full SVG deck, run the initial project check and repairs, verify charts when applicable, then normalize Viettel chrome and run the final project scan before native export:
 
 ```bash
-python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel  # viettel_default only
 python3 scripts/svg_quality_checker.py <project_path>
+# repair findings and verify charts
+python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel  # viettel_default only
+python3 scripts/svg_quality_checker.py <project_path>  # final scan, must report 0 errors
 python3 scripts/svg_to_pptx.py <project_path>
 ```
 
