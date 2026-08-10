@@ -50,12 +50,15 @@ description: >
 >
 > - Every normal run of this skill is a Viettel-branded PPT 16:9 run. Initialize with `--brand-profile viettel_default`; do not wait for a Viettel keyword.
 > - Use `--brand-profile custom_override` only when the user explicitly says not to use Viettel, names another brand, or supplies an explicit non-Viettel template path. A color/font request alone is not an override.
-> - This skill's typography is locked to the single family `"FS Magistral"` for every normal run.
+> - This skill's typography is locked to three bundled static TTF faces for every normal run; never synthesize one face from another:
+>   - Title / KPI / emphasis: FS Magistral Bold — `FS Magistral-Bold.ttf`
+>   - Body / caption / source: FS Magistral Book — `FS Magistral-Book.ttf`
+>   - Subtitle / secondary label: FS Magistral Medium — `FS Magistral-Medium.ttf`
 > - During Eight Confirmations, state the typography lock for visibility; do not ask the user to choose or approve a typeface.
-> - Use FS Magistral Bold (`font-weight="700"`) for cover/chapter/page titles, section and card headers, KPI/hero numbers, callouts, and highlighted text. Use Book/Regular (`400`) for body, descriptions, captions, sources, and footers; Medium (`500`) is reserved for secondary subtitles/labels.
+> - SVG `700`, `400`/omitted, and `500` are selectors for Bold, Book, and Medium respectively. PPTX must write the exact Windows typeface (`FS Magistral Bold`, `FS Magistral Book`, or `FS Magistral Medium`) and embed every face used. Arial/Calibri substitution and synthetic bold are forbidden.
 > - Viettel red `#EE0033` is the brand accent. Deep blue `#12436D` is restricted to chart, diagram/infographic, icon marks, and cataloged builtin backgrounds whose `backgrounds_index.json` item explicitly sets `deep_blue_background: true`. Never use it for text, cards, rails, footer, dividers, ad-hoc backgrounds, or unregistered decoration.
 > - Do NOT propose alternative brand colors, font combinations, typefaces, or competing templates unless the run is an explicit `custom_override`.
-> - Before generation, search the full host font catalog for FS Magistral Book, Medium, and Bold. If any face is missing, automatically install all three trusted bundled faces for the current user without asking. If installation still fails, keep `"FS Magistral"` in SVG, report `brand fidelity degraded`, and block export unless the user explicitly passes `--allow-font-fallback`.
+> - Before generation, search the full host font catalog for FS Magistral Book, Medium, and Bold. If any face is missing, automatically install all three trusted bundled faces for the current user without asking. If installation still fails, keep `"FS Magistral"` in SVG and report `brand fidelity degraded`; `--allow-font-fallback` permits degraded host preview only. Viettel export must still embed every used face and hard-fail if its bundled payload is missing or invalid.
 
 ## Main Pipeline Scripts
 
@@ -213,10 +216,10 @@ Read references/strategist.md
 4. Style objective
 5. Color scheme
 6. Icon usage approach
-7. Typography plan (fixed FS Magistral family and weight rules; informational, not a font choice)
+7. Typography plan (the three locked FS Magistral static faces and TTF filenames; informational, not a font choice)
 8. Image usage approach
 
-**Viettel brand lock**: for every normal run, present PPT 16:9, Viettel red `#EE0033`, white/approved-gray reporting surfaces, dark-neutral text, the locked family `"FS Magistral"` and its fixed weight roles, top-right logo slot, footer/page-number treatment, and content safe area as fixed decisions. Typography is informational in the confirmation set, not a user choice. Deep blue `#12436D` is chart/diagram/icon-only except for cataloged builtin backgrounds explicitly marked `deep_blue_background: true`. `spec_lock.md` MUST record `brand.profile: viettel_default` and these values exactly. Only an explicit hard non-Viettel request may record `brand.profile: custom_override`.
+**Viettel brand lock**: for every normal run, present PPT 16:9, Viettel red `#EE0033`, white/approved-gray reporting surfaces, dark-neutral text, the three locked static faces FS Magistral Book/Medium/Bold, top-right logo slot, footer/page-number treatment, and content safe area as fixed decisions. Typography is informational in the confirmation set, not a user choice. Deep blue `#12436D` is chart/diagram/icon-only except for cataloged builtin backgrounds explicitly marked `deep_blue_background: true`. `spec_lock.md` MUST keep `font_family: "FS Magistral"` for compatibility and record `brand.profile: viettel_default`; do not add fixed per-face configuration fields. Only an explicit hard non-Viettel request may record `brand.profile: custom_override`.
 
 **Font preflight (required for bundled brand fonts)**: after `spec_lock.md` is written, run:
 
@@ -227,7 +230,7 @@ python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>
 - `installed` → proceed normally
 - all three faces found → proceed without changing the host
 - any face missing → automatically install Book, Medium, and Bold from the trusted local bundle, then re-check
-- still missing after installation → continue SVG generation with the locked family and report `brand fidelity degraded`; export remains blocked unless explicitly run with `--allow-font-fallback`
+- still missing after installation → continue SVG generation with the locked family and report `brand fidelity degraded`; `--allow-font-fallback` affects host preview only, while export still requires valid embedded payloads for every used face
 
 **Mandatory — split-mode note** (not a ninth confirmation): after listing the eight confirmation details, you MUST append exactly one short line (rendered in the user's language, prefixed with 💡) about generation mode. Pick the variant by qualitative read of Phase A signals — recommended page count, source-material bulk, whether `topic-research` ran with substantial web-fetch accumulation:
 
@@ -338,7 +341,7 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 
 **Per-page spec_lock re-read (Mandatory)**: before **each** SVG page, `read_file <project_path>/spec_lock.md` and use only its colors / fonts / icons / images, plus the per-page `page_rhythm` / optional `page_backgrounds` / `page_layouts` / `page_charts` lookups (resolves to background/template/chart SVGs already loaded in the batch read above). Missing `page_backgrounds` means no decorative background for that page. Resists context-compression drift on long decks. See executor-base.md §2.1.
 
-**Font-preflight gate (Mandatory for bundled brand fonts)**: before the first SVG page, run `python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>`. It searches the full host catalog for FS Magistral Book, Medium, and Bold and automatically installs all three trusted bundled faces when any is missing; do not ask the user. If the re-check still reports missing faces, surface `brand fidelity degraded` but continue generating SVG with the exact locked family. The exporter repeats installation and validation, blocks missing host faces by default, and always rejects Arial/Calibri drift; only explicit `--allow-font-fallback` bypasses the missing-host-face block.
+**Font-preflight gate (Mandatory for bundled brand fonts)**: before the first SVG page, run `python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>`. It searches the full host catalog for FS Magistral Book, Medium, and Bold and automatically installs all three trusted bundled faces when any is missing; do not ask the user. If the re-check still reports missing faces, surface `brand fidelity degraded` but continue generating SVG with the exact locked family. The exporter repeats installation and validation, blocks missing host faces by default, and always rejects Arial/Calibri drift. Explicit `--allow-font-fallback` bypasses only the missing-host preview check; missing or invalid embedded payloads always hard-fail Viettel export.
 
 > ⚠️ **Main-agent only**: SVG generation MUST stay in the current main agent — page design depends on full upstream context. Do NOT delegate to sub-agents.
 > ⚠️ **Generation rhythm**: generate pages sequentially, one at a time, in the same continuous context. Do NOT batch (e.g., 5 per group).

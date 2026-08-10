@@ -279,16 +279,6 @@ def _faces_from_windows_registry() -> dict[str, str]:
             for face in VIETTEL_REQUIRED_FACES:
                 if normalize_font_name(f"{VIETTEL_FAMILY} {face}") == normalized:
                     found.setdefault(face, columns[2])
-    if found:
-        gdi_families = _run_command([
-            "powershell", "-NoProfile", "-NonInteractive", "-Command",
-            "Add-Type -AssemblyName System.Drawing; "
-            "(New-Object System.Drawing.Text.InstalledFontCollection).Families.Name",
-        ])
-        if normalize_font_name(VIETTEL_FAMILY) not in {
-            normalize_font_name(value) for value in gdi_families.splitlines()
-        }:
-            return {}
     return found
 
 
@@ -607,6 +597,7 @@ def build_report(project_path: Path) -> dict[str, object]:
 
     return {
         "project": str(project_path),
+        "brand_profile": lock.get("brand", {}).get("profile"),
         "summary": {
             "brand_fidelity": "degraded" if degraded else "ok",
             "installed": sorted([row["family"] for row in family_reports if row["installed"]]),

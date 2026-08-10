@@ -84,25 +84,25 @@
 
 ### Font Plan
 
-> **Viettel default for this skill.** All normal Viettel roles MUST use the single locked family `"FS Magistral"`. This is informational, not a user-selectable typography option. Do not propose or record alternative font combinations. Create hierarchy through size, the locked weights, spacing, and color.
+> **Viettel default for this skill.** All normal Viettel roles MUST use the three locked static faces FS Magistral Book, Medium, and Bold. This is informational, not a user-selectable typography option. Do not propose or record alternative font combinations. Create hierarchy through the assigned face, size, spacing, and color.
 >
-> **Viettel weight lock.** Title / Header / Emphasis use FS Magistral Bold (`700`): cover/chapter/page titles, section/card headers, KPI/hero numbers, callouts, and highlighted text. Body / Caption use Book/Regular (`400`). Secondary subtitles/labels may use Medium (`500`). Do not use `600`, `800`, or `900`.
+> **Viettel static-face lock.** Title / Header / Emphasis use FS Magistral Bold (`FS Magistral-Bold.ttf`; SVG selector `700`). Body / Caption use FS Magistral Book (`FS Magistral-Book.ttf`; `400` or omitted). Secondary subtitles/labels use FS Magistral Medium (`FS Magistral-Medium.ttf`; `500`). Do not use synthetic faces or selectors `600`, `800`, or `900`.
 >
 > **⚠️ PPT-safe stack discipline (HARD rule).** PPTX stores a single `typeface` per run — no runtime fallback. For explicit non-Viettel overrides, every stack MUST end with a cross-platform pre-installed font: `"Microsoft YaHei", sans-serif` / `SimSun, serif` / `Arial, sans-serif` / `"Times New Roman", serif` / `Consolas, "Courier New", monospace`. The locked Viettel stack is this skill's bundled-brand exception and is validated by `scripts/check_fonts.py`.
 
-**Typography direction**: Viettel brand sans — locked family: FS Magistral; locked weights: `400` / `500` / `700`
+**Typography direction**: locked static faces FS Magistral Book / Medium / Bold; SVG selectors `400` / `500` / `700`
 
-| Role | Family | Weight | Usage |
+| Role | Static face | Bundled file / SVG selector | Usage |
 | ---- | ------ | ------ | ----- |
-| **Title / Header** | `"FS Magistral"` | Bold (`700`) | Cover/chapter/page titles, section/card headers |
-| **Emphasis** | `"FS Magistral"` | Bold (`700`) | KPI/hero numbers, callouts, highlighted text |
-| **Body** | `"FS Magistral"` | Book/Regular (`400`) | Body copy, descriptions, ordinary chart labels |
-| **Secondary** | `"FS Magistral"` | Medium (`500`) | Secondary subtitles/labels only |
-| **Caption** | `"FS Magistral"` | Book/Regular (`400`) | Sources, footers, page numbers |
+| **Title / Header** | FS Magistral Bold | `FS Magistral-Bold.ttf`; SVG `700` | Cover/chapter/page titles, section/card headers |
+| **Emphasis** | FS Magistral Bold | `FS Magistral-Bold.ttf`; SVG `700` | KPI/hero numbers, callouts, highlighted text |
+| **Body** | FS Magistral Book | `FS Magistral-Book.ttf`; SVG `400`/omitted | Body copy, descriptions, ordinary chart labels |
+| **Secondary** | FS Magistral Medium | `FS Magistral-Medium.ttf`; SVG `500` | Secondary subtitles/labels only |
+| **Caption** | FS Magistral Book | `FS Magistral-Book.ttf`; SVG `400`/omitted | Sources, footers, page numbers |
 
 **SVG / spec lock family value**: `"FS Magistral"` for every role. In normal Viettel `spec_lock.md`, emit only `font_family`; do not emit redundant per-role family overrides.
 
-> **Stack ordering for explicit non-Viettel overrides only**: CSS `font-family` falls back font-by-font (not char-by-char). The normal Viettel flow has one family and no ordering choice. For custom overrides:
+> **Stack ordering for explicit non-Viettel overrides only**: CSS `font-family` falls back font-by-font (not char-by-char). The normal Viettel flow uses the fixed static-face mapping above and has no ordering choice. For custom overrides:
 > - `Georgia, "Microsoft YaHei", serif` → Latin in Georgia (elegant serif), CJK falls through to Microsoft YaHei. **Use when Latin typography is the primary design statement** (academic / editorial / Latin-heavy covers).
 > - `"Microsoft YaHei", Georgia, serif` → Everything in Microsoft YaHei (Latin uses YaHei's Latin glyphs — a different design tone). **Use when the deck is CJK-primary and Latin is incidental**.
 >
@@ -126,9 +126,9 @@
 | Hero number (consulting KPIs) | 1.5-2x | 36-48px | 27-36px | Bold (`700`) |
 | Section/card header | 1-1.3x | 24-31px | 18-23px | Bold (`700`) |
 | Subtitle | 1.2-1.5x | 29-36px | 22-27px | Medium (`500`) |
-| **Body content** | **1x** | **24px** | **18px** | Book/Regular (`400`) |
-| Annotation / caption | 0.7-0.85x | 17-20px | 13-15px | Book/Regular (`400`) |
-| Page number / footnote | 0.5-0.65x | 12-16px | 9-12px | Book/Regular (`400`) |
+| **Body content** | **1x** | **24px** | **18px** | Book (`400`) |
+| Annotation / caption | 0.7-0.85x | 17-20px | 13-15px | Book (`400`) |
+| Page number / footnote | 0.5-0.65x | 12-16px | 9-12px | Book (`400`) |
 
 > The two px columns are illustrations for common baselines. For any other `body` value, multiply by each row's ratio — the checker (`svg_quality_checker._check_spec_lock_drift`) reads the live `body` from `spec_lock.md` and applies the bands, so no code change is needed for a different baseline.
 

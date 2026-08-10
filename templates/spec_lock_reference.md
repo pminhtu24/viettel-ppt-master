@@ -50,9 +50,9 @@
 
 > `font_family` is the only family declaration for `viettel_default`; every role inherits it. Do not emit `title_family`, `body_family`, `emphasis_family`, or `code_family` for normal Viettel runs.
 >
-> **Viettel default for this skill**: keep the single locked family `"FS Magistral"`. Typography is not a user choice in normal runs. Do not introduce FS PF BeauSans Pro, Sarabun, Microsoft YaHei, Arial, Georgia, Consolas, or another design font. Runtime missing-font handling belongs to `scripts/check_fonts.py` and must be reported as `brand fidelity degraded`.
+> **Viettel default for this skill**: keep `font_family: "FS Magistral"` for compatibility, representing the three locked static faces FS Magistral Book, Medium, and Bold. Typography is not a user choice in normal runs. Do not add fixed per-face configuration fields or introduce FS PF BeauSans Pro, Sarabun, Microsoft YaHei, Arial, Georgia, Consolas, or another design font. Runtime missing-font handling belongs to `scripts/check_fonts.py` and must be reported as `brand fidelity degraded`.
 >
-> **Weight lock**: FS Magistral Bold (`700`) is mandatory for titles, headers, card/KPI labels, hero/KPI numbers, callouts, and highlighted text. Book/Regular (`400`) is mandatory for body, descriptions, captions, sources, footers, and ordinary chart labels. Medium (`500`) is reserved for secondary subtitles/labels. Do not use `600`, `800`, or `900`.
+> **Static-face lock**: SVG `700` selects FS Magistral Bold (`FS Magistral-Bold.ttf`) for titles/KPIs/emphasis; `400` or omitted selects FS Magistral Book (`FS Magistral-Book.ttf`) for body/captions/sources; `500` selects FS Magistral Medium (`FS Magistral-Medium.ttf`) for subtitles/secondary labels. These are selectors, not synthetic weights. Do not use `600`, `800`, or `900`.
 >
 > Sizes (`body` / `title` / etc.) are in px, matching SVG units. `body` is the **required baseline anchor** — all other sizes derive as ratios of it (ramp table: `design_spec_reference.md §IV`).
 >

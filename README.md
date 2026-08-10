@@ -55,10 +55,10 @@ Skill sẽ dừng lại một lần ở bước Strategist để bạn xác nh�
 - Mục tiêu phong cách.
 - Bảng màu.
 - Cách dùng icon.
-- Typography cố định FS Magistral và quy tắc Bold/Regular.
+- Typography cố định bằng ba static face FS Magistral Book/Medium/Bold.
 - Cách dùng hình ảnh.
 
-Với deck Viettel, các lựa chọn thương hiệu được khóa theo template Viettel, gồm màu `#EE0033`, `#12436D`, font family `"FS Magistral"`, logo top-right và footer/page-number treatment. Typography không phải lựa chọn của user: title/header/KPI/highlight dùng FS Magistral Bold (`700`), nội dung thường dùng Book/Regular (`400`), subtitle phụ dùng Medium (`500`).
+Với deck Viettel, các lựa chọn thương hiệu được khóa theo template Viettel, gồm màu `#EE0033`, `#12436D`, ba static face FS Magistral, logo top-right và footer/page-number treatment. Typography không phải lựa chọn của user: title/header/KPI/highlight dùng FS Magistral Bold (`FS Magistral-Bold.ttf`), nội dung thường dùng FS Magistral Book (`FS Magistral-Book.ttf`), subtitle phụ dùng FS Magistral Medium (`FS Magistral-Medium.ttf`). Trong SVG, `700` / `400` hoặc bỏ trống / `500` chỉ là selector; khi xuất PPTX, exporter ghi đúng Windows typeface và nhúng từng face thực sự được dùng để ngăn Arial/Calibri substitution.
 
 ## Chế độ split mode
 
@@ -104,4 +104,4 @@ Nếu deck có chart dữ liệu, workflow `verify-charts` sẽ được dùng �
 pip install -r requirements.txt
 ```
 
-Skill tìm đủ FS Magistral Book, Medium và Bold trên host trước. Nếu thiếu bất kỳ face nào, skill tự cài cả ba từ `templates/layouts/viettel_default/fonts/` vào phạm vi user, không hỏi thêm. SVG luôn giữ `"FS Magistral"`; exporter chặn font fallback mặc định và chỉ cho phép chủ động bỏ qua bằng `--allow-font-fallback`.
+Skill tìm đủ FS Magistral Book, Medium và Bold trên host trước. Nếu thiếu bất kỳ face nào, skill tự cài cả ba từ `templates/layouts/viettel_default/fonts/` vào phạm vi user, không hỏi thêm. SVG luôn giữ `"FS Magistral"`; `--allow-font-fallback` chỉ cho phép preview host bị degraded. Exporter vẫn bắt buộc nhúng payload hợp lệ của từng face được dùng và hard-fail nếu payload thiếu hoặc sai metadata.

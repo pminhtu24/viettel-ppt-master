@@ -112,7 +112,7 @@ Before the first SVG page, output a confirmation listing: canvas dimensions, bod
 
 **Hard rule**: Before generating **each** SVG page, `read_file <project_path>/spec_lock.md`. Use only values from this file, not from memory. If context was auto-compacted, also `read_file <project_path>/design_spec.md` for the current page's §IX brief.
 
-**Font preflight rule**: run `python3 scripts/check_fonts.py <project_path>` before the first SVG page. It must search for FS Magistral Book, Medium, and Bold first; if any face is missing, it automatically installs all three trusted bundled faces for the current user without asking. If re-check still fails, state `brand fidelity degraded` and continue generating SVG with `"FS Magistral"`; export is blocked by default unless explicitly overridden with `--allow-font-fallback`.
+**Font preflight rule**: run `python3 scripts/check_fonts.py <project_path>` before the first SVG page. It must search for FS Magistral Book, Medium, and Bold first; if any face is missing, it automatically installs all three trusted bundled faces for the current user without asking. If re-check still fails, state `brand fidelity degraded` and continue generating SVG with `"FS Magistral"`. `--allow-font-fallback` permits degraded host preview only; Viettel export still requires a valid embedded payload for every face used.
 
 **If `spec_lock.md` is missing**: emit `warning: spec_lock.md missing — generating without execution lock` once, then proceed using `design_spec.md` values. Expected only for legacy projects; new projects MUST have it (see [strategist.md](strategist.md) §6 step 4).
 
@@ -186,7 +186,7 @@ Example:
 <text x="120" y="360"
       data-box="120,344,220,48"
       data-wrap="true"
-      font-family="Arial, sans-serif"
+      font-family="FS Magistral"
       font-size="14"
       fill="#44494D">Mức tăng trưởng hai chữ số liên tục trên quy mô lớn</text>
 ```
@@ -426,7 +426,7 @@ If `spec_lock.md` is absent, consult [`strategist.md`](strategist.md) §g — do
 
 **Hard rule**: under `viettel_default`, every SVG text element uses the exact locked stack `"FS Magistral"`; missing-font handling is reported by preflight and does not change the design stack. Under `custom_override`, every SVG `font-family` stack MUST end with a pre-installed family (Microsoft YaHei / SimHei / SimSun / Arial / Calibri / Segoe UI / Times New Roman / Georgia / Consolas / Courier New / Impact / Arial Black). PPTX has no runtime fallback.
 
-**Viettel weight rule**: use `font-weight="700"` for all titles, headers, card/KPI labels, hero/KPI numbers, callouts, and highlighted text. Use `400` or omit `font-weight` for ordinary body/caption/source/footer text. Use `500` only for secondary subtitles/labels. Do not use `600`, `800`, or `900`; the required prominent face is FS Magistral Bold, not ExtraBold.
+**Viettel static-face rule**: `font-weight="700"` selects FS Magistral Bold (`FS Magistral-Bold.ttf`) for titles/KPIs/emphasis; `400` or omitted selects FS Magistral Book (`FS Magistral-Book.ttf`) for body/captions/sources; `500` selects FS Magistral Medium (`FS Magistral-Medium.ttf`) for subtitles/secondary labels. These SVG values are selectors only. Export writes the exact Windows typeface and embeds every used face; never emit synthetic bold. Do not use `600`, `800`, or `900`.
 
 ---
 

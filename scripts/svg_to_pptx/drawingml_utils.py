@@ -111,6 +111,15 @@ GENERIC_FONT_MAP = {
     'serif': 'Times New Roman',
 }
 
+VIETTEL_FACE_BY_WEIGHT = {
+    '': 'FS Magistral Book',
+    'normal': 'FS Magistral Book',
+    '400': 'FS Magistral Book',
+    '500': 'FS Magistral Medium',
+    'bold': 'FS Magistral Bold',
+    '700': 'FS Magistral Bold',
+}
+
 # When the latin font is serif and no EA font is specified,
 # prefer SimSun (serif CJK) over Microsoft YaHei (sans-serif CJK).
 _SERIF_LATIN = {
@@ -431,6 +440,17 @@ def parse_font_family(font_family_str: str) -> dict[str, str]:
             ea_font = 'SimSun' if final_latin in _SERIF_LATIN else 'Microsoft YaHei'
 
     return {'latin': final_latin, 'ea': ea_font}
+
+
+def resolve_viettel_face(font_family_str: str, font_weight: str) -> str | None:
+    """Resolve the locked SVG family/weight pair to a physical Windows face."""
+    fonts = [font.strip().strip("'\"") for font in font_family_str.split(',')]
+    if 'FS Magistral' not in fonts:
+        return None
+    weight = str(font_weight or '').strip().lower()
+    if weight not in VIETTEL_FACE_BY_WEIGHT:
+        raise ValueError(f'unsupported FS Magistral weight: {font_weight!r}')
+    return VIETTEL_FACE_BY_WEIGHT[weight]
 
 
 def is_cjk_char(ch: str) -> bool:

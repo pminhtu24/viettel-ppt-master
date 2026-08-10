@@ -17,7 +17,7 @@ from .drawingml_utils import (
     rect_to_dml_xfrm,
     parse_hex_color, resolve_url_id, get_effective_filter_id,
     parse_font_family, is_cjk_char, estimate_text_width,
-    _xml_escape,
+    resolve_viettel_face, _xml_escape,
 )
 from .drawingml_styles import (
     build_solid_fill, build_gradient_fill,
@@ -986,12 +986,18 @@ def _build_run_xml(
     text_dec = run.get('text_decoration', '')
 
     sz = round(fs_px * FONT_PX_TO_HUNDREDTHS_PT)
-    b_attr = ' b="1"' if fw in ('bold', '600', '700', '800', '900') else ''
+    viettel_face = resolve_viettel_face(ff, fw)
+    b_attr = '' if viettel_face else (
+        ' b="1"' if fw in ('bold', '600', '700', '800', '900') else ''
+    )
     i_attr = ' i="1"' if fstyle == 'italic' else ''
     u_attr = ' u="sng"' if 'underline' in text_dec else ''
     strike_attr = ' strike="sngStrike"' if 'line-through' in text_dec else ''
 
-    fonts = parse_font_family(ff) if ff else default_fonts
+    fonts = (
+        {'latin': viettel_face, 'ea': viettel_face}
+        if viettel_face else parse_font_family(ff) if ff else default_fonts
+    )
 
     fill_xml = _build_text_fill_xml(fill, fill_raw, opacity, ctx)
     outline_xml = _build_text_outline_xml(run)

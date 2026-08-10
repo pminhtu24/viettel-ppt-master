@@ -264,5 +264,8 @@ Per-element entrance animation:
         animation_trigger=animation_trigger,
         animation_config=animation_config,
         animation_cli_overrides=animation_cli_overrides,
+        embed_viettel_fonts=bool(
+            font_report and font_report.get("brand_profile") == "viettel_default"
+        ),
     )
     raise SystemExit(0 if success else 1)

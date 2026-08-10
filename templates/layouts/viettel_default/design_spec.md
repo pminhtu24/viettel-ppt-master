@@ -114,23 +114,23 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 
 ### Font Stack
 
-**Locked Font Family**: `"FS Magistral"`
+**Locked Static Font Set**: FS Magistral Book / Medium / Bold
 
-> FS Magistral is mandatory and is not presented as a user-selectable option. Project setup copies only the required Book, Medium, and Bold faces from the local `fonts/` bundle; run font preflight before generation and treat fallback rendering as a brand-fidelity warning, not as a silent substitute.
+> FS Magistral is mandatory and is not presented as a user-selectable option. Project setup copies the three static TTF faces from the local `fonts/` bundle; PPTX export writes their exact Windows typefaces and embeds every used face. Host preview fallback is a brand-fidelity warning, never permission to export an unembedded Viettel face.
 
 ### Role Breakdown
 
 | Role         | Font Stack                                                         | Usage                       |
 | ------------ | ------------------------------------------------------------------ | --------------------------- |
-| **Title / Header** | `"FS Magistral"` Bold (`700`) | Cover, chapter/page titles, section/card headers |
-| **Emphasis** | `"FS Magistral"` Bold (`700`) | KPI/hero numbers, key metrics, callouts, highlighted text |
-| **Body** | `"FS Magistral"` Book/Regular (`400`) | Body content, descriptions, ordinary chart labels |
-| **Secondary** | `"FS Magistral"` Medium (`500`) | Secondary subtitles and labels only |
-| **Caption** | `"FS Magistral"` Book/Regular (`400`) | Footnotes, sources, page numbers |
+| **Title / Header** | FS Magistral Bold — `FS Magistral-Bold.ttf` (SVG `700`) | Cover, chapter/page titles, section/card headers |
+| **Emphasis** | FS Magistral Bold — `FS Magistral-Bold.ttf` (SVG `700`) | KPI/hero numbers, key metrics, callouts, highlighted text |
+| **Body** | FS Magistral Book — `FS Magistral-Book.ttf` (SVG `400`/omitted) | Body content, descriptions, ordinary chart labels |
+| **Secondary** | FS Magistral Medium — `FS Magistral-Medium.ttf` (SVG `500`) | Secondary subtitles and labels only |
+| **Caption** | FS Magistral Book — `FS Magistral-Book.ttf` (SVG `400`/omitted) | Footnotes, sources, page numbers |
 
 ### Font Size Hierarchy
 
-| Purpose       | Ratio to body | @body=18px (dense) | @body=20px (standard) | Weight  |
+| Purpose       | Ratio to body | @body=18px (dense) | @body=20px (standard) | SVG face selector |
 | ------------- | ------------- | ------------------ | --------------------- | ------- |
 | Cover title   | 2.5-3x        | 45-54px            | 50-60px               | 700     |
 | Chapter title | 2-2.5x        | 36-45px            | 40-50px               | 700     |
@@ -142,8 +142,8 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 | Caption       | 0.7-0.85x     | 13-15px            | 14-17px               | 400     |
 | Page number   | 0.6-0.75x     | 11-14px            | 12-15px               | 400     |
 
-> Keep the single font family exactly as declared in `spec_lock.md`. Do not introduce ad-hoc fonts in page SVGs.
-> For Viettel decks, Strategist MUST write `"FS Magistral"` into `spec_lock.md ## typography` as `font_family`. Do not ask the user to choose typography. Use only weights `400`, `500`, and `700`; prominent text uses `700`, never `800`/ExtraBold.
+> Keep `font_family: "FS Magistral"` in `spec_lock.md` for compatibility. Do not introduce ad-hoc fonts in page SVGs.
+> For Viettel decks, Strategist MUST name the three static faces and TTF files; do not ask the user to choose typography. SVG `400`/omitted, `500`, and `700` select Book, Medium, and Bold respectively; never use `800`/ExtraBold.
 > Viettel template projects ship a local `fonts/` bundle. After project setup, run `scripts/check_fonts.py <project_path>`; it searches for Book, Medium, and Bold first and automatically installs all three trusted bundled faces when any is missing. Do not ask the user. If re-check still fails, keep `"FS Magistral"` in SVG and report `brand fidelity degraded`.
 
 ---
@@ -529,12 +529,13 @@ Selected chart templates must be mirrored into project `spec_lock.md ## page_cha
 | Asset | Purpose | Runtime Path |
 | --- | --- | --- |
 | `viettel-logo.png` | Required Viettel logo fixed at top-right on shell pages | `../images/viettel-logo.png` |
-| `fonts/` bundle | Local install source for FS Magistral family | `<project_path>/fonts/` |
+| `fonts/*.ttf` | Local preview/install source for the three FS Magistral faces | `<project_path>/fonts/` |
+| `fonts/*.eot` | Fixed full-font payloads embedded by the Viettel PPTX exporter | exporter asset path only |
 
 ### Asset Path Rule
 
 The source asset lives in `templates/layouts/viettel_default/viettel-logo.png`. During project setup, copy it to `<project_path>/images/viettel-logo.png`; generated SVG pages reference it through the runtime path `../images/viettel-logo.png`.
-The font bundle lives in `templates/layouts/viettel_default/fonts/`. During project setup, copy only the required FS Magistral Book, Medium, and Bold faces to `<project_path>/fonts/`. The deck still declares the intended brand stack in `spec_lock.md`; runtime availability is validated by `scripts/check_fonts.py`.
+The font bundle lives in `templates/layouts/viettel_default/fonts/`. During project setup, copy only the three TTF faces to `<project_path>/fonts/`; the adjacent EOT files remain exporter assets. The deck keeps `font_family: "FS Magistral"` in `spec_lock.md`; runtime availability is validated by `scripts/check_fonts.py` and every face used is embedded at export.
 
 ### Optional Official Assets
 

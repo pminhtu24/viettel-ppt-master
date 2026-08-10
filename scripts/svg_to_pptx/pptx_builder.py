@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import mimetypes
+import re
 import shutil
 import tempfile
 import zipfile
@@ -47,7 +48,24 @@ _IMAGE_CONTENT_TYPES = {
     'tif': 'image/tiff',
     'tiff': 'image/tiff',
     'wmf': 'image/x-wmf',
+    'fntdata': 'application/x-fontdata',
 }
+
+_VIETTEL_EMBEDDED_FONTS = {
+    'FS Magistral Book': (
+        'FS Magistral-Book.eot',
+        '2bbc89df53a2a863608614bd0c13a05ea9812d9ab18d3d444bc07c83cba3dc67',
+    ),
+    'FS Magistral Medium': (
+        'FS Magistral-Medium.eot',
+        '0a3119fb8151d6a7e7d2ecf35c8a0b10e5d437c4a66e4486c4c26f73da2730fe',
+    ),
+    'FS Magistral Bold': (
+        'FS Magistral-Bold.eot',
+        '91757a9f9f0c4a9c5c955d724dade973d1348ef519b48d6b793247a868bc746f',
+    ),
+}
+_FONT_REL_TYPE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/font'
 
 
 def _content_type_for_extension(ext: str) -> str:
@@ -56,6 +74,105 @@ def _content_type_for_extension(ext: str) -> str:
     if not content_type:
         raise ValueError(f"Unknown media content type for extension: {ext}")
     return content_type
+
+
+def _embed_viettel_fonts(extract_dir: Path, used_faces: set[str]) -> None:
+    """Add the used static FS Magistral faces to a PresentationML package."""
+    faces = [face for face in _VIETTEL_EMBEDDED_FONTS if face in used_faces]
+    if not faces:
+        return
+
+    source_dir = (
+        Path(__file__).resolve().parents[2]
+        / 'templates/layouts/viettel_default/fonts'
+    )
+    fonts_dir = extract_dir / 'ppt' / 'fonts'
+    fonts_dir.mkdir(exist_ok=True)
+
+    rels_path = extract_dir / 'ppt' / '_rels' / 'presentation.xml.rels'
+    rels_xml = rels_path.read_text(encoding='utf-8')
+    existing_ids = [int(value) for value in re.findall(r'Id="rId(\d+)"', rels_xml)]
+    next_id = max(existing_ids, default=0) + 1
+    embedded_entries = []
+    rel_entries = []
+
+    for index, face in enumerate(faces, 1):
+        filename, expected_sha256 = _VIETTEL_EMBEDDED_FONTS[face]
+        source = source_dir / filename
+        if not source.is_file():
+            raise FileNotFoundError(f'embedded font payload missing: {source}')
+        payload = source.read_bytes()
+        if hashlib.sha256(payload).hexdigest() != expected_sha256:
+            raise ValueError(f'embedded font payload metadata mismatch: {filename}')
+
+        package_name = f'fontData{index}.fntdata'
+        (fonts_dir / package_name).write_bytes(payload)
+        rel_id = f'rId{next_id}'
+        next_id += 1
+        rel_entries.append(
+            f'<Relationship Id="{rel_id}" Type="{_FONT_REL_TYPE}" '
+            f'Target="fonts/{package_name}"/>'
+        )
+        embedded_entries.append(
+            '<p:embeddedFont>'
+            f'<p:font typeface="{face}" pitchFamily="34" charset="0"/>'
+            f'<p:regular r:id="{rel_id}"/>'
+            '</p:embeddedFont>'
+        )
+
+    rels_path.write_text(
+        rels_xml.replace('</Relationships>', ''.join(rel_entries) + '</Relationships>'),
+        encoding='utf-8',
+    )
+
+    presentation_path = extract_dir / 'ppt' / 'presentation.xml'
+    presentation_xml = presentation_path.read_text(encoding='utf-8')
+    if '<p:embeddedFontLst' in presentation_xml:
+        raise ValueError('presentation already contains an embedded font list')
+    presentation_xml = presentation_xml.replace('saveSubsetFonts="1"', 'saveSubsetFonts="0"', 1)
+    embedded_xml = '<p:embeddedFontLst>' + ''.join(embedded_entries) + '</p:embeddedFontLst>'
+    marker = '<p:defaultTextStyle'
+    if marker in presentation_xml:
+        presentation_xml = presentation_xml.replace(marker, embedded_xml + marker, 1)
+    else:
+        presentation_xml = presentation_xml.replace('</p:presentation>', embedded_xml + '</p:presentation>')
+    presentation_path.write_text(presentation_xml, encoding='utf-8')
+
+
+def _validate_viettel_font_embedding(pptx_path: Path, used_faces: set[str]) -> None:
+    """Reject a package that could silently substitute a used Viettel face."""
+    if not used_faces:
+        return
+    with zipfile.ZipFile(pptx_path) as archive:
+        names = set(archive.namelist())
+        presentation = archive.read('ppt/presentation.xml').decode('utf-8')
+        rels = archive.read('ppt/_rels/presentation.xml.rels').decode('utf-8')
+        content_types = archive.read('[Content_Types].xml').decode('utf-8')
+        slides = ''.join(
+            archive.read(name).decode('utf-8')
+            for name in names
+            if re.fullmatch(r'ppt/slides/slide\d+\.xml', name)
+        )
+
+        if 'Extension="fntdata" ContentType="application/x-fontdata"' not in content_types:
+            raise ValueError('PPTX is missing the embedded font content type')
+        if 'typeface="FS Magistral"' in slides:
+            raise ValueError('PPTX still contains the unresolved FS Magistral family')
+        if re.search(r'typeface="(?:Arial|Calibri)"', slides, re.IGNORECASE):
+            raise ValueError('PPTX contains an Arial/Calibri substitution')
+
+        for face in used_faces:
+            if f'<p:font typeface="{face}"' not in presentation:
+                raise ValueError(f'PPTX is missing embedded font metadata: {face}')
+        targets = re.findall(
+            rf'Type="{re.escape(_FONT_REL_TYPE)}" Target="([^"]+)"', rels
+        )
+        if len(targets) != len(used_faces):
+            raise ValueError('PPTX embedded font relationship count mismatch')
+        for target in targets:
+            package_path = f'ppt/{target}'
+            if package_path not in names or not archive.read(package_path):
+                raise ValueError(f'PPTX embedded font payload missing: {package_path}')
 
 
 def _as_dict(value: Any) -> dict[str, Any]:
@@ -184,6 +301,7 @@ def create_pptx_with_native_svg(
     animation_trigger: str = 'after-previous',
     animation_config: dict[str, Any] | None = None,
     animation_cli_overrides: dict[str, bool] | None = None,
+    embed_viettel_fonts: bool = False,
 ) -> bool:
     """Create a PPTX file with native SVG.
 
@@ -269,6 +387,7 @@ def create_pptx_with_native_svg(
         success_count = 0
         media_cache: dict[tuple[str, str], str] = {}
         image_exts_used: set[str] = set()
+        used_viettel_faces: set[str] = set()
         mixed_animation_offset = 0
 
         for i, svg_path in enumerate(svg_files, 1):
@@ -343,6 +462,11 @@ def create_pptx_with_native_svg(
                 with open(slide_xml_path, 'w', encoding='utf-8') as f:
                     f.write(slide_xml)
 
+                used_viettel_faces.update(
+                    face for face in _VIETTEL_EMBEDDED_FONTS
+                    if f'typeface="{face}"' in slide_xml
+                )
+
                 media_name_map: dict[str, str] = {}
                 for media_name, media_data in media_files_dict.items():
                     ext = media_name.rsplit('.', 1)[-1].lower()
@@ -400,6 +524,11 @@ def create_pptx_with_native_svg(
                     print(f"  [{i}/{len(svg_files)}] {svg_path.name} - Error: {e}")
                 raise
 
+        if embed_viettel_fonts:
+            _embed_viettel_fonts(extract_dir, used_viettel_faces)
+        if embed_viettel_fonts and used_viettel_faces:
+            image_exts_used.add('fntdata')
+
         # Update [Content_Types].xml
         content_types_path = extract_dir / '[Content_Types].xml'
         with open(content_types_path, 'r', encoding='utf-8') as f:
@@ -427,6 +556,8 @@ def create_pptx_with_native_svg(
                 if file_path.is_file():
                     arcname = file_path.relative_to(extract_dir)
                     zf.write(file_path, arcname)
+        if embed_viettel_fonts:
+            _validate_viettel_font_embedding(temp_output_path, used_viettel_faces)
         shutil.move(str(temp_output_path), str(output_path))
 
         if verbose:
