@@ -66,6 +66,57 @@ _VIETTEL_EMBEDDED_FONTS = {
     ),
 }
 _FONT_REL_TYPE = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/font'
+_FORBIDDEN_VIETTEL_TYPEFACES = {'arial', 'calibri', 'aptos', 'aptos display'}
+
+
+def _set_viettel_theme_fonts(extract_dir: Path) -> None:
+    """Make new PowerPoint text inherit the locked static Magistral faces."""
+    for theme_path in (extract_dir / 'ppt' / 'theme').glob('theme*.xml'):
+        xml = theme_path.read_text(encoding='utf-8')
+
+        def patch_block(match: re.Match[str], face: str) -> str:
+            block = match.group(0)
+            block = re.sub(
+                r'(<a:(?:latin|ea|cs)\b[^>]*\btypeface=")[^"]*(")',
+                rf'\g<1>{face}\2',
+                block,
+            )
+            block = re.sub(
+                r'(<a:font\b[^>]*\bscript="Viet"[^>]*\btypeface=")[^"]*(")',
+                rf'\g<1>{face}\2',
+                block,
+            )
+            return re.sub(
+                r'typeface="(?:Arial|Calibri|Aptos(?: Display)?)"',
+                f'typeface="{face}"',
+                block,
+                flags=re.IGNORECASE,
+            )
+
+        xml = re.sub(
+            r'<a:majorFont>.*?</a:majorFont>',
+            lambda match: patch_block(match, 'FS Magistral Bold'),
+            xml,
+            flags=re.DOTALL,
+        )
+        xml = re.sub(
+            r'<a:minorFont>.*?</a:minorFont>',
+            lambda match: patch_block(match, 'FS Magistral Book'),
+            xml,
+            flags=re.DOTALL,
+        )
+        theme_path.write_text(xml, encoding='utf-8')
+
+    for directory in ('slideMasters', 'slideLayouts'):
+        for xml_path in (extract_dir / 'ppt' / directory).glob('*.xml'):
+            xml = xml_path.read_text(encoding='utf-8')
+            xml = re.sub(
+                r'typeface="(?:Arial|Calibri|Aptos(?: Display)?)"',
+                'typeface="FS Magistral Book"',
+                xml,
+                flags=re.IGNORECASE,
+            )
+            xml_path.write_text(xml, encoding='utf-8')
 
 
 def _content_type_for_extension(ext: str) -> str:
@@ -141,8 +192,6 @@ def _embed_viettel_fonts(extract_dir: Path, used_faces: set[str]) -> None:
 
 def _validate_viettel_font_embedding(pptx_path: Path, used_faces: set[str]) -> None:
     """Reject a package that could silently substitute a used Viettel face."""
-    if not used_faces:
-        return
     with zipfile.ZipFile(pptx_path) as archive:
         names = set(archive.namelist())
         presentation = archive.read('ppt/presentation.xml').decode('utf-8')
@@ -153,13 +202,24 @@ def _validate_viettel_font_embedding(pptx_path: Path, used_faces: set[str]) -> N
             for name in names
             if re.fullmatch(r'ppt/slides/slide\d+\.xml', name)
         )
+        supporting_xml = ''.join(
+            archive.read(name).decode('utf-8')
+            for name in names
+            if re.fullmatch(r'ppt/(?:theme|slideMasters|slideLayouts)/[^/]+\.xml', name)
+        )
+        all_typefaces = re.findall(r'typeface="([^"]*)"', slides + supporting_xml)
+        for typeface in all_typefaces:
+            if typeface.casefold() in _FORBIDDEN_VIETTEL_TYPEFACES:
+                raise ValueError(f'PPTX contains a forbidden theme or slide typeface: {typeface}')
+            if typeface.casefold().startswith('fs magistral') and typeface not in _VIETTEL_EMBEDDED_FONTS:
+                raise ValueError(f'PPTX contains an unresolved FS Magistral typeface: {typeface}')
+        if '<a:t' in slides and not used_faces:
+            raise ValueError('Viettel PPTX contains text but no resolvable static FS Magistral face')
+        if not used_faces:
+            return
 
         if 'Extension="fntdata" ContentType="application/x-fontdata"' not in content_types:
             raise ValueError('PPTX is missing the embedded font content type')
-        if 'typeface="FS Magistral"' in slides:
-            raise ValueError('PPTX still contains the unresolved FS Magistral family')
-        if re.search(r'typeface="(?:Arial|Calibri)"', slides, re.IGNORECASE):
-            raise ValueError('PPTX contains an Arial/Calibri substitution')
 
         for face in used_faces:
             if f'<p:font typeface="{face}"' not in presentation:
@@ -380,6 +440,8 @@ def create_pptx_with_native_svg(
         extract_dir = temp_dir / 'pptx_content'
         with zipfile.ZipFile(base_pptx, 'r') as zf:
             zf.extractall(extract_dir)
+        if embed_viettel_fonts:
+            _set_viettel_theme_fonts(extract_dir)
 
         media_dir = extract_dir / 'ppt' / 'media'
         media_dir.mkdir(exist_ok=True)

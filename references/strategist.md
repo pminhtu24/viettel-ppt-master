@@ -536,7 +536,7 @@ Divider rules:
 | I. Project Information | Project name, canvas format, page count, style, audience, scenario, date |
 | II. Canvas Specification | Format, dimensions, viewBox, margins, content area |
 | III. Visual Theme | Style description, locked Viettel light theme (or explicit override theme), tone, color scheme (with HEX table), gradient scheme only for `custom_override` |
-| IV. Typography System | Locked FS Magistral family, role-based weight plan, font size hierarchy |
+| IV. Typography System | Locked FS Magistral Book/Medium/Bold static faces with TTF filenames and font size hierarchy |
 | V. Layout Principles | Page structure (header/content/footer zones), layout pattern library (combine/break as content demands), spacing spec |
 | VI. Icon Usage Spec | Source description, placeholder syntax, recommended icon list |
 | VII. Visualization Reference List | Visualization type, reference template path, used-in pages, purpose; for Viettel, include section-page background assignments from `templates/backgrounds/backgrounds_index.json` when used |

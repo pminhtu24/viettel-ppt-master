@@ -11,6 +11,9 @@ from pathlib import Path
 
 
 SCRIPT = Path(__file__).with_name("svg_to_pptx.py")
+sys.path.insert(0, str(SCRIPT.parent))
+from svg_to_pptx.drawingml_utils import resolve_viettel_face
+
 SVG = """<svg width="1280" height="720" viewBox="0 0 1280 720"
 xmlns="http://www.w3.org/2000/svg">
 <rect width="1280" height="720" fill="#FFFFFF"/>
@@ -22,6 +25,9 @@ xmlns="http://www.w3.org/2000/svg">
 
 
 def main() -> None:
+    assert resolve_viettel_face("fs magistral", "400") == "FS Magistral Book"
+    assert resolve_viettel_face("FS MAGISTRAL", "500") == "FS Magistral Medium"
+
     with tempfile.TemporaryDirectory() as tmp:
         project = Path(tmp)
         output_dir = project / "svg_output"
@@ -58,6 +64,13 @@ def main() -> None:
             presentation_xml = archive.read("ppt/presentation.xml").decode()
             presentation_rels = archive.read("ppt/_rels/presentation.xml.rels").decode()
             content_types = archive.read("[Content_Types].xml").decode()
+            theme_xml = archive.read("ppt/theme/theme1.xml").decode()
+            support_xml = theme_xml + "".join(
+                archive.read(name).decode()
+                for name in names
+                if name.startswith(("ppt/slideMasters/", "ppt/slideLayouts/"))
+                and name.endswith(".xml")
+            )
         assert not any("notesSlide" in name for name in names)
         assert not any(
             name.lower().endswith((".mp3", ".wav", ".m4a"))
@@ -72,6 +85,12 @@ def main() -> None:
         assert ' b="1"' not in slide_xml
         assert presentation_rels.count("/relationships/font") == 3
         assert content_types.count('Extension="fntdata"') == 1
+        assert '<a:majorFont><a:latin typeface="FS Magistral Bold"' in theme_xml
+        assert '<a:minorFont><a:latin typeface="FS Magistral Book"' in theme_xml
+        assert not any(
+            f'typeface="{font}"' in support_xml
+            for font in ("Arial", "Calibri", "Aptos", "Aptos Display")
+        )
         font_parts = [name for name in names if name.startswith("ppt/fonts/fontData")]
         assert len(font_parts) == 3
         with zipfile.ZipFile(pptx_path) as archive:

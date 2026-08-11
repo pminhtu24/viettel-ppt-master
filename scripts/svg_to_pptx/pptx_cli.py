@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -31,10 +32,22 @@ def _font_gate_errors(
 ) -> list[str]:
     """Return font problems that would otherwise become silent PPT fallbacks."""
     if not (project_path / "spec_lock.md").exists():
+        if any(
+            re.search(r"font-family\s*[:=][^>\n]*fs\s+magistral", path.read_text(encoding="utf-8", errors="ignore"), re.IGNORECASE)
+            for path in svg_files
+        ):
+            return ["Viettel typography requires spec_lock.md with brand.profile=viettel_default"]
         return []
 
     report = report or build_report(project_path)
     errors = []
+    requests_viettel = any(
+        "fs magistral" in str(stack.get("stack", "")).casefold()
+        for stack in report.get("stacks", [])
+        if isinstance(stack, dict)
+    )
+    if requests_viettel and report.get("brand_profile") != "viettel_default":
+        errors.append("FS Magistral requires brand.profile=viettel_default so embedding cannot be bypassed")
     face_report = report.get("viettel_faces")
     if (
         not allow_font_fallback
@@ -57,7 +70,7 @@ def _font_gate_errors(
         result = checker.check_file(str(svg_file))
         messages = [*result["errors"], *result["warnings"]]
         for message in messages:
-            if "[brand-font]" in message or (
+            if "[brand-font" in message or (
                 "[spec-lock-drift]" in message and "font-family" in message
             ):
                 errors.append(f"{svg_file.name}: {message}")
@@ -163,7 +176,7 @@ Per-element entrance animation:
             + f"\nRun: python3 scripts/check_fonts.py {project_path}"
         )
     if args.allow_font_fallback and font_report and font_report["summary"]["brand_fidelity"] == "degraded":
-        print("[WARN] brand fidelity degraded: exporting with a host font fallback")
+        print("[WARN] host preview degraded; PPTX retains exact embedded FS Magistral faces")
 
     if args.output:
         output_path = Path(args.output)

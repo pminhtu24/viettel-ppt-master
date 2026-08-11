@@ -30,6 +30,12 @@ python3 scripts/svg_quality_checker.py <project_path>  # final scan
 python3 scripts/svg_to_pptx.py <project_path>
 ```
 
+On Windows with Microsoft PowerPoint installed, verify the exported copy without modifying the original:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/windows_powerpoint_smoke.ps1 -PptxPath <deck.pptx>
+```
+
 Repository update:
 
 ```bash
@@ -68,6 +74,8 @@ python3 scripts/project_manager.py import-sources <project_path> <source_files..
 python3 scripts/project_manager.py validate <project_path>
 python3 scripts/check_fonts.py <project_path>
 ```
+
+Native Windows PowerShell may use `py -3` in place of `python3`; do not invoke these commands through `cmd.exe` path expansion.
 
 Template source import:
 

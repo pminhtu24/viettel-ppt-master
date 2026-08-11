@@ -56,7 +56,7 @@ VIETTEL_BRAND_PROFILE = "viettel_default"
 VIETTEL_CUSTOM_OVERRIDE_PROFILE = "custom_override"
 VIETTEL_VIEWBOX = "0 0 1280 720"
 VIETTEL_FONT_STACK = '"FS Magistral"'
-VIETTEL_ALLOWED_FONT_WEIGHTS = {"", "normal", "400", "500", "bold", "700"}
+VIETTEL_ALLOWED_FONT_WEIGHTS = {"", "400", "500", "700"}
 VIETTEL_DEEP_BLUE = "#12436D"
 VIETTEL_BLUE_SCOPES = {"chart", "diagram", "icon", "background"}
 VIETTEL_RAIL_PAGE_ROLES = {"cover", "chapter", "ending"}
@@ -1201,7 +1201,7 @@ class SVGQualityChecker:
             if is_text:
                 if not font:
                     missing_fonts.add(locator)
-                elif _normalize_font_stack(font) != _normalize_font_stack(VIETTEL_FONT_STACK):
+                elif ',' in font or font.strip().strip("'\"") != 'FS Magistral':
                     invalid_fonts[font].add(locator)
                 if weight not in VIETTEL_ALLOWED_FONT_WEIGHTS:
                     invalid_weights[weight or '(missing)'].add(locator)
@@ -2038,7 +2038,8 @@ class SVGQualityChecker:
             print(f"  1. XML well-formedness: write typography as raw Unicode (—, ©, →, NBSP); escape XML reserved chars as &amp; &lt; &gt; &quot; &apos; — never use HTML named entities like &nbsp; &mdash; &copy;")
             print(f"  2. viewBox issues: Ensure consistency with canvas format (see references/canvas-formats.md)")
             print(f"  3. foreignObject: Use separate <text> lines or data-box/data-wrap")
-            print(f"  4. Font issues: end every font-family stack with a PPT-safe family (e.g. Microsoft YaHei / Arial / Consolas)")
+            print("  4. Font issues: viettel_default requires exact FS Magistral; "
+                  "PPT-safe fallback stacks apply only to custom_override")
 
     def _print_animation_summary(self):
         """Print animations.json validation issues if present."""

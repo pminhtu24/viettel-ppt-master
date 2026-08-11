@@ -113,10 +113,8 @@ GENERIC_FONT_MAP = {
 
 VIETTEL_FACE_BY_WEIGHT = {
     '': 'FS Magistral Book',
-    'normal': 'FS Magistral Book',
     '400': 'FS Magistral Book',
     '500': 'FS Magistral Medium',
-    'bold': 'FS Magistral Bold',
     '700': 'FS Magistral Bold',
 }
 
@@ -445,7 +443,7 @@ def parse_font_family(font_family_str: str) -> dict[str, str]:
 def resolve_viettel_face(font_family_str: str, font_weight: str) -> str | None:
     """Resolve the locked SVG family/weight pair to a physical Windows face."""
     fonts = [font.strip().strip("'\"") for font in font_family_str.split(',')]
-    if 'FS Magistral' not in fonts:
+    if not any(font.casefold() == 'fs magistral' for font in fonts):
         return None
     weight = str(font_weight or '').strip().lower()
     if weight not in VIETTEL_FACE_BY_WEIGHT:

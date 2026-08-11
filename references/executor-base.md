@@ -112,9 +112,9 @@ Before the first SVG page, output a confirmation listing: canvas dimensions, bod
 
 **Hard rule**: Before generating **each** SVG page, `read_file <project_path>/spec_lock.md`. Use only values from this file, not from memory. If context was auto-compacted, also `read_file <project_path>/design_spec.md` for the current page's §IX brief.
 
-**Font preflight rule**: run `python3 scripts/check_fonts.py <project_path>` before the first SVG page. It must search for FS Magistral Book, Medium, and Bold first; if any face is missing, it automatically installs all three trusted bundled faces for the current user without asking. If re-check still fails, state `brand fidelity degraded` and continue generating SVG with `"FS Magistral"`. `--allow-font-fallback` permits degraded host preview only; Viettel export still requires a valid embedded payload for every face used.
+**Font preflight rule**: run `python3 scripts/check_fonts.py <project_path>` before the first SVG page (`py -3 ...` in native Windows PowerShell when needed). It must search for FS Magistral Book, Medium, and Bold first and install only missing trusted faces. On Windows it tries the system Fonts directory and falls back to the per-user directory only when access is denied. Never run manual `copy`, `reg`, or `%LOCALAPPDATA%` commands. If re-check still fails, state `brand fidelity degraded` and continue generating SVG with `"FS Magistral"`. `--allow-font-fallback` permits degraded host preview only; Viettel export still requires a valid embedded payload for every face used.
 
-**If `spec_lock.md` is missing**: emit `warning: spec_lock.md missing — generating without execution lock` once, then proceed using `design_spec.md` values. Expected only for legacy projects; new projects MUST have it (see [strategist.md](strategist.md) §6 step 4).
+**If `spec_lock.md` is missing**: Viettel generation/export is a hard error because the profile controls font validation and embedding. Only a legacy non-Viettel project may warn once and proceed from `design_spec.md`; new projects MUST have the lock (see [strategist.md](strategist.md) §6 step 4).
 
 **Forbidden — values outside the lock**:
 

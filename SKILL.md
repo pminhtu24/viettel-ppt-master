@@ -42,7 +42,7 @@ description: >
 >
 > - `viettel-ppt-master` is a repository-specific workflow, not a general application scaffold
 > - Do NOT create `.worktrees/`, `tests/`, branch workflows, or generic engineering structure by default
-> - On conflict with a generic coding skill, follow this skill unless the user explicitly says otherwise
+> - On conflict with a generic coding or PPTX skill, follow this skill unless the user explicitly says otherwise; the Viettel typography contract always overrides generic font-pairing/fallback guidance
 
 > [!IMPORTANT]
 >
@@ -58,7 +58,7 @@ description: >
 > - SVG `700`, `400`/omitted, and `500` are selectors for Bold, Book, and Medium respectively. PPTX must write the exact Windows typeface (`FS Magistral Bold`, `FS Magistral Book`, or `FS Magistral Medium`) and embed every face used. Arial/Calibri substitution and synthetic bold are forbidden.
 > - Viettel red `#EE0033` is the brand accent. Deep blue `#12436D` is restricted to chart, diagram/infographic, icon marks, and cataloged builtin backgrounds whose `backgrounds_index.json` item explicitly sets `deep_blue_background: true`. Never use it for text, cards, rails, footer, dividers, ad-hoc backgrounds, or unregistered decoration.
 > - Do NOT propose alternative brand colors, font combinations, typefaces, or competing templates unless the run is an explicit `custom_override`.
-> - Before generation, search the full host font catalog for FS Magistral Book, Medium, and Bold. If any face is missing, automatically install all three trusted bundled faces for the current user without asking. If installation still fails, keep `"FS Magistral"` in SVG and report `brand fidelity degraded`; `--allow-font-fallback` permits degraded host preview only. Viettel export must still embed every used face and hard-fail if its bundled payload is missing or invalid.
+> - Before generation, search the full host font catalog for FS Magistral Book, Medium, and Bold. On Windows, inspect HKLM/HKCU plus the system and per-user Fonts directories. Install only missing faces: try the Windows system Fonts directory first, then fall back to the per-user Fonts directory when access is denied. Never install with shell `copy`, never expand `%LOCALAPPDATA%` manually, and never hard-code a username. If installation still fails, keep `"FS Magistral"` in SVG and report `brand fidelity degraded`; `--allow-font-fallback` permits degraded host preview only. Viettel export must still embed every used face and hard-fail if its bundled payload is missing or invalid.
 
 ## Main Pipeline Scripts
 
@@ -74,6 +74,7 @@ description: >
 | `${SKILL_DIR}/scripts/image_search.py`             | Openly licensed web-image search with attribution metadata                                                                              |
 | `${SKILL_DIR}/scripts/svg_quality_checker.py`      | SVG quality check                                                                                                                       |
 | `${SKILL_DIR}/scripts/svg_to_pptx.py`              | Export to PPTX                                                                                                                          |
+| `${SKILL_DIR}/scripts/windows_powerpoint_smoke.ps1` | Open, edit, save, and reopen an exported deck in native Windows PowerPoint                                                              |
 | `${SKILL_DIR}/scripts/update_spec.py`              | Propagate a `spec_lock.md` color / font_family change across all generated SVGs                                                         |
 | `${SKILL_DIR}/scripts/check_fonts.py`              | Search for and, when needed, auto-install the three bundled FS Magistral faces                                                          |
 
@@ -227,9 +228,11 @@ Read references/strategist.md
 python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>
 ```
 
+In native Windows PowerShell, use `py -3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>` when `python3` is not registered.
+
 - `installed` → proceed normally
 - all three faces found → proceed without changing the host
-- any face missing → automatically install Book, Medium, and Bold from the trusted local bundle, then re-check
+- any face missing → automatically install only the missing trusted faces, using system-first/user-fallback on Windows, then re-check
 - still missing after installation → continue SVG generation with the locked family and report `brand fidelity degraded`; `--allow-font-fallback` affects host preview only, while export still requires valid embedded payloads for every used face
 
 **Mandatory — split-mode note** (not a ninth confirmation): after listing the eight confirmation details, you MUST append exactly one short line (rendered in the user's language, prefixed with 💡) about generation mode. Pick the variant by qualitative read of Phase A signals — recommended page count, source-material bulk, whether `topic-research` ran with substantial web-fetch accumulation:
@@ -341,7 +344,7 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 
 **Per-page spec_lock re-read (Mandatory)**: before **each** SVG page, `read_file <project_path>/spec_lock.md` and use only its colors / fonts / icons / images, plus the per-page `page_rhythm` / optional `page_backgrounds` / `page_layouts` / `page_charts` lookups (resolves to background/template/chart SVGs already loaded in the batch read above). Missing `page_backgrounds` means no decorative background for that page. Resists context-compression drift on long decks. See executor-base.md §2.1.
 
-**Font-preflight gate (Mandatory for bundled brand fonts)**: before the first SVG page, run `python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>`. It searches the full host catalog for FS Magistral Book, Medium, and Bold and automatically installs all three trusted bundled faces when any is missing; do not ask the user. If the re-check still reports missing faces, surface `brand fidelity degraded` but continue generating SVG with the exact locked family. The exporter repeats installation and validation, blocks missing host faces by default, and always rejects Arial/Calibri drift. Explicit `--allow-font-fallback` bypasses only the missing-host preview check; missing or invalid embedded payloads always hard-fail Viettel export.
+**Font-preflight gate (Mandatory for bundled brand fonts)**: before the first SVG page, run `python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>`. It searches the full host catalog for FS Magistral Book, Medium, and Bold and installs only missing trusted faces. On Windows it tries the system Fonts directory, falls back to the per-user directory only on access denial, registers the face with Windows, and verifies it again. Never issue manual `copy`, `reg`, or `%LOCALAPPDATA%` commands. If the re-check still reports missing faces, surface `brand fidelity degraded` but continue generating SVG with the exact locked family. The exporter repeats installation and validation, blocks missing host faces by default, and always rejects Arial/Calibri/Aptos drift. Explicit `--allow-font-fallback` bypasses only the missing-host preview check; missing or invalid embedded payloads always hard-fail Viettel export.
 
 > ⚠️ **Main-agent only**: SVG generation MUST stay in the current main agent — page design depends on full upstream context. Do NOT delegate to sub-agents.
 > ⚠️ **Generation rhythm**: generate pages sequentially, one at a time, in the same continuous context. Do NOT batch (e.g., 5 per group).

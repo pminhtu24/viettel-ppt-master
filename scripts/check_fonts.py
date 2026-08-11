@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import ctypes
 import ctypes.util
+import getpass
 import json
 import os
 import platform
@@ -23,7 +24,7 @@ import shutil
 import struct
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 try:
     from update_spec import parse_lock
@@ -57,10 +58,89 @@ WINDOWS_FONT_REGISTRY_KEYS = (
     r"HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts",
     r"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts",
 )
+WINDOWS_FONT_REGISTRY_SUBKEY = r"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
+_FOLDERID_LOCAL_APP_DATA = (
+    0xF1B32785,
+    0x6FBA,
+    0x4FCF,
+    (0x9D, 0x55, 0x7B, 0x8E, 0x7F, 0x15, 0x70, 0x91),
+)
+
+
+class _GUID(ctypes.Structure):
+    _fields_ = [
+        ("Data1", ctypes.c_ulong),
+        ("Data2", ctypes.c_ushort),
+        ("Data3", ctypes.c_ushort),
+        ("Data4", ctypes.c_ubyte * 8),
+    ]
 
 
 def normalize_font_name(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", value.lower())
+
+
+def _is_absolute_windows_path(value: str | None) -> bool:
+    """Reject shell placeholders and cwd-relative Windows install targets."""
+    if not value or "%" in value:
+        return False
+    return PureWindowsPath(value).is_absolute() or Path(value).is_absolute()
+
+
+def _windows_directory() -> Path:
+    configured = os.environ.get("WINDIR")
+    if _is_absolute_windows_path(configured):
+        return Path(configured)
+    buffer = ctypes.create_unicode_buffer(32768)
+    length = ctypes.windll.kernel32.GetWindowsDirectoryW(buffer, len(buffer))
+    if not length or length >= len(buffer):
+        raise RuntimeError("Windows directory could not be resolved")
+    return Path(buffer.value)
+
+
+def _windows_local_app_data() -> tuple[Path, str]:
+    configured = os.environ.get("LOCALAPPDATA")
+    if _is_absolute_windows_path(configured):
+        return Path(configured), "environment"
+
+    data1, data2, data3, data4 = _FOLDERID_LOCAL_APP_DATA
+    folder_id = _GUID(data1, data2, data3, (ctypes.c_ubyte * 8)(*data4))
+    output = ctypes.c_wchar_p()
+    known_folder = ctypes.windll.shell32.SHGetKnownFolderPath
+    known_folder.argtypes = [
+        ctypes.POINTER(_GUID),
+        ctypes.c_uint32,
+        ctypes.c_void_p,
+        ctypes.POINTER(ctypes.c_wchar_p),
+    ]
+    known_folder.restype = ctypes.c_long
+    result = known_folder(
+        ctypes.byref(folder_id), 0, None, ctypes.byref(output)
+    )
+    if result != 0 or not output.value:
+        raise RuntimeError("Local AppData could not be resolved from Windows Known Folders")
+    try:
+        return Path(output.value), "known-folder"
+    finally:
+        free_memory = ctypes.windll.ole32.CoTaskMemFree
+        free_memory.argtypes = [ctypes.c_void_p]
+        free_memory(ctypes.cast(output, ctypes.c_void_p))
+
+
+def _windows_font_dirs() -> tuple[Path, Path | None, str | None]:
+    system_dir = _windows_directory() / "Fonts"
+    try:
+        local_app_data, source = _windows_local_app_data()
+    except (AttributeError, OSError, RuntimeError):
+        return system_dir, None, None
+    return system_dir, local_app_data / "Microsoft/Windows/Fonts", source
+
+
+def _windows_is_elevated() -> bool:
+    try:
+        return bool(ctypes.windll.shell32.IsUserAnAdmin())
+    except (AttributeError, OSError):
+        return False
 
 
 def family_aliases_from_name(value: str) -> set[str]:
@@ -194,6 +274,9 @@ def _font_dirs(system: str, home: Path | None = None) -> list[Path]:
         ]
     if system == "Darwin":
         return [home / "Library/Fonts", Path("/Library/Fonts"), Path("/System/Library/Fonts")]
+    if system == "Windows":
+        system_dir, user_dir, _ = _windows_font_dirs()
+        return [system_dir, *([user_dir] if user_dir else [])]
     return []
 
 
@@ -266,19 +349,62 @@ def _faces_from_macos_coretext() -> dict[str, str]:
     return found
 
 
-def _faces_from_windows_registry() -> dict[str, str]:
+def _windows_registry_entries() -> list[tuple[str, str, str]]:
+    """Return (scope, display name, data) without parsing localized reg.exe output."""
+    try:
+        import winreg
+    except ImportError:
+        return []
+
+    entries: list[tuple[str, str, str]] = []
+    for scope, hive in (("user", winreg.HKEY_CURRENT_USER), ("system", winreg.HKEY_LOCAL_MACHINE)):
+        try:
+            key = winreg.OpenKey(hive, WINDOWS_FONT_REGISTRY_SUBKEY)
+        except OSError:
+            continue
+        with key:
+            index = 0
+            while True:
+                try:
+                    name, data, _ = winreg.EnumValue(key, index)
+                except OSError:
+                    break
+                index += 1
+                if isinstance(name, str) and isinstance(data, str):
+                    entries.append((scope, name, data))
+    return entries
+
+
+def _registry_font_candidates(
+    scope: str,
+    data: str,
+    system_dir: Path,
+    user_dir: Path | None,
+) -> list[Path]:
+    expanded = os.path.expandvars(data).strip().strip('"')
+    path = Path(expanded)
+    if path.is_absolute() or PureWindowsPath(expanded).is_absolute():
+        return [path]
+    if scope == "user":
+        candidates = [user_dir / expanded] if user_dir else []
+        return [*candidates, system_dir / expanded]
+    return [system_dir / expanded]
+
+
+def _faces_from_windows_registry(
+    font_dirs: list[Path] | None = None,
+) -> dict[str, str]:
+    dirs = font_dirs or _font_dirs("Windows")
+    system_dir = dirs[0] if dirs else _windows_directory() / "Fonts"
+    user_dir = dirs[1] if len(dirs) > 1 else None
     found: dict[str, str] = {}
-    for registry_key in WINDOWS_FONT_REGISTRY_KEYS:
-        registry = _run_command(["reg", "query", registry_key])
-        for line in registry.splitlines():
-            columns = re.split(r"\s{2,}", line.strip())
-            if len(columns) < 3 or not columns[1].startswith("REG_"):
-                continue
-            display_name = re.sub(r"\s*\([^)]*Type\)\s*$", "", columns[0])
-            normalized = normalize_font_name(display_name)
-            for face in VIETTEL_REQUIRED_FACES:
-                if normalize_font_name(f"{VIETTEL_FAMILY} {face}") == normalized:
-                    found.setdefault(face, columns[2])
+    for scope, _display_name, data in _windows_registry_entries():
+        candidates = _registry_font_candidates(scope, data, system_dir, user_dir)
+        for path in candidates:
+            face = _font_file_face(path)
+            if face:
+                found.setdefault(face, str(path))
+                break
     return found
 
 
@@ -292,7 +418,11 @@ def scan_installed_viettel_faces(
     if system == "Darwin":
         return _faces_from_macos_coretext() or _faces_from_font_dirs(font_dirs or _font_dirs(system))
     if system == "Windows":
-        return _faces_from_windows_registry()
+        dirs = font_dirs or _font_dirs(system)
+        found = _faces_from_windows_registry(dirs)
+        for face, path in _faces_from_font_dirs(dirs).items():
+            found.setdefault(face, path)
+        return found
     return _faces_from_font_dirs(font_dirs or _font_dirs(system))
 
 
@@ -313,12 +443,21 @@ def _viettel_bundle(project_path: Path) -> dict[str, Path]:
     return bundle
 
 
-def _copy_bundle(bundle: dict[str, Path], target: Path) -> dict[str, str]:
+def _copy_bundle(
+    bundle: dict[str, Path],
+    target: Path,
+    faces: set[str] | None = None,
+) -> dict[str, str]:
     target.mkdir(parents=True, exist_ok=True)
     installed: dict[str, str] = {}
     for face, source in bundle.items():
+        if faces is not None and face not in faces:
+            continue
         destination = target / source.name
-        if not destination.exists() or _font_file_face(destination) != face:
+        if destination.exists():
+            if _font_file_face(destination) != face:
+                raise FileExistsError(f"font target conflicts with bundled face: {destination}")
+        else:
             shutil.copy2(source, destination)
         installed[face] = str(destination)
     return installed
@@ -352,18 +491,81 @@ def _register_macos(paths: dict[str, str]) -> None:
             core_foundation.CFRelease(error)
 
 
-def _register_windows(paths: dict[str, str]) -> None:
-    registry_key = WINDOWS_FONT_REGISTRY_KEYS[0]
-    for face, path in paths.items():
-        _run_checked([
-            "reg", "add", registry_key, "/v", f"{VIETTEL_FAMILY} {face} (TrueType)",
-            "/t", "REG_SZ", "/d", path, "/f",
-        ])
-        ctypes.windll.gdi32.AddFontResourceExW(str(path), 0, None)
+def _register_windows(paths: dict[str, str], scope: str = "user") -> None:
+    """Register copied fonts transactionally and verify GDI accepted each file."""
+    import winreg
+
+    hive = winreg.HKEY_LOCAL_MACHINE if scope == "system" else winreg.HKEY_CURRENT_USER
+    access = winreg.KEY_QUERY_VALUE | winreg.KEY_SET_VALUE
+    previous: dict[str, tuple[object, int] | None] = {}
+    registered: list[str] = []
+    key = winreg.CreateKeyEx(hive, WINDOWS_FONT_REGISTRY_SUBKEY, 0, access)
+    try:
+        for face, path in paths.items():
+            value_name = f"{VIETTEL_FAMILY} {face} (TrueType)"
+            try:
+                previous[value_name] = winreg.QueryValueEx(key, value_name)
+            except FileNotFoundError:
+                previous[value_name] = None
+            registry_data = Path(path).name if scope == "system" else str(path)
+            winreg.SetValueEx(key, value_name, 0, winreg.REG_SZ, registry_data)
+            added = ctypes.windll.gdi32.AddFontResourceExW(str(path), 0, None)
+            if not added:
+                raise RuntimeError(f"Windows GDI rejected font: {path}")
+            registered.append(str(path))
+    except Exception:
+        for path in reversed(registered):
+            ctypes.windll.gdi32.RemoveFontResourceExW(path, 0, None)
+        for value_name, old_value in previous.items():
+            try:
+                if old_value is None:
+                    winreg.DeleteValue(key, value_name)
+                else:
+                    value, value_type = old_value
+                    winreg.SetValueEx(key, value_name, 0, value_type, value)
+            except OSError:
+                pass
+        raise
+    finally:
+        winreg.CloseKey(key)
+
     result = ctypes.c_ulong()
     ctypes.windll.user32.SendMessageTimeoutW(
         0xFFFF, 0x001D, 0, 0, 0x0002, 5000, ctypes.byref(result)
     )
+
+
+def _is_access_denied(exc: BaseException) -> bool:
+    return isinstance(exc, PermissionError) or getattr(exc, "winerror", None) == 5
+
+
+def _install_windows_scope(
+    bundle: dict[str, Path], target: Path, scope: str
+) -> dict[str, str]:
+    created = {target / source.name for source in bundle.values() if not (target / source.name).exists()}
+    try:
+        paths = _copy_bundle(bundle, target)
+        _register_windows(paths, scope=scope)
+        return paths
+    except Exception:
+        for path in created:
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                pass
+        raise
+
+
+def _install_windows_bundle(bundle: dict[str, Path]) -> dict[str, str]:
+    system_dir, user_dir, _ = _windows_font_dirs()
+    try:
+        return _install_windows_scope(bundle, system_dir, "system")
+    except Exception as exc:
+        if not _is_access_denied(exc):
+            raise
+    if user_dir is None:
+        raise RuntimeError("system font install was denied and Local AppData is unavailable")
+    return _install_windows_scope(bundle, user_dir, "user")
 
 
 def _install_viettel_bundle(bundle: dict[str, Path], system: str) -> dict[str, str]:
@@ -377,17 +579,12 @@ def _install_viettel_bundle(bundle: dict[str, Path], system: str) -> dict[str, s
         _register_macos(paths)
         return paths
     if system == "Windows":
-        local_app_data = os.environ.get("LOCALAPPDATA")
-        if not local_app_data:
-            raise RuntimeError("LOCALAPPDATA is not set")
-        paths = _copy_bundle(bundle, Path(local_app_data) / "Microsoft/Windows/Fonts")
-        _register_windows(paths)
-        return paths
+        return _install_windows_bundle(bundle)
     raise RuntimeError(f"automatic font installation is unsupported on {system}")
 
 
 def ensure_viettel_fonts(project_path: Path) -> dict[str, object]:
-    """Search first, then install all three trusted bundled faces when needed."""
+    """Search first, then install only the missing trusted bundled faces."""
     system = platform.system()
     found_before = scan_installed_viettel_faces(system=system)
     missing_before = sorted(set(VIETTEL_REQUIRED_FACES) - set(found_before))
@@ -395,11 +592,22 @@ def ensure_viettel_fonts(project_path: Path) -> dict[str, object]:
     error = None
     if missing_before:
         try:
-            installed_paths = _install_viettel_bundle(_viettel_bundle(project_path), system)
+            bundle = _viettel_bundle(project_path)
+            installed_paths = _install_viettel_bundle(
+                {face: bundle[face] for face in missing_before}, system
+            )
         except Exception as exc:
             error = str(exc)
     found_after = scan_installed_viettel_faces(system=system) if missing_before else found_before
     missing_after = sorted(set(VIETTEL_REQUIRED_FACES) - set(found_after))
+    install_scope = None
+    if installed_paths and system == "Windows":
+        try:
+            system_dir, _, _ = _windows_font_dirs()
+            first_parent = Path(next(iter(installed_paths.values()))).parent
+            install_scope = "system" if str(first_parent).casefold() == str(system_dir).casefold() else "user"
+        except RuntimeError:
+            install_scope = "unknown"
     return {
         "required_faces": list(VIETTEL_REQUIRED_FACES),
         "found_before": found_before,
@@ -408,8 +616,10 @@ def ensure_viettel_fonts(project_path: Path) -> dict[str, object]:
         "found_after": found_after,
         "missing_after": missing_after,
         "install_error": error,
-        "status": "installed" if not missing_after else "degraded",
+        "status": "installed" if not missing_after and error is None else "degraded",
         "install_dir": str(Path(next(iter(installed_paths.values()))).parent) if installed_paths else None,
+        "install_scope": install_scope,
+        "restart_powerpoint": bool(installed_paths and system == "Windows"),
     }
 
 
@@ -447,16 +657,13 @@ def collect_installed_fonts() -> tuple[set[str], list[str]]:
             ]
         )
     elif system == "Windows":
-        for registry_key in WINDOWS_FONT_REGISTRY_KEYS:
-            registry = _run_command(["reg", "query", registry_key])
-            if not registry:
-                continue
-            sources.append(registry_key)
-            for line in registry.splitlines():
-                columns = re.split(r"\s{2,}", line.strip())
-                if len(columns) >= 3 and columns[1].startswith("REG_"):
-                    display_name = re.sub(r"\s*\([^)]*Type\)\s*$", "", columns[0])
-                    aliases.update(family_aliases_from_name(display_name))
+        entries = _windows_registry_entries()
+        if entries:
+            sources.extend(WINDOWS_FONT_REGISTRY_KEYS)
+        for _, display_name, _ in entries:
+            clean = re.sub(r"\s*\([^)]*Type\)\s*$", "", display_name)
+            aliases.update(family_aliases_from_name(clean))
+        font_dirs.extend(_font_dirs("Windows"))
     else:
         font_dirs.append(home / ".fonts")
 
@@ -595,6 +802,24 @@ def build_report(project_path: Path) -> dict[str, object]:
         }
     )
 
+    environment: dict[str, object] = {
+        "os": platform.system(),
+        "installed_font_sources": installed_sources,
+    }
+    if platform.system() == "Windows":
+        environment.update({"process_user": getpass.getuser(), "elevated": _windows_is_elevated()})
+        try:
+            system_dir, user_dir, local_source = _windows_font_dirs()
+            environment.update(
+                {
+                    "windows_font_dir": str(system_dir),
+                    "user_font_dir": str(user_dir) if user_dir else None,
+                    "local_app_data_source": local_source,
+                }
+            )
+        except RuntimeError as exc:
+            environment["windows_font_resolution_error"] = str(exc)
+
     return {
         "project": str(project_path),
         "brand_profile": lock.get("brand", {}).get("profile"),
@@ -608,10 +833,7 @@ def build_report(project_path: Path) -> dict[str, object]:
         "bundle": {
             "dirs": bundle_dirs,
         },
-        "environment": {
-            "os": platform.system(),
-            "installed_font_sources": installed_sources,
-        },
+        "environment": environment,
         "viettel_faces": face_report,
         "stacks": stack_reports,
     }
@@ -636,6 +858,10 @@ def print_summary(report: dict[str, object]) -> None:
             installed_faces = ", ".join(face_report["auto_installed"])
             print(f"Auto-installed from bundle: {installed_faces}")
             print(f"Install directory: {face_report['install_dir']}")
+            if face_report.get("install_scope"):
+                print(f"Install scope: {face_report['install_scope']}")
+            if face_report.get("restart_powerpoint"):
+                print("Restart PowerPoint to refresh its font catalog.")
         if face_report["install_error"]:
             print(f"Automatic install failed: {face_report['install_error']}")
         if face_report["missing_after"]:
