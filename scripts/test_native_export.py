@@ -21,6 +21,8 @@ xmlns="http://www.w3.org/2000/svg">
 <text x="80" y="120" font-family="FS Magistral" font-size="32" font-weight="400">Book</text>
 <text x="80" y="180" font-family="FS Magistral" font-size="32" font-weight="500">Medium</text>
 <text x="80" y="240" font-family="FS Magistral" font-size="32" font-weight="700">Bold</text>
+<text x="80" y="320" data-box="80,280,400,48" data-wrap="true"
+      font-family="FS Magistral" font-size="32" font-weight="700">A deliberately long title that must stay inside its fixed text box</text>
 </svg>"""
 
 
@@ -83,6 +85,8 @@ def main() -> None:
         assert 'saveSubsetFonts="0"' in presentation_xml
         assert 'typeface="FS Magistral"' not in slide_xml
         assert ' b="1"' not in slide_xml
+        assert '<a:normAutofit/>' in slide_xml
+        assert '<a:noAutofit/>' not in slide_xml
         assert presentation_rels.count("/relationships/font") == 3
         assert content_types.count('Extension="fntdata"') == 1
         assert '<a:majorFont><a:latin typeface="FS Magistral Bold"' in theme_xml

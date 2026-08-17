@@ -1169,7 +1169,10 @@ def convert_text(elem: ET.Element, ctx: ConvertContext) -> ShapeResult | None:
     ext_cy = px_to_emu(box_h)
     wrap = elem.get('data-wrap') == 'true' or fixed_text_box is not None
     wrap_attr = 'square' if wrap else 'none'
-    autofit_xml = '<a:noAutofit/>' if fixed_text_box else '<a:spAutoFit/>'
+    # A fixed wrap box must shrink long text before it can spill into the next
+    # layout block (common on cover/chapter titles).  Expanding the shape is
+    # not safe because sibling shapes have fixed SVG coordinates.
+    autofit_xml = '<a:normAutofit/>' if fixed_text_box else '<a:spAutoFit/>'
 
     return ShapeResult(xml=f'''<p:sp>
 <p:nvSpPr>

@@ -281,10 +281,13 @@ Catalog read: 71 templates
 >
 > Deep-blue builtin rule: `#12436D` is allowed only when the selected index item sets `deep_blue_background: true`. Record the background id normally; Executor applies the required `data-viettel-blue-scope="background"` wrapper and preserves the indexed safe text zone.
 
-| Page | Background ID | Category | Intensity | Reason |
-| ---- | ------------- | -------- | --------- | ------ |
-| P01 | `bg_red_corner_sweep` | cover | high | Cover needs stronger brand presence; title sits in the calm left zone |
-| P03 | `bg_red_folded_stage` | brand | high | Section divider can carry a stronger visual field because content is sparse |
+| Page role | Candidate background IDs | Selection rule |
+| --------- | ------------------------- | -------------- |
+| Cover | `bg_clean_white_rail`, `bg_red_corner_sweep`, `bg_signal_arc`, `bg_wave_ribbon_soft` | Choose one that matches the project's tone and title safe zone |
+| Chapter | `bg_red_folded_stage`, `bg_network_texture_light`, `bg_topographic_lines`, `bg_signal_arc` | Match the chapter topic and keep the indexed safe text zone clear |
+| Ending | `bg_clean_white_rail`, `bg_signal_arc`, `bg_wave_ribbon_soft` | Prefer a calm layer unless the conclusion needs a strong brand close |
+
+> These are candidate examples, not a page mapping. The actual project must assign only the selected IDs to its own `P<NN>` rows; do not copy a fixed P01/P03/P07 assignment.
 
 > **Spec lock handoff rule**: every row MUST be copied into `spec_lock.md ## page_backgrounds` with the same page key and background id. Content-heavy pages MUST NOT appear in `page_backgrounds`.
 

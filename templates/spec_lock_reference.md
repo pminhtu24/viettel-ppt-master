@@ -125,11 +125,12 @@
 
 ## page_backgrounds
 
-- P01: bg_red_corner_sweep
-- P03: bg_red_folded_stage
-- P07: bg_signal_arc
+<!-- Example shape only; this is not a default page-to-background mapping. -->
+- P<NN>: <background_id_from_backgrounds_index>
 
 > Optional cover/chapter/ending entries for `brand.profile: viettel_default`. Key: `P<NN>` matching §IX. Value: a background id from `templates/backgrounds/backgrounds_index.json`, without `.svg`.
+>
+> Choose rows from the actual project's topic, page role, `page_rhythm`, and `safe_text_zone`. Do not copy a P01/P03/P07 mapping from this reference. Omit the section or omit a page when the clean shell is the better fit.
 >
 > **Default Viettel policy**: only cover, chapter, and ending pages get a background layer or full-height red rail. Content, TOC, chart, KPI, table, section-divider, and breathing pages MUST omit `page_backgrounds` and use the standard clean Viettel shell.
 >
