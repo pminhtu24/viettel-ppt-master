@@ -104,4 +104,4 @@ Nếu deck có chart dữ liệu, workflow `verify-charts` sẽ được dùng �
 pip install -r requirements.txt
 ```
 
-Skill tìm đủ FS Magistral Book, Medium và Bold trên host trước. Skill chỉ cài face còn thiếu; trên Windows nó thử system Fonts trước và fallback sang per-user Fonts khi bị từ chối quyền. Không dùng shell `copy` hoặc tự expand `%LOCALAPPDATA%`. SVG luôn giữ `"FS Magistral"`; `--allow-font-fallback` chỉ cho phép preview host bị degraded. Exporter vẫn bắt buộc nhúng payload hợp lệ của từng face được dùng và hard-fail nếu payload thiếu hoặc sai metadata.
+Skill tìm đủ FS Magistral Book, Medium và Bold trên host trước. Skill chỉ cài face còn thiếu; trên Windows nó luôn dùng Fonts của user hiện tại, không yêu cầu quyền system/admin. Không dùng shell `copy` hoặc tự expand `%LOCALAPPDATA%`. SVG luôn giữ `"FS Magistral"`; `--allow-font-fallback` chỉ cho phép preview host bị degraded. Exporter vẫn bắt buộc nhúng payload hợp lệ của từng face được dùng và hard-fail nếu payload thiếu hoặc sai metadata.

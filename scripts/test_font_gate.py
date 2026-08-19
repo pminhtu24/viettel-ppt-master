@@ -168,23 +168,22 @@ def main() -> None:
                 "check_fonts._windows_font_dirs",
                 return_value=(windows_system, windows_user, "known-folder"),
             ),
-            patch(
-                "check_fonts._install_windows_scope",
-                side_effect=[PermissionError("system denied"), user_paths],
-            ) as install_scope,
+            patch("check_fonts._register_windows") as register,
         ):
             paths = _install_windows_bundle(bundle)
         assert paths == user_paths
-        assert [call.args[2] for call in install_scope.call_args_list] == ["system", "user"]
+        register.assert_called_once_with(user_paths)
+        assert not windows_system.exists()
 
         registry_state = {}
+        registry_hives = []
         fake_winreg = SimpleNamespace(
             HKEY_LOCAL_MACHINE=1,
             HKEY_CURRENT_USER=2,
             KEY_QUERY_VALUE=1,
             KEY_SET_VALUE=2,
             REG_SZ=1,
-            CreateKeyEx=lambda *args: object(),
+            CreateKeyEx=lambda hive, *args: registry_hives.append(hive) or object(),
             QueryValueEx=lambda *args: (_ for _ in ()).throw(FileNotFoundError()),
             SetValueEx=lambda key, name, reserved, kind, value: registry_state.__setitem__(name, value),
             DeleteValue=lambda key, name: registry_state.pop(name, None),
@@ -205,16 +204,17 @@ def main() -> None:
             else:
                 raise AssertionError("GDI registration failure was accepted")
 
+        registry_state.clear()
         fake_gdi.AddFontResourceExW = lambda *args: 1
         fake_user32 = SimpleNamespace(SendMessageTimeoutW=lambda *args: 1)
         fake_windll = SimpleNamespace(gdi32=fake_gdi, user32=fake_user32)
         with patch.dict(sys.modules, {"winreg": fake_winreg}), patch(
             "check_fonts.ctypes.windll", fake_windll, create=True
         ):
-            _register_windows(
-                {"Bold": str(bundled / VIETTEL_REQUIRED_FACES["Bold"])}, scope="system"
-            )
-        assert registry_state["FS Magistral Bold (TrueType)"] == "FS Magistral-Bold.ttf"
+            bold_path = str(bundled / VIETTEL_REQUIRED_FACES["Bold"])
+            _register_windows({"Bold": bold_path})
+        assert registry_state["FS Magistral Bold (TrueType)"] == bold_path
+        assert registry_hives == [fake_winreg.HKEY_CURRENT_USER] * 2
 
         init_project = root / "init-project"
         (init_project / "templates").mkdir(parents=True)

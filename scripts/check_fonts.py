@@ -491,15 +491,16 @@ def _register_macos(paths: dict[str, str]) -> None:
             core_foundation.CFRelease(error)
 
 
-def _register_windows(paths: dict[str, str], scope: str = "user") -> None:
+def _register_windows(paths: dict[str, str]) -> None:
     """Register copied fonts transactionally and verify GDI accepted each file."""
     import winreg
 
-    hive = winreg.HKEY_LOCAL_MACHINE if scope == "system" else winreg.HKEY_CURRENT_USER
     access = winreg.KEY_QUERY_VALUE | winreg.KEY_SET_VALUE
     previous: dict[str, tuple[object, int] | None] = {}
     registered: list[str] = []
-    key = winreg.CreateKeyEx(hive, WINDOWS_FONT_REGISTRY_SUBKEY, 0, access)
+    key = winreg.CreateKeyEx(
+        winreg.HKEY_CURRENT_USER, WINDOWS_FONT_REGISTRY_SUBKEY, 0, access
+    )
     try:
         for face, path in paths.items():
             value_name = f"{VIETTEL_FAMILY} {face} (TrueType)"
@@ -507,8 +508,7 @@ def _register_windows(paths: dict[str, str], scope: str = "user") -> None:
                 previous[value_name] = winreg.QueryValueEx(key, value_name)
             except FileNotFoundError:
                 previous[value_name] = None
-            registry_data = Path(path).name if scope == "system" else str(path)
-            winreg.SetValueEx(key, value_name, 0, winreg.REG_SZ, registry_data)
+            winreg.SetValueEx(key, value_name, 0, winreg.REG_SZ, str(path))
             added = ctypes.windll.gdi32.AddFontResourceExW(str(path), 0, None)
             if not added:
                 raise RuntimeError(f"Windows GDI rejected font: {path}")
@@ -535,17 +535,18 @@ def _register_windows(paths: dict[str, str], scope: str = "user") -> None:
     )
 
 
-def _is_access_denied(exc: BaseException) -> bool:
-    return isinstance(exc, PermissionError) or getattr(exc, "winerror", None) == 5
-
-
-def _install_windows_scope(
-    bundle: dict[str, Path], target: Path, scope: str
-) -> dict[str, str]:
-    created = {target / source.name for source in bundle.values() if not (target / source.name).exists()}
+def _install_windows_bundle(bundle: dict[str, Path]) -> dict[str, str]:
+    _, target, _ = _windows_font_dirs()
+    if target is None:
+        raise RuntimeError("per-user Fonts directory is unavailable")
+    created = {
+        target / source.name
+        for source in bundle.values()
+        if not (target / source.name).exists()
+    }
     try:
         paths = _copy_bundle(bundle, target)
-        _register_windows(paths, scope=scope)
+        _register_windows(paths)
         return paths
     except Exception:
         for path in created:
@@ -554,18 +555,6 @@ def _install_windows_scope(
             except OSError:
                 pass
         raise
-
-
-def _install_windows_bundle(bundle: dict[str, Path]) -> dict[str, str]:
-    system_dir, user_dir, _ = _windows_font_dirs()
-    try:
-        return _install_windows_scope(bundle, system_dir, "system")
-    except Exception as exc:
-        if not _is_access_denied(exc):
-            raise
-    if user_dir is None:
-        raise RuntimeError("system font install was denied and Local AppData is unavailable")
-    return _install_windows_scope(bundle, user_dir, "user")
 
 
 def _install_viettel_bundle(bundle: dict[str, Path], system: str) -> dict[str, str]:
@@ -600,14 +589,7 @@ def ensure_viettel_fonts(project_path: Path) -> dict[str, object]:
             error = str(exc)
     found_after = scan_installed_viettel_faces(system=system) if missing_before else found_before
     missing_after = sorted(set(VIETTEL_REQUIRED_FACES) - set(found_after))
-    install_scope = None
-    if installed_paths and system == "Windows":
-        try:
-            system_dir, _, _ = _windows_font_dirs()
-            first_parent = Path(next(iter(installed_paths.values()))).parent
-            install_scope = "system" if str(first_parent).casefold() == str(system_dir).casefold() else "user"
-        except RuntimeError:
-            install_scope = "unknown"
+    install_scope = "user" if installed_paths and system == "Windows" else None
     return {
         "required_faces": list(VIETTEL_REQUIRED_FACES),
         "found_before": found_before,

@@ -39,7 +39,7 @@
 > For `viettel_default`, keep only the approved rows actually used and do not add colors outside this palette. For explicit `custom_override`, replace the section with the override palette.
 >
 > **Viettel default color lock**: normal runs use Viettel red `#EE0033`, white/approved-gray surfaces, and dark-neutral text. Deep blue `#12436D` may appear only in chart, diagram/infographic, icon marks, or a cataloged builtin background whose index item sets `deep_blue_background: true`. Every deep-blue SVG mark MUST be inside `<g data-viettel-blue-scope="chart|diagram|icon|background">`; `background` scope also requires `data-viettel-background-id="<id>"`. Deep blue remains forbidden for text, cards, rails, footers, dividers, ad-hoc backgrounds, and unregistered decoration.
->
+
 ## typography
 
 - font_family: "FS Magistral"
@@ -126,6 +126,7 @@
 ## page_backgrounds
 
 <!-- Example shape only; this is not a default page-to-background mapping. -->
+
 - P<NN>: <background_id_from_backgrounds_index>
 
 > Optional cover/chapter/ending entries for `brand.profile: viettel_default`. Key: `P<NN>` matching §IX. Value: a background id from `templates/backgrounds/backgrounds_index.json`, without `.svg`.

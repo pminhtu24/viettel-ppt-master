@@ -144,7 +144,7 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 
 > Keep `font_family: "FS Magistral"` in `spec_lock.md` for compatibility. Do not introduce ad-hoc fonts in page SVGs.
 > For Viettel decks, Strategist MUST name the three static faces and TTF files; do not ask the user to choose typography. SVG `400`/omitted, `500`, and `700` select Book, Medium, and Bold respectively; never use `800`/ExtraBold.
-> Viettel template projects ship a local `fonts/` bundle. After project setup, run `scripts/check_fonts.py <project_path>`; it searches for Book, Medium, and Bold first and installs only missing trusted faces. On Windows it tries system Fonts and falls back to per-user Fonts on access denial; never use shell `copy` or `%LOCALAPPDATA%` expansion. If re-check still fails, keep `"FS Magistral"` in SVG and report `brand fidelity degraded`.
+> Viettel template projects ship a local `fonts/` bundle. After project setup, run `scripts/check_fonts.py <project_path>`; it searches for Book, Medium, and Bold first and installs only missing trusted faces. On Windows it always installs into the current user's Fonts directory and HKCU without system/admin access; never use shell `copy` or `%LOCALAPPDATA%` expansion. If re-check still fails, keep `"FS Magistral"` in SVG and report `brand fidelity degraded`.
 
 ---
 

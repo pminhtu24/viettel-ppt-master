@@ -108,7 +108,7 @@
 >
 > The converter (`drawingml_utils.py parse_font_family`) maps these to PPTX `<a:latin>` / `<a:ea>` regardless of order — but browser preview and SVG native rendering reflect stack order. Pick the order matching your design intent.
 
-> **Bundled brand fonts**: keep the intended stack in `design_spec.md` / `spec_lock.md`. For Viettel, `scripts/check_fonts.py` first searches for Book, Medium, and Bold and installs only missing trusted faces. On Windows it uses system-first/user-fallback installation without shell path expansion, then re-checks.
+> **Bundled brand fonts**: keep the intended stack in `design_spec.md` / `spec_lock.md`. For Viettel, `scripts/check_fonts.py` first searches for Book, Medium, and Bold and installs only missing trusted faces. On Windows it always installs into the current user's Fonts directory and HKCU without system/admin access or shell path expansion, then re-checks.
 
 ### Font Size Hierarchy
 
