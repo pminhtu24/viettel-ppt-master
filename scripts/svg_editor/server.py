@@ -20,6 +20,7 @@ Dependencies:
 import argparse
 import os
 import re
+import socket
 import sys
 import threading
 import time
@@ -28,7 +29,15 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional
 
-from flask import Flask, jsonify, request, send_from_directory
+try:
+    from flask import Flask, jsonify, request, send_from_directory
+except ImportError:
+    print(
+        "SVG Editor unavailable: flask not installed. "
+        "Live preview skipped. Install with: pip install flask",
+        flush=True,
+    )
+    sys.exit(2)
 
 # Local — sys.path injection for sibling module (code-style.md §3)
 _SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -406,6 +415,20 @@ def main(argv: Optional[list[str]] = None) -> int:
     app = create_app(str(project_path), idle_timeout=idle_timeout, live=args.live)
 
     url = f'http://localhost:{args.port}'
+
+    # Pre-bind the port so the "running at" line is a reliable listening signal.
+    # If the port is taken or unavailable, exit non-zero immediately instead of
+    # printing a misleading "running" message and then dying inside app.run().
+    try:
+        probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        probe.bind(('127.0.0.1', args.port))
+        probe.close()
+    except OSError as e:
+        print(f"Error: cannot bind 127.0.0.1:{args.port} — {e}", file=sys.stderr)
+        print("Hint: use --port <other> to pick a free port.", file=sys.stderr)
+        return 1
+
     if not args.no_browser:
         webbrowser.open(url)
 

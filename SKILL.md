@@ -328,15 +328,20 @@ Read references/executor-consultant-top.md # Top consulting style (MBB level)
 
 **Design Parameter Confirmation (Mandatory)**: before the first SVG, output key design parameters from the spec (canvas dimensions, color scheme, font plan, body font size). See executor-base.md §2.
 
-**Live Preview Auto-Startup (Mandatory)**: before the first SVG, automatically start the browser editor in live mode and keep it running continuously through Executor + Step 7 export:
+**Live Preview Auto-Startup (Best-effort, Mandatory attempt)**: before the first SVG, attempt to start the browser editor in live mode and keep it running through Executor + Step 7 export:
 
 ```bash
 python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 ```
 
 - Start it immediately when Executor begins; `svg_output/` may be empty. Editor opens at `http://localhost:5050`; port conflict → `--port <other>` and report the actual URL.
-- Run it as a long-running side process/session; do not wait for it to exit before generating SVG pages. Do not wait for user confirmation after startup.
-- **Service must keep running** until one of: (a) the user clicks **Exit preview** in the browser, or (b) the user explicitly asks in chat to stop it. Generation continues even if the user closes the editor.
+- Run it as a long-running background process; do not wait for it to exit before generating SVG pages.
+- **Startup verification (do not block the pipeline)**: the server only prints `SVG Editor running at http://...` *after* the port is successfully bound, so that line is a reliable listening signal. Wait at most ~5 seconds for one of these outcomes:
+  - `running at` line appears → preview is up; proceed to generate SVGs.
+  - `flask not installed` line appears, or process exits with code `2` → flask is missing on this host. **Skip preview entirely** — no retry, no install attempt. Tell the user in one short line: `Live preview skipped — flask not installed (pip install flask to enable it next time)`. Continue generation.
+  - `Error: cannot bind` line appears, or process exits with code `1` → port unavailable. Skip preview (or let the user pick another port manually); do not auto-retry in a loop. Continue generation.
+  - No signal within ~5s → skip preview, continue generation.
+- **Service must keep running** until one of: (a) the user clicks **Exit preview** in the browser, (b) the user explicitly asks in chat to stop it, or (c) it failed to start (handled above). Generation continues even if the user closes the editor or it never came up.
 - **Do NOT read or apply submitted annotations during generation.** Users may annotate at any time, but Executor proceeds without touching them. The window to apply annotations opens only after Step 7 completes — see [`workflows/live-preview.md`](workflows/live-preview.md).
 - UI button semantics and editor details: see [`workflows/live-preview.md`](workflows/live-preview.md) Notes.
 
@@ -385,7 +390,7 @@ Chrome normalization also removes marked background groups and near-full-height 
 ```markdown
 ## ✅ Executor Phase Complete
 
-- [x] Live preview started and kept available at the reported URL
+- [x] Live preview startup attempted (running at the reported URL, or skipped if flask missing / bind failed)
 - [x] All SVGs generated to svg_output/
 - [x] svg_quality_checker.py passed (0 errors)
 ```

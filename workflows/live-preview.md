@@ -34,13 +34,15 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path>
 
 (Plain mode — no `--live`. The `--live` flag is reserved for Step 6's auto-startup.)
 
-The server binds `127.0.0.1:5050`, opens the browser on a local desktop, and edits `<project_path>/svg_output/` in place. After it prints `SVG Editor running at http://localhost:5050`, tell the user in their language, in one short message:
+The server binds `127.0.0.1:5050`, opens the browser on a local desktop, and edits `<project_path>/svg_output/` in place. The `SVG Editor running at http://...` line is printed only after the port is successfully bound, so it is a reliable listening signal. After it prints that line, tell the user in their language, in one short message:
 
 - editor is at `http://localhost:5050`
 - click an element → write the change → click **Submit annotations** → return to the chat and say `apply my annotations` (or quote the browser prompt)
 - to skip the editor, just describe the change in chat
 
 Do not wait for confirmation before launching — the user already asked for preview, so launching is the response. Port conflicts → `--port <other>` and report the new URL. Remote access → see the appendix.
+
+**If the server reports `flask not installed` (exit code 2)**: this is a user-initiated preview, so do NOT skip silently. Tell the user flask is missing and give them the install command (`pip install flask`), then ask whether to retry after they install it. **If the server reports `Error: cannot bind` (exit code 1)**: suggest `--port <other>` and retry once with a free port.
 
 ---
 
