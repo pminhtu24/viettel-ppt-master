@@ -1,13 +1,21 @@
+# Core app dependencies
 python-pptx>=0.6.21
 PyMuPDF>=1.23.0
-mammoth>=1.6.0
-markdownify>=0.11.6
-ebooklib>=0.18
-nbconvert>=7.0.0
 openpyxl>=3.1.0
 Pillow>=9.0.0
 numpy>=1.20.0
 requests>=2.31.0
-beautifulsoup4>=4.12.0
 curl_cffi>=0.7.0
 flask>=3.0.0
+
+# Source-to-Markdown converter dependencies
+# mammoth, cobble, ebooklib, nbconvert, markdownify, beautifulsoup4, and all
+# pure-Python transitive deps are BUNDLED as universal wheels in
+# scripts/source_to_md/vendor_wheels/universal/. doc_to_md.py auto-loads
+# them at startup — no pip install needed for offline use.
+# The packages below are still listed for users who prefer system install.
+mammoth>=1.6.0
+markdownify>=0.11.6
+ebooklib>=0.18
+nbconvert>=7.0.0
+beautifulsoup4>=4.12.0

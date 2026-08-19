@@ -5,8 +5,8 @@ Document to Markdown Converter (hybrid Python + Pandoc fallback)
 Primary formats (pure Python, no external tools required):
     .docx   → mammoth
     .html   → markdownify + BeautifulSoup
-    .epub   → ebooklib + markdownify
-    .ipynb  → nbconvert
+    .epub   → ebooklib + markdownify  (stdlib fallback if lxml missing)
+    .ipynb  → nbconvert               (pyzmq stub for static conversion)
 
 Fallback formats (require pandoc installed):
     .doc .odt .rtf .tex .latex .rst .org .typ
@@ -14,7 +14,14 @@ Fallback formats (require pandoc installed):
 All paths produce the same output convention:
     <input>.md                     Markdown file
     <input>_files/<asset>          Extracted media (relative references in MD)
+
+Bundled wheels: mammoth, cobble, ebooklib, nbconvert, and all transitive
+pure-Python dependencies are shipped in vendor_wheels/universal/. The
+bootstrap function below adds them to sys.path so the converter works
+without internet access or pip install.
 """
+
+from __future__ import annotations
 
 import argparse
 import base64
@@ -30,6 +37,60 @@ import zipfile
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 from xml.etree import ElementTree as ET
+
+
+# ─────────────────────────────────────────────────────────────
+# Vendored dependency bootstrap
+# ─────────────────────────────────────────────────────────────
+
+_VENDOR_DIR = Path(__file__).parent / "vendor_wheels"
+_VENDOR_UNIVERSAL = _VENDOR_DIR / "universal"
+_VENDOR_BOOTSTRAPPED = False
+
+
+def _ensure_vendored_deps():
+    """Add bundled universal wheels to sys.path and inject stubs.
+
+    Called once at startup. If the system already has a package
+    installed, the system version takes precedence (sys.path order).
+    Stubs are only injected if the real package is not available.
+
+    Wheels are extracted to a temp directory rather than added to
+    sys.path directly, because some packages (e.g. nbformat) need to
+    open data files (JSON schemas) via Path.open(), which zipimport
+    cannot do from inside a .whl ZIP archive.
+    """
+    global _VENDOR_BOOTSTRAPPED
+    if _VENDOR_BOOTSTRAPPED:
+        return
+    _VENDOR_BOOTSTRAPPED = True
+
+    if _VENDOR_UNIVERSAL.is_dir():
+        import tempfile
+        import zipfile
+        extract_dir = Path(tempfile.mkdtemp(prefix="vendor_deps_"))
+        for whl in sorted(_VENDOR_UNIVERSAL.glob("*.whl")):
+            try:
+                with zipfile.ZipFile(str(whl), "r") as zf:
+                    zf.extractall(str(extract_dir))
+            except Exception:
+                pass
+        extract_dir_str = str(extract_dir)
+        if extract_dir_str not in sys.path:
+            sys.path.append(extract_dir_str)
+
+    import importlib.util
+    for stub_name in ("pyzmq_stub", "rpds_stub"):
+        stub_path = _VENDOR_DIR / f"{stub_name}.py"
+        if stub_path.exists():
+            try:
+                __import__(stub_name)
+            except ImportError:
+                spec = importlib.util.spec_from_file_location(stub_name, stub_path)
+                if spec and spec.loader:
+                    stub_mod = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(stub_mod)
+                    stub_mod.install(sys.modules)
 
 # ─────────────────────────────────────────────────────────────
 # Format registry
@@ -385,7 +446,8 @@ def _convert_docx(input_file: Path, out_file: Path) -> str:
     try:
         import mammoth
     except ImportError:
-        print("[ERROR] mammoth not installed. Run: pip install mammoth")
+        print("[ERROR] mammoth not available. The bundled wheel may be corrupted.")
+        print(f"   Vendor dir: {_VENDOR_UNIVERSAL}")
         return ""
 
     media_dir, rel_media_dir = _ensure_media_dir(out_file)
@@ -583,19 +645,24 @@ def _convert_html(input_file: Path, out_file: Path) -> str:
 
 
 # ─────────────────────────────────────────────────────────────
-# EPUB → Markdown (ebooklib + markdownify)
+# EPUB → Markdown (ebooklib + markdownify, or stdlib fallback)
 # ─────────────────────────────────────────────────────────────
 
+# OPF XML namespace
+_OPF_NS = "http://www.idpf.org/2007/opf"
+_CONTAINER_NS = "urn:oasis:names:tc:opendocument:xmlns:container"
+
+
 def _convert_epub(input_file: Path, out_file: Path) -> str:
+    """Convert EPUB using ebooklib if lxml is available, else stdlib."""
     try:
         import ebooklib
         from ebooklib import epub
+        import lxml  # noqa: F401 — required by ebooklib at runtime
         from markdownify import markdownify
         from bs4 import BeautifulSoup
-    except ImportError as e:
-        print(f"[ERROR] Missing dependency: {e.name}. "
-              f"Run: pip install ebooklib markdownify beautifulsoup4")
-        return ""
+    except ImportError:
+        return _convert_epub_stdlib(input_file, out_file)
 
     media_dir, rel_media_dir = _ensure_media_dir(out_file)
     book = epub.read_epub(str(input_file))
@@ -646,6 +713,112 @@ def _convert_epub(input_file: Path, out_file: Path) -> str:
     return markdown
 
 
+def _convert_epub_stdlib(input_file: Path, out_file: Path) -> str:
+    """Convert EPUB to Markdown using only stdlib + bundled markdownify/bs4.
+
+    EPUB is a ZIP archive containing XHTML chapters, images, and an OPF
+    manifest that defines reading order. This parser uses zipfile and
+    xml.etree.ElementTree to extract content without ebooklib/lxml.
+    """
+    from markdownify import markdownify
+    from bs4 import BeautifulSoup
+
+    media_dir, rel_media_dir = _ensure_media_dir(out_file)
+
+    with zipfile.ZipFile(str(input_file), "r") as zf:
+        # 1. Read container.xml to find the OPF file path
+        container_xml = zf.read("META-INF/container.xml")
+        container_tree = ET.fromstring(container_xml)
+        opf_path = None
+        for rootfile in container_tree.iter():
+            if rootfile.tag.split("}")[-1] == "rootfile":
+                opf_path = rootfile.get("full-path")
+                break
+        if not opf_path:
+            print("[ERROR] Could not find OPF path in container.xml")
+            return ""
+
+        # 2. Parse the OPF file
+        opf_xml = zf.read(opf_path)
+        opf_tree = ET.fromstring(opf_xml)
+        opf_dir = posixpath.dirname(opf_path)
+
+        # Build manifest: id → (href, media_type)
+        manifest: dict[str, tuple[str, str]] = {}
+        for item in opf_tree.iter():
+            if item.tag.split("}")[-1] == "item":
+                item_id = item.get("id", "")
+                href = item.get("href", "")
+                media_type = item.get("media-type", "")
+                manifest[item_id] = (href, media_type)
+
+        # Build spine: ordered list of itemref idrefs
+        spine_ids: list[str] = []
+        for itemref in opf_tree.iter():
+            if itemref.tag.split("}")[-1] == "itemref":
+                idref = itemref.get("idref", "")
+                if idref:
+                    spine_ids.append(idref)
+
+        # 3. Extract all image items
+        img_map: dict[str, str] = {}
+        index = 0
+        for item_id, (href, media_type) in manifest.items():
+            if media_type.startswith("image/"):
+                index += 1
+                ext = Path(href).suffix or ".bin"
+                filename = f"image_{index:03d}{ext}"
+                # Resolve path relative to OPF directory
+                img_path = posixpath.normpath(posixpath.join(opf_dir, href))
+                try:
+                    img_bytes = zf.read(img_path)
+                    (media_dir / filename).write_bytes(img_bytes)
+                    img_map[href] = filename
+                    img_map[Path(href).name] = filename
+                    img_map[img_path] = filename
+                except KeyError:
+                    pass
+
+        # 4. Iterate document items in spine order
+        html_parts: list[str] = []
+        for sid in spine_ids:
+            entry = manifest.get(sid)
+            if entry is None:
+                continue
+            href, media_type = entry
+            if not media_type.endswith("xml"):
+                continue
+            doc_path = posixpath.normpath(posixpath.join(opf_dir, href))
+            try:
+                content = zf.read(doc_path)
+            except KeyError:
+                continue
+
+            soup = BeautifulSoup(content, "html.parser")
+            for img in soup.find_all("img"):
+                src = img.get("src", "")
+                if not src:
+                    continue
+                candidates = [src, Path(src).name, unquote(src), Path(unquote(src)).name]
+                resolved = next((img_map[c] for c in candidates if c in img_map), None)
+                if resolved:
+                    img["src"] = f"{rel_media_dir}/{resolved}"
+            body = soup.find("body") or soup
+            html_parts.append(str(body))
+
+    combined_html = "\n\n".join(html_parts)
+    markdown = markdownify(combined_html, heading_style="ATX", bullets="-")
+    markdown = re.sub(r"\n{3,}", "\n\n", markdown).strip() + "\n"
+    out_file.write_text(markdown, encoding="utf-8")
+
+    if not any(media_dir.iterdir()):
+        media_dir.rmdir()
+        media_dir = None  # type: ignore[assignment]
+
+    _report_result(out_file, media_dir)
+    return markdown
+
+
 # ─────────────────────────────────────────────────────────────
 # IPYNB → Markdown (nbconvert)
 # ─────────────────────────────────────────────────────────────
@@ -656,13 +829,15 @@ def _convert_ipynb(input_file: Path, out_file: Path) -> str:
         from nbconvert import MarkdownExporter
         from nbconvert.writers import FilesWriter
     except ImportError:
-        print("[ERROR] nbconvert not installed. Run: pip install nbconvert")
+        print("[ERROR] nbconvert not available. The bundled wheel may be corrupted.")
+        print(f"   Vendor dir: {_VENDOR_UNIVERSAL}")
         return ""
 
     # Pre-process cell-level markdown attachments: nbconvert leaves
     # `attachment:<name>` references intact but doesn't write the files.
     # Extract them into our outputs dict so FilesWriter picks them up.
-    nb = nbformat.read(str(input_file), as_version=4)
+    with open(str(input_file), encoding="utf-8") as f:
+        nb = nbformat.read(f, as_version=4)
     extra_outputs: dict[str, bytes] = {}
     rel_media_dir = f"{out_file.stem}_files"
 
@@ -782,12 +957,13 @@ _FORMAT_DESC = {
     ".docx":  "Microsoft Word (mammoth)",
     ".html":  "HTML (markdownify)",
     ".htm":   "HTML (markdownify)",
-    ".epub":  "EPUB (ebooklib)",
+    ".epub":  "EPUB (ebooklib or stdlib fallback)",
     ".ipynb": "Jupyter Notebook (nbconvert)",
 }
 
 
 def convert_to_markdown(input_path: str, output_path: str | None = None) -> str:
+    _ensure_vendored_deps()
     input_file = Path(input_path)
     if not input_file.exists():
         print(f"[ERROR] File not found: {input_path}")

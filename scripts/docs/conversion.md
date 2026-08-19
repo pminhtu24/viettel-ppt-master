@@ -40,11 +40,25 @@ pip install PyMuPDF
 
 Hybrid converter: pure-Python for the common formats, pandoc fallback for the rest.
 
-Native path (no external binary required):
-- `.docx` — via `mammoth`
-- `.html` / `.htm` — via `markdownify` + `beautifulsoup4`
-- `.epub` — via `ebooklib` + `markdownify`
-- `.ipynb` — via `nbconvert`
+**Bundled wheels** — mammoth, cobble, ebooklib, nbconvert, markdownify,
+beautifulsoup4, and all pure-Python transitive dependencies are shipped as
+universal wheels in `scripts/source_to_md/vendor_wheels/universal/`.
+The script auto-loads them at startup, so `.docx`, `.html`, `.epub`, and
+`.ipynb` conversion works without internet access or `pip install`.
+
+For `.epub`, if `lxml` (C extension) is not available on the system, a
+stdlib fallback using `zipfile` + `xml.etree.ElementTree` handles extraction
+instead of `ebooklib`.
+
+For `.ipynb`, a bundled `pyzmq_stub.py` provides the minimal `zmq` module
+surface that `nbconvert`'s import chain requires. Static conversion (no
+kernel execution) works without `pyzmq` installed.
+
+Native path (no external binary or pip install required):
+- `.docx` — via `mammoth` (bundled wheel)
+- `.html` / `.htm` — via `markdownify` + `beautifulsoup4` (bundled wheel)
+- `.epub` — via `ebooklib` (bundled) if `lxml` present, else stdlib fallback
+- `.ipynb` — via `nbconvert` (bundled wheel) + `pyzmq_stub`
 
 Pandoc fallback (only if you need these):
 - `.doc`, `.odt`, `.rtf`, `.tex`/`.latex`, `.rst`, `.org`, `.typ`
@@ -56,11 +70,11 @@ python3 scripts/source_to_md/doc_to_md.py notes.epub
 python3 scripts/source_to_md/doc_to_md.py paper.tex -o paper.md  # uses pandoc
 ```
 
-Dependencies:
+Optional system dependencies:
 
 ```bash
-# Native path — always required
-pip install mammoth markdownify ebooklib nbconvert beautifulsoup4
+# Only needed for .epub if you want ebooklib's full fidelity (otherwise stdlib fallback)
+pip install lxml
 
 # Fallback path — only for .doc/.odt/.rtf/.tex/.rst/.org/.typ
 # macOS:   brew install pandoc
