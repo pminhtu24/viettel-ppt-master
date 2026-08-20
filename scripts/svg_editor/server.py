@@ -20,7 +20,6 @@ Dependencies:
 import argparse
 import os
 import re
-import socket
 import sys
 import threading
 import time
@@ -31,6 +30,7 @@ from typing import Optional
 
 try:
     from flask import Flask, jsonify, request, send_from_directory
+    from werkzeug.serving import make_server
 except ImportError:
     print(
         "SVG Editor unavailable: flask not installed. "
@@ -416,16 +416,10 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     url = f'http://localhost:{args.port}'
 
-    # Pre-bind the port so the "running at" line is a reliable listening signal.
-    # If the port is taken or unavailable, exit non-zero immediately instead of
-    # printing a misleading "running" message and then dying inside app.run().
     try:
-        probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        probe.bind(('127.0.0.1', args.port))
-        probe.close()
-    except OSError as e:
-        print(f"Error: cannot bind 127.0.0.1:{args.port} — {e}", file=sys.stderr)
+        server = make_server('127.0.0.1', args.port, app, threaded=True)
+    except SystemExit:
+        print(f"Error: cannot bind 127.0.0.1:{args.port}", file=sys.stderr)
         print("Hint: use --port <other> to pick a free port.", file=sys.stderr)
         return 1
 
@@ -433,9 +427,9 @@ def main(argv: Optional[list[str]] = None) -> int:
         webbrowser.open(url)
 
     mode = "live preview (auto-startup)" if args.live else "live preview"
-    print(f"SVG Editor running at {url} ({mode})")
-    print(f"Project: {project_path}")
-    app.run(host='127.0.0.1', port=args.port, debug=False)
+    print(f"SVG Editor running at {url} ({mode})", flush=True)
+    print(f"Project: {project_path}", flush=True)
+    server.serve_forever()
     return 0
 
 
