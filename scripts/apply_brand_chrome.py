@@ -91,7 +91,14 @@ def _has_viettel_page_number(svg: str) -> bool:
     return False
 
 
-def _local_name(tag: str) -> str:
+def _local_name(tag) -> str:
+    """Return an XML local name and ignore ElementTree comment nodes.
+
+    >>> _local_name(ET.Comment)
+    ''
+    """
+    if not isinstance(tag, str):
+        return ""
     return tag.rsplit("}", 1)[-1] if "}" in tag else tag
 
 
