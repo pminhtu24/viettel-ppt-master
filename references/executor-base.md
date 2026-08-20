@@ -21,6 +21,8 @@
 | Every distinct chart name in `spec_lock.md page_charts` | `templates/charts/<chart_name>.svg` |
 | Chart types in `design_spec.md §VII` not covered above | `templates/charts/<chart_name>.svg` |
 
+**Chart path root (HARD rule)**: every `templates/charts/<chart_name>.svg` path above means `${SKILL_DIR}/templates/charts/<chart_name>.svg`. Never resolve chart-library files from `<project_path>` or try `<project_path>/templates/charts/...`; the project `templates/` directory contains only the installed deck/layout template. Build the exact `${SKILL_DIR}` path from the selected chart key and read it once. If that exact file is missing, report the missing chart and use the documented `no-template-match` fallback—do not probe alternate roots.
+
 **Forbidden — re-reading during generation**:
 - Layout SVG already loaded in this batch
 - Background SVG already loaded in this batch
