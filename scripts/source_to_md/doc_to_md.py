@@ -66,9 +66,11 @@ def _ensure_vendored_deps():
     _VENDOR_BOOTSTRAPPED = True
 
     if _VENDOR_UNIVERSAL.is_dir():
+        import atexit
         import tempfile
         import zipfile
         extract_dir = Path(tempfile.mkdtemp(prefix="vendor_deps_"))
+        atexit.register(shutil.rmtree, extract_dir, ignore_errors=True)
         for whl in sorted(_VENDOR_UNIVERSAL.glob("*.whl")):
             try:
                 with zipfile.ZipFile(str(whl), "r") as zf:
@@ -963,7 +965,6 @@ _FORMAT_DESC = {
 
 
 def convert_to_markdown(input_path: str, output_path: str | None = None) -> str:
-    _ensure_vendored_deps()
     input_file = Path(input_path)
     if not input_file.exists():
         print(f"[ERROR] File not found: {input_path}")
@@ -980,6 +981,7 @@ def convert_to_markdown(input_path: str, output_path: str | None = None) -> str:
     out_file.parent.mkdir(parents=True, exist_ok=True)
 
     if suffix in NATIVE_FORMATS:
+        _ensure_vendored_deps()
         desc = _FORMAT_DESC[suffix]
         print(f"[INFO] Converting {desc}: {input_file.name}")
         if suffix == ".docx":

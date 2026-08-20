@@ -300,14 +300,19 @@ print("PHASE 2 RESULT:", "ALL PASSED" if all_pass else "FAILED")
 sys.exit(0 if all_pass else 1)
 '''
 
+    temp_dirs_before = set(Path(tempfile.gettempdir()).glob("vendor_deps_*"))
     result = subprocess.run(
         [sys.executable, "-c", subprocess_script],
         capture_output=True, text=True, env=env, cwd=str(REPO_ROOT)
     )
+    leaked_temp_dirs = set(Path(tempfile.gettempdir()).glob("vendor_deps_*")) - temp_dirs_before
     print(result.stdout)
     if result.stderr:
         print("STDERR:", result.stderr[:500])
     if result.returncode != 0:
+        all_pass = False
+    if leaked_temp_dirs:
+        print(f"[FAIL] Leaked vendor temp dirs: {sorted(map(str, leaked_temp_dirs))}")
         all_pass = False
 
     print()
