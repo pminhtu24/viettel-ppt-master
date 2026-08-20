@@ -2194,6 +2194,9 @@ def print_usage() -> None:
 
 def main() -> None:
     """Run the CLI entry point."""
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
+
     if len(sys.argv) < 2:
         print_usage()
         sys.exit(0)
