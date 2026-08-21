@@ -30,12 +30,6 @@ python3 scripts/svg_quality_checker.py <project_path>  # final scan
 python3 scripts/svg_to_pptx.py <project_path>
 ```
 
-On Windows with Microsoft PowerPoint installed, verify the exported copy without modifying the original:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/windows_powerpoint_smoke.ps1 -PptxPath <deck.pptx>
-```
-
 Repository update:
 
 ```bash

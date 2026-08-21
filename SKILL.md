@@ -9,7 +9,7 @@ description: >
 
 > Multi-role SVG presentation workflow. Converts source documents into high-quality SVG pages and exports them to PPTX.
 
-**Core Pipeline**: `Source Document → Create Project → [Template] → Strategist → [Web Image Acquisition] → Executor Live Preview → Quality Check → [Chart Verification] → Native PPTX Export → Rendered Visual QA`
+**Core Pipeline**: `Source Document → Create Project → [Template] → Strategist → [Web Image Acquisition] → Executor Live Preview → Quality Check → [Chart Verification] → Native PPTX Export`
 
 > [!CAUTION]
 >
@@ -74,7 +74,6 @@ description: >
 | `${SKILL_DIR}/scripts/image_search.py`             | Openly licensed web-image search with attribution metadata                                                                              |
 | `${SKILL_DIR}/scripts/svg_quality_checker.py`      | SVG quality check                                                                                                                       |
 | `${SKILL_DIR}/scripts/svg_to_pptx.py`              | Export to PPTX                                                                                                                          |
-| `${SKILL_DIR}/scripts/windows_powerpoint_smoke.ps1` | Open, edit, save, and reopen an exported deck in native Windows PowerPoint                                                              |
 | `${SKILL_DIR}/scripts/update_spec.py`              | Propagate a `spec_lock.md` color / font_family change across all generated SVGs                                                         |
 | `${SKILL_DIR}/scripts/check_fonts.py`              | Search for and, when needed, auto-install the three bundled FS Magistral faces                                                          |
 
@@ -422,22 +421,6 @@ The exporter reads `svg_output/` directly and produces editable native DrawingML
 Run the standalone [`customize-animations`](workflows/customize-animations.md) workflow. Default export already has global entrance animation; do not create `animations.json` unless object-level customization was requested.
 
 Full effect list, anchor logic, and limits: [`references/animations.md`](references/animations.md).
-
-**Step 7.1 — Rendered Visual QA (Mandatory)**:
-
-After the final PPTX export, render the full deck exactly once into a dedicated QA directory:
-
-```bash
-mkdir -p <exports_dir>/qa
-python3 /home/tupham/.codex/skills/pptx/scripts/office/soffice.py --headless --convert-to pdf <output.pptx> --outdir <exports_dir>/qa
-pdftoppm -jpeg -r 120 <exports_dir>/qa/<output_stem>.pdf <exports_dir>/qa/qa_slide
-```
-
-- Open **every** generated JPG with an image-capable viewer (`view_image`, `image_info`, or the environment's equivalent). Generic `file_read` errors on binary images and does not count as inspection.
-- Review for text overflow, clipped labels, missing or duplicated assets, layer-order errors, chart marks entering title/footer zones, and footer/source collisions.
-- If inspection is unavailable or any image fails to open, QA is incomplete: stop, preserve `<exports_dir>/qa/`, and report the blocker. Never infer success from file creation or SVG validation alone.
-- If an issue is found, fix the corresponding SVG, rerun `svg_quality_checker.py`, re-export, regenerate the PDF, and use `pdftoppm -f N -l N` to rerender only the affected slide(s). Do not repeat a full-deck JPG render.
-- After every slide has been visually inspected and all affected slides pass reinspection, delete only the dedicated `<exports_dir>/qa/` directory. Keep the final PPTX; keep a PDF only when the user requested one.
 
 > **Post-export annotation window**: the preview service from Step 6 typically remains running after export. If the user submitted annotations in the browser (during Executor or after export) and now asks to apply them — they may quote the browser prompt (`Annotations saved. ... apply my annotations`), say "apply my annotations" / "apply annotations" / equivalent — run [`live-preview`](workflows/live-preview.md) Step 2 to apply and re-export. Annotations submitted during generation are also handled here, not earlier.
 
