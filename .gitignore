@@ -1,6 +1,7 @@
 .gitignore
 contents/
 projects/
+/tests/
 __pycache__/
 diagrams/
 AGENTS.md
