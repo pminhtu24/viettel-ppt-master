@@ -11,7 +11,7 @@ Skill tạo deck PowerPoint, tối ưu cho slide Viettel: nhận tài liệu ngu
 
 ## Cách gọi nhanh
 
-Trong NetClaw, Claude, Codex, nội dung yêu cầu nên có từ khóa `ppt`, `presentation`, `deck`, `slide`, hoặc `viettel slide`.
+Trong netMind Desktop, Claude, Codex, nội dung yêu cầu nên có từ khóa `ppt`, `presentation`, `deck`, `slide`, hoặc `viettel slide`.
 
 Ví dụ:
 
