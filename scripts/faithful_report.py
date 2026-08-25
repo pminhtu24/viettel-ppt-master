@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import ast
 import hashlib
 import json
 import platform
@@ -16,16 +15,13 @@ import tempfile
 import zipfile
 from collections import Counter, defaultdict
 from collections.abc import Callable
-from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
 BLOCK_ID_RE = re.compile(r"SRC\d{2}-B\d{4}")
-CLAIM_ID_RE = re.compile(r"P\d{2,3}-C\d{2,3}", re.I)
-CHART_ID_RE = re.compile(r"P\d{2,3}-CH\d{2,3}", re.I)
+FACT_ID_RE = re.compile(r"SRC\d{2}-B\d{4}-F\d{2,4}")
 SLIDE_RE = re.compile(r"^####\s+Slide\s+(\d{1,3})\b", re.I)
 SOURCE_BLOCKS_RE = re.compile(r"^-\s+\*\*Source Blocks\*\*:\s*(.+)$", re.I)
-CLAIMS_RE = re.compile(r"^-\s+\*\*Claims\*\*:\s*(.+)$", re.I)
 NUMBER_RE = re.compile(r"(?<![\w])\d+(?:[.,/]\d+)*(?:\s*%)?|\d+(?=[GgKk]\b)")
 ALLOWED_EXCLUSIONS = {"exact_duplicate", "decorative_asset", "header_footer_artifact"}
 REPORT_MARKERS = (
@@ -39,7 +35,6 @@ REPORT_MARKERS = (
     "status report",
     "operations report",
 )
-CLAIM_TYPES = {"verbatim", "mechanical", "derived", "asset"}
 CHROME_KINDS = {"brand_chrome", "page_number"}
 
 
@@ -268,7 +263,7 @@ def _design_pages(text: str, ordered_ids: list[str]) -> tuple[dict[str, dict[str
         slide = SLIDE_RE.match(line)
         if slide:
             current = f"P{int(slide.group(1)):02d}"
-            pages[current] = {"ids": [], "claim_ids": [], "content": []}
+            pages[current] = {"ids": [], "content": []}
             continue
         if not current:
             continue
@@ -277,10 +272,6 @@ def _design_pages(text: str, ordered_ids: list[str]) -> tuple[dict[str, dict[str
             ids, bad = _expand_ids(source_blocks.group(1), ordered_ids)
             pages[current]["ids"] = ids
             invalid.extend(bad)
-        elif claims := CLAIMS_RE.match(line):
-            claim_ids = [value.strip() for value in claims.group(1).replace("`", "").split(",") if value.strip()]
-            pages[current]["claim_ids"] = claim_ids
-            invalid.extend(value for value in claim_ids if not CLAIM_ID_RE.fullmatch(value))
         elif not re.match(r"^-\s+\*\*(?:Layout|Visualization|Source Blocks|Claims)\*\*:", line, re.I):
             pages[current]["content"].append(line)
     return pages, invalid
@@ -305,191 +296,27 @@ def _load(project: Path) -> tuple[dict[str, object], list[dict[str, object]], li
     return inventory, blocks, ids
 
 
-def _safe_formula(expression: str) -> Decimal:
-    operators = {
-        ast.Add: lambda a, b: a + b,
-        ast.Sub: lambda a, b: a - b,
-        ast.Mult: lambda a, b: a * b,
-        ast.Div: lambda a, b: a / b,
-    }
-
-    def evaluate(node: ast.AST) -> Decimal:
-        if isinstance(node, ast.Expression):
-            return evaluate(node.body)
-        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
-            return Decimal(str(node.value))
-        if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
-            value = evaluate(node.operand)
-            return value if isinstance(node.op, ast.UAdd) else -value
-        if isinstance(node, ast.BinOp) and type(node.op) in operators:
-            return operators[type(node.op)](evaluate(node.left), evaluate(node.right))
-        raise ValueError("derived formula may contain only numbers, parentheses, +, -, *, and /")
-
-    return evaluate(ast.parse(expression, mode="eval"))
-
-
-def _decimal_values(text: str) -> list[Decimal]:
-    values: list[Decimal] = []
-    for raw in re.findall(r"(?<![\w])\d+(?:[.,]\d+)?", text):
-        try:
-            values.append(Decimal(raw.replace(",", ".")))
-        except InvalidOperation:
-            pass
-    return values
-
-
-def _claim_manifest(
-    project: Path,
-    blocks: list[dict[str, object]],
-    lock_pages: dict[str, list[str]],
-    required_chart_pages: set[str] | None = None,
-) -> tuple[dict[str, object], dict[str, dict[str, object]], list[str], list[str]]:
-    path = project / "claim_manifest.json"
-    if not path.exists():
-        return {}, {}, ["claim_manifest.json is required for faithful_report"], []
-    manifest = json.loads(path.read_text(encoding="utf-8"))
-    errors: list[str] = []
-    warnings: list[str] = []
-    if manifest.get("content_mode") != "faithful_report":
-        errors.append("claim_manifest content_mode must be faithful_report")
-    derived_policy = manifest.get("derived_content", "forbidden")
-    if derived_policy not in {"forbidden", "allowed"}:
-        errors.append("claim_manifest derived_content must be forbidden or allowed")
-
-    by_block = {str(block["id"]): block for block in blocks}
-    by_fact = {
+def _fact_index(blocks: list[dict[str, object]]) -> dict[str, tuple[str, dict[str, object]]]:
+    return {
         str(fact["id"]): (str(block["id"]), fact)
         for block in blocks
         for fact in block.get("facts", [])
     }
-    claims: dict[str, dict[str, object]] = {}
-    mapped_facts: list[str] = []
-    mapped_sources: list[str] = []
-    for raw in manifest.get("claims", []):
-        if not isinstance(raw, dict):
-            errors.append("claim_manifest claims must be objects")
-            continue
-        claim_id = str(raw.get("id", ""))
-        page = str(raw.get("page", ""))
-        claim_type = str(raw.get("type", ""))
-        text = str(raw.get("text", ""))
-        source_ids = [str(value) for value in raw.get("source_ids", [])]
-        fact_ids = [str(value) for value in raw.get("fact_ids", [])]
-        if not CLAIM_ID_RE.fullmatch(claim_id):
-            errors.append(f"invalid claim id: {claim_id or '<missing>'}")
-            continue
-        if claim_id in claims:
-            errors.append(f"duplicate claim id: {claim_id}")
-            continue
-        if not re.fullmatch(r"P\d{2,3}", page):
-            errors.append(f"{claim_id}: invalid page {page or '<missing>'}")
-        if claim_type not in CLAIM_TYPES:
-            errors.append(f"{claim_id}: invalid type {claim_type or '<missing>'}")
-        unknown_sources = sorted(set(source_ids) - set(by_block))
-        if unknown_sources:
-            errors.append(f"{claim_id}: unknown source ids {', '.join(unknown_sources)}")
-        if not source_ids:
-            errors.append(f"{claim_id}: source_ids is empty")
-        elif not set(source_ids) <= set(lock_pages.get(page, [])):
-            errors.append(f"{claim_id}: source_ids are not mapped to {page}")
-        unknown_facts = sorted(set(fact_ids) - set(by_fact))
-        if unknown_facts:
-            errors.append(f"{claim_id}: unknown fact ids {', '.join(unknown_facts)}")
-        if any(by_fact[fact_id][0] not in source_ids for fact_id in fact_ids if fact_id in by_fact):
-            errors.append(f"{claim_id}: fact_ids must belong to source_ids")
 
-        if claim_type == "asset":
-            if text or fact_ids or any(by_block[source_id]["kind"] != "image" for source_id in source_ids if source_id in by_block):
-                errors.append(f"{claim_id}: asset claims require image sources, empty text, and no fact_ids")
-        elif not fact_ids:
-            errors.append(f"{claim_id}: fact_ids is empty")
-        elif claim_type in {"verbatim", "mechanical"} and len(fact_ids) != 1:
-            errors.append(f"{claim_id}: {claim_type} claims must map exactly one atomic fact")
-        else:
-            source_text = " ".join(str(by_fact[fact_id][1]["source_span"]) for fact_id in fact_ids if fact_id in by_fact)
-            source_tokens = _token_counter(source_text)
-            claim_tokens = _token_counter(text)
-            if claim_type == "verbatim" and re.sub(r"\s+", " ", text).strip().casefold() != re.sub(r"\s+", " ", source_text).strip().casefold():
-                errors.append(f"{claim_id}: verbatim text does not match source_span")
-            elif claim_type == "mechanical" and claim_tokens != source_tokens:
-                missing = list((source_tokens - claim_tokens).elements())
-                extra = list((claim_tokens - source_tokens).elements())
-                errors.append(f"{claim_id}: mechanical token mismatch; missing={missing}, extra={extra}")
-            elif claim_type == "derived":
-                if derived_policy != "allowed":
-                    errors.append(f"{claim_id}: derived content is forbidden")
-                formula = str(raw.get("formula", ""))
-                try:
-                    source_words = Counter(token for token in source_tokens if not NUMBER_RE.fullmatch(token))
-                    claim_words = Counter(token for token in claim_tokens if not NUMBER_RE.fullmatch(token))
-                    if claim_words - source_words:
-                        errors.append(f"{claim_id}: derived labels contain words outside source facts")
-                    result = _safe_formula(formula)
-                    inputs = _decimal_values(source_text)
-                    literals = _decimal_values(formula)
-                    if any(value not in inputs and value not in {Decimal(100)} for value in literals):
-                        errors.append(f"{claim_id}: formula contains numbers outside source facts")
-                    displayed = _decimal_values(text)
-                    if not displayed or min(abs(value - result) for value in displayed) > Decimal("0.1"):
-                        errors.append(f"{claim_id}: derived result {result} is not present in claim text")
-                except (SyntaxError, ValueError, InvalidOperation, ZeroDivisionError) as exc:
-                    errors.append(f"{claim_id}: invalid derived formula: {exc}")
-            mapped_facts.extend(fact_ids)
-        claims[claim_id] = {**raw, "id": claim_id, "page": page, "type": claim_type, "text": text, "source_ids": source_ids, "fact_ids": fact_ids}
-        mapped_sources.extend(source_ids)
 
-    required_facts = {
-        str(fact["id"])
-        for block in blocks if block.get("required", True)
-        for fact in block.get("facts", [])
+def _expected_facts(
+    blocks: list[dict[str, object]], lock_pages: dict[str, list[str]]
+) -> dict[str, dict[str, dict[str, object]]]:
+    by_block = {str(block["id"]): block for block in blocks}
+    return {
+        page: {
+            str(fact["id"]): fact
+            for block_id in block_ids
+            if block_id in by_block
+            for fact in by_block[block_id].get("facts", [])
+        }
+        for page, block_ids in lock_pages.items()
     }
-    missing_facts = sorted(required_facts - set(mapped_facts))
-    if missing_facts:
-        errors.append(f"missing required facts: {', '.join(missing_facts)}")
-    required_sources = {str(block["id"]) for block in blocks if block.get("required", True)}
-    missing_claim_sources = sorted(required_sources - set(mapped_sources))
-    if missing_claim_sources:
-        errors.append(f"source blocks without claims: {', '.join(missing_claim_sources)}")
-    duplicate_facts = sorted(fact_id for fact_id, count in Counter(mapped_facts).items() if count > 1)
-    if duplicate_facts:
-        warnings.append(f"duplicate fact mappings: {', '.join(duplicate_facts)}")
-
-    charts = manifest.get("charts", [])
-    chart_pages: set[str] = set()
-    chart_ids: set[str] = set()
-    for chart in charts if isinstance(charts, list) else []:
-        if not isinstance(chart, dict):
-            errors.append("claim_manifest charts must be objects")
-            continue
-        chart_id = str(chart.get("id", ""))
-        page = str(chart.get("page", ""))
-        source_ids = [str(value) for value in chart.get("source_ids", [])]
-        fact_ids = [str(value) for value in chart.get("fact_ids", [])]
-        if not CHART_ID_RE.fullmatch(chart_id) or chart_id in chart_ids:
-            errors.append(f"invalid or duplicate chart id: {chart_id or '<missing>'}")
-        chart_ids.add(chart_id)
-        chart_pages.add(page)
-        if not set(source_ids) <= set(lock_pages.get(page, [])):
-            errors.append(f"{chart_id}: source_ids are not mapped to {page}")
-        if not fact_ids or any(fact_id not in by_fact for fact_id in fact_ids):
-            errors.append(f"{chart_id}: fact_ids are missing or invalid")
-            continue
-        source_text = " ".join(str(by_fact[fact_id][1]["source_span"]) for fact_id in fact_ids)
-        declared = " ".join(
-            [str(chart.get("unit", "")), str(chart.get("period", ""))]
-            + [str(series.get("label", "")) + " " + " ".join(map(str, series.get("values", []))) for series in chart.get("series", []) if isinstance(series, dict)]
-        )
-        extra = _token_counter(declared) - _token_counter(source_text)
-        if extra:
-            errors.append(f"{chart_id}: chart manifest contains tokens outside source facts: {list(extra.elements())}")
-        source_numbers = Counter(token for token in _token_counter(source_text) if NUMBER_RE.fullmatch(token))
-        declared_numbers = Counter(token for token in _token_counter(declared) if NUMBER_RE.fullmatch(token))
-        if source_numbers - declared_numbers:
-            errors.append(f"{chart_id}: chart manifest omits source values: {list((source_numbers - declared_numbers).elements())}")
-    missing_chart_pages = sorted((required_chart_pages or set()) - chart_pages)
-    if missing_chart_pages:
-        errors.append(f"chart pages missing claim_manifest chart entries: {', '.join(missing_chart_pages)}")
-    return manifest, claims, errors, warnings
 
 
 def validate_spec(project: Path, write_report: bool = True) -> dict[str, object]:
@@ -548,18 +375,8 @@ def validate_spec(project: Path, write_report: bool = True) -> dict[str, object]
     if first_occurrences != required_order:
         errors.append("page_sources must preserve required source-block order")
 
-    chart_pages = {
-        match.group(1)
-        for line in _section(lock_text, "page_charts")
-        if (match := re.match(r"^\s*-\s+(P\d{2,3}):", line))
-    }
-    _, claims, claim_errors, claim_warnings = _claim_manifest(project, blocks, lock_pages, chart_pages)
-    errors.extend(claim_errors)
-    warnings.extend(claim_warnings)
-    for page, page_data in design_pages.items():
-        expected_claims = [claim_id for claim_id, claim in claims.items() if claim["page"] == page]
-        if page_data.get("claim_ids", []) != expected_claims:
-            errors.append(f"{page}: design_spec Claims do not match claim_manifest")
+    if (project / "claim_manifest.json").exists():
+        warnings.append("legacy claim_manifest.json ignored by faithful_report V2")
 
     for page, page_data in design_pages.items():
         source_text = " ".join(str(by_id[block_id]["text"]) for block_id in page_data["ids"] if block_id in by_id)
@@ -574,14 +391,15 @@ def validate_spec(project: Path, write_report: bool = True) -> dict[str, object]
         "mapped_blocks": len(required & mapped_set),
         "coverage_percent": round(100 * len(required & mapped_set) / len(required), 2) if required else 100,
         "source_mapping_coverage": round(100 * len(required & mapped_set) / len(required), 2) if required else 100,
-        "fact_fidelity": "pass" if not claim_errors else "fail",
-        "unsupported_claims": len(claim_errors),
+        "fact_fidelity": "pass" if not errors else "fail",
+        "unsupported_claims": sum("factual tokens" in error for error in errors),
         "numeric_mismatches": _numeric_mismatch_count(errors),
         "chart_mismatches": sum("chart" in error.lower() for error in errors),
         "layout_errors": 0,
         "render_backend": None,
         "release_status": "DRAFT",
-        "claims": len(claims),
+        "facts_expected": sum(len(facts) for facts in _expected_facts(blocks, lock_pages).values()),
+        "facts_rendered": 0,
         "excluded_blocks": [block["id"] for block in exclusions],
         "duplicates": duplicates,
         "errors": errors,
@@ -601,6 +419,8 @@ def _svg_page(path: Path) -> str | None:
 def validate_svg(project: Path) -> dict[str, object]:
     spec_report = validate_spec(project, write_report=False)
     _, blocks, ordered_ids = _load(project)
+    by_block = {str(block["id"]): block for block in blocks}
+    by_fact = _fact_index(blocks)
     lock_text = (project / "spec_lock.md").read_text(encoding="utf-8")
     lock_pages, _ = _page_sources(lock_text, ordered_ids)
     chart_pages = {
@@ -608,31 +428,28 @@ def validate_svg(project: Path) -> dict[str, object]:
         for line in _section(lock_text, "page_charts")
         if (match := re.match(r"^\s*-\s+(P\d{2,3}):", line))
     }
-    manifest, claims, _, _ = _claim_manifest(project, blocks, lock_pages, chart_pages)
+    expected_facts = _expected_facts(blocks, lock_pages)
     expected_pages: dict[str, set[str]] = defaultdict(set)
     for page, ids in lock_pages.items():
         for block_id in ids:
             expected_pages[block_id].add(page)
     found_ids: set[str] = set()
     found_page: dict[str, set[str]] = defaultdict(set)
-    claim_text: dict[str, list[str]] = defaultdict(list)
-    claim_pages: dict[str, set[str]] = defaultdict(set)
-    seen_claims: set[str] = set()
-    charts = {str(chart.get("id")): chart for chart in manifest.get("charts", []) if isinstance(chart, dict)}
-    seen_charts: set[str] = set()
+    fact_text: dict[tuple[str, str], list[str]] = defaultdict(list)
+    found_assets: set[tuple[str, str]] = set()
     errors = list(spec_report["errors"])
     warnings = list(spec_report["warnings"])
 
-    def parse_claim_ids(raw: str) -> tuple[list[str], list[str]]:
+    def parse_fact_ids(raw: str) -> tuple[list[str], list[str]]:
         values = [value.strip() for value in raw.split(",") if value.strip()]
-        return [value for value in values if CLAIM_ID_RE.fullmatch(value)], [value for value in values if not CLAIM_ID_RE.fullmatch(value)]
+        return [value for value in values if FACT_ID_RE.fullmatch(value)], [value for value in values if not FACT_ID_RE.fullmatch(value)]
 
     def walk(
         elem: ET.Element,
         svg_name: str,
         page: str | None,
         inherited_sources: list[str],
-        inherited_claims: list[str],
+        inherited_facts: list[str],
         inherited_kind: str,
     ) -> None:
         sources = inherited_sources
@@ -640,44 +457,49 @@ def validate_svg(project: Path) -> dict[str, object]:
             sources, bad = _expand_ids(str(elem.get("data-source-ids")), ordered_ids)
             errors.extend(f"{svg_name}: invalid data-source-ids token {token}" for token in bad)
             for block_id in sources:
-                found_ids.add(block_id)
-                if page:
+                if block_id not in by_block:
+                    errors.append(f"{svg_name}: unknown source id {block_id}")
+                elif not page or block_id not in lock_pages.get(page, []):
+                    errors.append(f"{svg_name}: {block_id} is not mapped to {page or '<unknown page>'}")
+                else:
+                    found_ids.add(block_id)
                     found_page[block_id].add(page)
-        claim_ids = inherited_claims
-        if elem.get("data-claim-ids"):
-            claim_ids, bad_claims = parse_claim_ids(str(elem.get("data-claim-ids")))
-            errors.extend(f"{svg_name}: invalid data-claim-ids token {token}" for token in bad_claims)
-            for claim_id in claim_ids:
-                seen_claims.add(claim_id)
-                if page:
-                    claim_pages[claim_id].add(page)
-                if claim_id not in claims:
-                    errors.append(f"{svg_name}: unknown claim id {claim_id}")
-                elif not set(claims[claim_id]["source_ids"]) <= set(sources):
-                    errors.append(f"{svg_name}: {claim_id} source ids do not match data-source-ids")
+        fact_ids = inherited_facts
+        if elem.get("data-fact-ids"):
+            fact_ids, bad_facts = parse_fact_ids(str(elem.get("data-fact-ids")))
+            errors.extend(f"{svg_name}: invalid data-fact-ids token {token}" for token in bad_facts)
+            for fact_id in fact_ids:
+                if fact_id not in by_fact:
+                    errors.append(f"{svg_name}: unknown fact id {fact_id}")
+                    continue
+                block_id = by_fact[fact_id][0]
+                if block_id not in sources:
+                    errors.append(f"{svg_name}: {fact_id} does not belong to data-source-ids")
+                if not page or fact_id not in expected_facts.get(page, {}):
+                    errors.append(f"{svg_name}: {fact_id} is not mapped to {page or '<unknown page>'}")
         content_kind = str(elem.get("data-content-kind") or inherited_kind)
-        if elem.get("data-chart-id"):
-            chart_id = str(elem.get("data-chart-id"))
-            seen_charts.add(chart_id)
-            if chart_id not in charts:
-                errors.append(f"{svg_name}: unknown data-chart-id {chart_id}")
-            elif page != charts[chart_id].get("page"):
-                errors.append(f"{svg_name}: {chart_id} rendered on {page}, expected {charts[chart_id].get('page')}")
-            elif not set(charts[chart_id].get("source_ids", [])) <= set(sources):
-                errors.append(f"{svg_name}: {chart_id} source ids do not match data-source-ids")
-        if elem.tag.rsplit("}", 1)[-1] == "text":
+        tag = elem.tag.rsplit("}", 1)[-1]
+        if tag == "image" and content_kind == "source_asset" and page:
+            for block_id in sources:
+                if block_id in by_block and by_block[block_id]["kind"] == "image":
+                    found_assets.add((page, block_id))
+                elif block_id in by_block:
+                    errors.append(f"{svg_name}: source_asset {block_id} is not an image block")
+        if tag == "text":
             visible = " ".join(part.strip() for part in elem.itertext() if part.strip())
             if visible and content_kind == "page_number" and not re.fullmatch(r"\s*\d+(?:\s*/\s*\d+)?\s*", visible):
                 errors.append(f"{svg_name}: invalid page_number chrome text: {visible[:80]}")
             elif visible and content_kind == "brand_chrome" and set(_token_counter(visible)) - {"viettel"}:
                 errors.append(f"{svg_name}: unsupported brand_chrome text: {visible[:80]}")
+            elif visible and content_kind == "source_asset":
+                errors.append(f"{svg_name}: source_asset may not exempt visible text: {visible[:80]}")
             elif visible and content_kind not in CHROME_KINDS:
-                if not claim_ids:
-                    errors.append(f"{svg_name}: visible text has no data-claim-ids: {visible[:80]}")
-                for claim_id in claim_ids:
-                    claim_text[claim_id].append(visible)
+                if len(fact_ids) != 1:
+                    errors.append(f"{svg_name}: visible text must resolve to exactly one data-fact-ids value: {visible[:80]}")
+                elif page and fact_ids[0] in expected_facts.get(page, {}):
+                    fact_text[(page, fact_ids[0])].append(visible)
         for child in elem:
-            walk(child, svg_name, page, sources, claim_ids, content_kind)
+            walk(child, svg_name, page, sources, fact_ids, content_kind)
 
     for svg in sorted((project / "svg_output").glob("*.svg")):
         page = _svg_page(svg)
@@ -697,24 +519,31 @@ def validate_svg(project: Path) -> dict[str, object]:
     for block_id, pages in found_page.items():
         if block_id in expected_pages and pages != expected_pages[block_id]:
             errors.append(f"{block_id}: annotated on {sorted(pages)}, expected {sorted(expected_pages[block_id])}")
-    missing_claims = sorted(set(claims) - seen_claims)
-    if missing_claims:
-        errors.append(f"SVG missing claims: {', '.join(missing_claims)}")
-    missing_charts = sorted(set(charts) - seen_charts)
-    if missing_charts:
-        errors.append(f"SVG missing charts: {', '.join(missing_charts)}")
-    for claim_id, pages in claim_pages.items():
-        if claim_id in claims and pages != {str(claims[claim_id]["page"])}:
-            errors.append(f"{claim_id}: rendered on {sorted(pages)}, expected {claims[claim_id]['page']}")
-    for claim_id, claim in claims.items():
-        if claim["type"] == "asset":
-            continue
-        visible = " ".join(claim_text.get(claim_id, []))
-        expected = str(claim["text"])
-        if _token_counter(visible) != _token_counter(expected):
-            missing_tokens = list((_token_counter(expected) - _token_counter(visible)).elements())
-            extra_tokens = list((_token_counter(visible) - _token_counter(expected)).elements())
-            errors.append(f"{claim_id}: SVG claim token mismatch; missing={missing_tokens}, extra={extra_tokens}")
+    expected_assets = {
+        (page, block_id)
+        for page, block_ids in lock_pages.items()
+        for block_id in block_ids
+        if block_id in by_block and by_block[block_id]["kind"] == "image"
+    }
+    for page, block_id in sorted(expected_assets - found_assets):
+        errors.append(f"{page}:{block_id}: SVG missing source asset")
+
+    matched_facts = 0
+    for page, facts in expected_facts.items():
+        for fact_id, fact in facts.items():
+            visible = " ".join(fact_text.get((page, fact_id), []))
+            expected = str(fact["source_span"])
+            expected_tokens = _token_counter(expected)
+            visible_tokens = _token_counter(visible)
+            if visible_tokens == expected_tokens:
+                matched_facts += 1
+                continue
+            missing_tokens = list((expected_tokens - visible_tokens).elements())
+            extra_tokens = list((visible_tokens - expected_tokens).elements())
+            prefix = "chart " if page in chart_pages else ""
+            errors.append(f"{page}:{fact_id}: SVG {prefix}fact token mismatch; missing={missing_tokens}, extra={extra_tokens}")
+
+    facts_expected = sum(len(facts) for facts in expected_facts.values())
 
     report = {
         "phase": "svg",
@@ -723,12 +552,17 @@ def validate_svg(project: Path) -> dict[str, object]:
         "coverage_percent": round(100 * len(required & found_ids) / len(required), 2) if required else 100,
         "source_mapping_coverage": round(100 * len(required & found_ids) / len(required), 2) if required else 100,
         "fact_fidelity": "pass" if not errors else "fail",
-        "unsupported_claims": sum("claim" in error for error in errors),
+        "unsupported_claims": sum(
+            any(marker in error for marker in ("visible text", "fact token mismatch", "unsupported brand_chrome"))
+            for error in errors
+        ),
         "numeric_mismatches": _numeric_mismatch_count(errors),
         "chart_mismatches": sum("chart" in error.lower() for error in errors),
         "layout_errors": 0,
         "render_backend": None,
         "release_status": "DRAFT",
+        "facts_expected": facts_expected,
+        "facts_rendered": matched_facts,
         "errors": errors,
         "warnings": warnings,
         "status": "pass" if not errors else "fail",
@@ -850,19 +684,33 @@ def _render_previews(pdf: Path, output: Path) -> list[str]:
 
 def _pdf_text_presence(project: Path, pdf: Path) -> tuple[str, list[str]]:
     pdftotext = shutil.which("pdftotext")
-    manifest_path = project / "claim_manifest.json"
-    if not pdftotext or not manifest_path.exists():
+    if not pdftotext or not (project / "source_inventory.json").exists() or not (project / "spec_lock.md").exists():
         return "unavailable", []
     result = subprocess.run([pdftotext, str(pdf), "-"], capture_output=True, text=True, timeout=60, check=True)
-    visible = _token_counter(result.stdout)
+    _, blocks, ordered_ids = _load(project)
+    lock_pages, _ = _page_sources((project / "spec_lock.md").read_text(encoding="utf-8"), ordered_ids)
+    expected = _expected_facts(blocks, lock_pages)
+    pages = result.stdout.rstrip("\f\n").split("\f")
+    ordered_pages = sorted(lock_pages, key=lambda value: int(value[1:]))
     missing: list[str] = []
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    for claim in manifest.get("claims", []):
-        if claim.get("type") == "asset":
-            continue
-        expected = _token_counter(str(claim.get("text", "")))
-        if expected - visible:
-            missing.append(str(claim.get("id", "<unknown>")))
+    if len(pages) == len(ordered_pages):
+        for page, text in zip(ordered_pages, pages):
+            visible = _token_counter(text)
+            for fact_id, fact in expected.get(page, {}).items():
+                tokens = _token_counter(str(fact["source_span"]))
+                if tokens - visible:
+                    missing.append(f"{page}:{fact_id}")
+                else:
+                    visible -= tokens
+    else:
+        visible = _token_counter(result.stdout)
+        for page in ordered_pages:
+            for fact_id, fact in expected.get(page, {}).items():
+                tokens = _token_counter(str(fact["source_span"]))
+                if tokens - visible:
+                    missing.append(f"{page}:{fact_id}")
+                else:
+                    visible -= tokens
     return ("fail", missing) if missing else ("pass", [])
 
 
@@ -896,7 +744,7 @@ def render_check(project: Path, pptx: Path, fast: bool = False) -> dict[str, obj
     report: dict[str, object] = {
         "platform": platform.system(), "backend": None, "backend_version": None,
         "pages_expected": expected, "pages_rendered": 0, "text_presence": "not_run",
-        "missing_claims": [], "visual_review": "pending", "layout_errors": [],
+        "missing_facts": [], "visual_review": "pending", "layout_errors": [],
         "fallbacks": [], "errors": [], "release_status": "DRAFT",
     }
     try:
@@ -953,13 +801,13 @@ def render_check(project: Path, pptx: Path, fast: bool = False) -> dict[str, obj
         report["output_pptx"] = str(_status_copy(pptx, "DRAFT", project / "exports"))
     else:
         rendered = _pdf_page_count(pdf)
-        text_presence, missing_claims = _pdf_text_presence(project, pdf)
+        text_presence, missing_facts = _pdf_text_presence(project, pdf)
         pages = _render_previews(pdf, render_root / "pages")
         report.update(
             {
                 "pages_rendered": rendered,
                 "text_presence": text_presence,
-                "missing_claims": missing_claims,
+                "missing_facts": missing_facts,
                 "pdf": str(pdf),
                 "preview_pages": pages,
                 "montage": str(render_root / "pages/montage.png") if (render_root / "pages/montage.png").exists() else None,
@@ -968,7 +816,7 @@ def render_check(project: Path, pptx: Path, fast: bool = False) -> dict[str, obj
         if rendered != expected:
             report["errors"].append(f"rendered {rendered} pages, expected {expected}")  # type: ignore[union-attr]
         if text_presence == "fail":
-            report["errors"].append(f"rendered output is missing claims: {', '.join(missing_claims)}")  # type: ignore[union-attr]
+            report["errors"].append(f"rendered output is missing facts: {', '.join(missing_facts)}")  # type: ignore[union-attr]
         report["output_pptx"] = str(_status_copy(pptx, "DRAFT", project / "exports"))
     (project / "render_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     _sync_coverage(project, report)

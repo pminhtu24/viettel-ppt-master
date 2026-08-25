@@ -16,8 +16,8 @@ sentences or time points, use background knowledge, or borrow from another
 page's blocks. In particular, preserve contrasts such as `đạt/vượt`,
 `đã/đang/chưa`, and `dự kiến/hoàn thành` exactly.
 
-Allowed transformations are mechanical only: line breaks, bullets, moving a
-repeated prefix into a heading, repeating table headers, and choosing a chart,
+Allowed transformations are mechanical only: line breaks, bullets, moving words
+within the same fact into a heading, repeating table headers, and choosing a chart,
 timeline, KPI card, diagram, or table that retains the complete source data. If
 content does not fit, add a slide. Never summarize, omit, or shrink below the
 text-fit floor.
@@ -28,10 +28,10 @@ text-fit floor.
 - Coverage is 100% of blocks marked `required: true` in
   `source_inventory.json`. There is no hard slide cap; readability determines
   page count.
-- Mechanical editing only: split sentences/bullets, normalize whitespace,
-  remove exact verbal repetition, or lift a repeated prefix into a shared
-  heading. Preserve terminology, negation, qualifiers, status, owner, deadline,
-  units, and every numeric value.
+- Mechanical editing only: split sentences/bullets, normalize whitespace, or
+  move tokens within one fact into a heading. Do not deduplicate across facts;
+  every fact must retain its complete token multiset. Preserve terminology,
+  negation, qualifiers, status, owner, deadline, units, and every numeric value.
 - Do not add executive-summary, key-takeaway, chapter, conclusion, agenda, or
   ending pages unless the source contains the corresponding material. Cover and
   TOC content may use only source metadata/headings.
@@ -84,38 +84,25 @@ Every page in `design_spec.md §IX` MUST include:
 Mirror the same mapping in `spec_lock.md ## page_sources`. Add
 `## content_mode` exactly as specified in `templates/spec_lock_reference.md`.
 
-Create `claim_manifest.json` before validation. Each visible statement is a
-`verbatim` or `mechanical` claim with its page, exact `source_ids`, and v2
-inventory `fact_ids`. Each verbatim/mechanical claim maps exactly one atomic
-fact so values cannot be swapped between sentences or time points. One claim
-may span multiple SVG text elements for line breaking. Use `asset` with empty text only for source images.
-`derived_content` is `forbidden` unless the user explicitly enables a formula
-for this run. Do not put QA labels such as source coverage or validation status
-on a slide.
+Do not create a claim or chart manifest. `page_sources` is the complete handoff:
+Executor reads each mapped block and its atomic facts directly from
+`source_inventory.json`. Derived formulas and calculated labels are forbidden.
+Do not put QA labels such as source coverage or validation status on a slide.
 
-```json
-{
-  "content_mode": "faithful_report",
-  "derived_content": "forbidden",
-  "claims": [
-    {
-      "id": "P08-C03",
-      "page": "P08",
-      "text": "Cosite đạt 43% KH Q3",
-      "type": "mechanical",
-      "source_ids": ["SRC01-B0042"],
-      "fact_ids": ["SRC01-B0042-F01"]
-    }
-  ],
-  "charts": []
-}
+Executor records provenance directly in SVG. Every source-backed text leaf
+resolves to exactly one fact through inherited or local metadata:
+
+```xml
+<g data-source-ids="SRC01-B0042" data-fact-ids="SRC01-B0042-F01">
+  <text>Cosite đạt 43% KH Q3</text>
+</g>
 ```
 
-For each page listed in `spec_lock.md ## page_charts`, add a `charts` manifest
-entry with an id such as `P09-CH01`, page, source/fact ids, series labels and
-values, unit, and period. Every declared token must occur in those facts. A
-chart that cannot retain the detail uses an additional approved table/callout
-claim or another slide.
+One fact may span multiple SVG text elements for mechanical line breaking.
+Source images use `data-content-kind="source_asset"` and their source block id.
+Chart labels, values, tables, and callouts use the same direct fact provenance.
+A chart that cannot retain every source token uses an additional table/callout
+or another slide.
 
 Run `python3 scripts/faithful_report.py validate-spec <project_path>` and fix all
 errors before handing off to Executor. Duplicate mappings are allowed when a

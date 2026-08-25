@@ -66,7 +66,7 @@ description: >
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `${SKILL_DIR}/scripts/source_to_md/pdf_to_md.py`   | PDF to Markdown                                                                                                                         |
 | `${SKILL_DIR}/scripts/source_to_md/doc_to_md.py`   | Documents to Markdown — native Python for DOCX/HTML/EPUB/IPYNB, LibreOffice bridge for binary `.doc`, pandoc fallback for other legacy text formats |
-| `${SKILL_DIR}/scripts/faithful_report.py`          | Build source/fact inventory, enforce closed-source claims, validate SVG fidelity, and run render/release gates for `faithful_report` |
+| `${SKILL_DIR}/scripts/faithful_report.py`          | Build source/fact inventory, validate direct source provenance in SVG, and run render/release gates for `faithful_report` |
 | `${SKILL_DIR}/scripts/source_to_md/excel_to_md.py` | Excel workbooks to Markdown — supports .xlsx/.xlsm; legacy .xls should be resaved as .xlsx                                              |
 | `${SKILL_DIR}/scripts/source_to_md/ppt_to_md.py`   | PowerPoint to Markdown                                                                                                                  |
 | `${SKILL_DIR}/scripts/source_to_md/web_to_md.py`   | Web page to Markdown (supports WeChat via `curl_cffi`)                                                                                  |
@@ -277,11 +277,10 @@ python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
 - `<project_path>/design_spec.md` — human-readable design narrative
 - `<project_path>/spec_lock.md` — machine-readable execution contract (skeleton: `templates/spec_lock_reference.md`); Executor re-reads before every page
 - `<project_path>/source_inventory.json` — required only for `faithful_report`; canonical source-block inventory and detection profile
-- `<project_path>/claim_manifest.json` — required only for `faithful_report`; approved visible claims and source/fact provenance
 
 For `faithful_report`, before completing Strategist run:
 
-1. Create `claim_manifest.json` from the v2 inventory. Every visible statement is `verbatim` or `mechanical`; source images use `asset`. Keep `derived_content: forbidden` unless the user explicitly enables formulas for this run.
+1. Map every slide's `Source Blocks` into the identical `spec_lock.md ## page_sources` entry. Do not restate source facts as claims.
 2. Treat assigned blocks as a closed set: add no insight, cause, risk, direction, deadline, owner, status, KPI, period, ratio, forecast, recommendation, or conclusion. Preserve status, negation, qualifiers, and numeric tuples exactly. If content does not fit, add slides.
 3. Run:
 
@@ -289,7 +288,7 @@ For `faithful_report`, before completing Strategist run:
 python3 ${SKILL_DIR}/scripts/faithful_report.py validate-spec <project_path>
 ```
 
-Source block/fact coverage at 100%, unsupported claims at 0, and no protected-token mismatch are hard gates. Duplicate mappings are reported but allowed. Do not proceed to Executor on failure.
+Source block coverage at 100% and no factual token outside the mapped source are hard gates. Duplicate mappings are reported but allowed. Fact fidelity is checked directly against the final SVG. Do not proceed to Executor on failure.
 
 **✅ Checkpoint — Phase deliverables complete, auto-proceed to next step**:
 
@@ -379,7 +378,7 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 
 **Per-page spec_lock re-read (Mandatory)**: before **each** SVG page, `read_file <project_path>/spec_lock.md` and use only its colors / fonts / icons / images, plus the per-page `page_rhythm` / optional `page_backgrounds` / `page_layouts` / `page_charts` lookups (resolves to background/template/chart SVGs already loaded in the batch read above). Missing `page_backgrounds` means no decorative background for that page. Resists context-compression drift on long decks. See executor-base.md §2.1.
 
-When `spec_lock.md ## content_mode` is `faithful_report`, resolve the current page's `page_sources`, read those exact inventory blocks, then render only that page's approved claims. Wrap every visible content group in `<g data-source-ids="SRC01-B0001,..." data-claim-ids="P01-C01,...">`; source images use `asset` claims. Only literal Viettel branding may use `data-content-kind="brand_chrome"`, and page-number-only text uses `data-content-kind="page_number"`. QA IDs are internal and MUST NOT appear as visible text.
+When `spec_lock.md ## content_mode` is `faithful_report`, resolve the current page's `page_sources`, read those exact inventory blocks, and copy their facts directly. Every source-backed text leaf must resolve to exactly one fact through `<g data-source-ids="SRC01-B0001" data-fact-ids="SRC01-B0001-F01">`; one fact may span several text elements for mechanical line breaking. Source images use `data-content-kind="source_asset"` with `data-source-ids`. Chart labels, values, tables, and callouts use the same direct fact provenance; no claim/chart manifest or derived content is allowed. Only literal Viettel branding may use `data-content-kind="brand_chrome"`, and page-number-only text uses `data-content-kind="page_number"`. QA IDs are internal and MUST NOT appear as visible text.
 
 **Font-preflight gate (Mandatory for bundled brand fonts)**: before the first SVG page, run `python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>`. It searches the full host catalog for FS Magistral Book, Medium, and Bold and installs only missing trusted faces. On Windows it always uses the current user's Fonts directory and HKCU, registers the face with Windows, and verifies it again without requiring system/admin access. Never issue manual `copy`, `reg`, or `%LOCALAPPDATA%` commands. If the re-check still reports missing faces, surface `brand fidelity degraded` but continue generating SVG with the exact locked family. The exporter repeats installation and validation, blocks missing host faces by default, and always rejects Arial/Calibri/Aptos drift. Explicit `--allow-font-fallback` bypasses only the missing-host preview check; missing or invalid embedded payloads always hard-fail Viettel export.
 
@@ -422,7 +421,7 @@ Chrome normalization also removes marked background groups and near-full-height 
 python3 ${SKILL_DIR}/scripts/faithful_report.py validate-svg <project_path>
 ```
 
-Export is blocked unless required block/fact coverage is 100%, unsupported claims are 0, and every approved claim—including numeric tuples, dates, units, periods, status, negation, and qualifiers—survives in the final SVGs.
+Export is blocked unless required block/fact coverage is 100%, unsupported content is 0, and every source fact—including numeric tuples, dates, units, periods, status, negation, and qualifiers—survives in the final SVGs.
 
 **✅ Checkpoint — Confirm all SVGs are fully generated and quality-checked. Proceed directly to export**:
 

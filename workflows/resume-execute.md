@@ -31,7 +31,6 @@ Verify the project's Phase-A artifacts before doing anything else:
 | `<project_path>/spec_lock.md` | Always | Strategist's execution contract; Executor reads it per page |
 | `<project_path>/design_spec.md` | Always | Section IX page outline; Executor cross-references it |
 | `<project_path>/source_inventory.json` | `content_mode: faithful_report` | Canonical required blocks and exact source text |
-| `<project_path>/claim_manifest.json` | `content_mode: faithful_report` | Closed-source visible claims and fact provenance |
 | `<project_path>/images/` | `spec_lock images` references any image | Images must exist for embedding |
 | `<project_path>/templates/` | `spec_lock page_layouts` / `page_charts` references any | Layout / chart SVGs needed for batch read |
 
@@ -59,7 +58,7 @@ The fresh session pays the cost of re-reading references (~14K tokens) but earns
 
 **Source materials**: Phase B is a fresh session; `<project_path>/sources/<file>.md` is NOT in context. The Executor SHOULD read the relevant `sources/` files when crafting per-page content — they hold the concrete facts, quotes, names, and details that turn skeleton outlines into substantive slides. `design_spec.md §IX` only carries the per-page intent; the source materials carry the texture. The Phase A → Phase B split is designed to free context budget precisely for this kind of high-quality enrichment.
 
-For `faithful_report`, this becomes a hard requirement: resolve current-page `page_sources` against `source_inventory.json`, read only those exact blocks plus the page's approved claims, and emit matching `data-source-ids` + `data-claim-ids` group metadata. Run `faithful_report.py validate-svg` before export; no new text or derived number may be introduced during resume.
+For `faithful_report`, this becomes a hard requirement: resolve current-page `page_sources` against `source_inventory.json`, read only those exact blocks/facts, and emit matching `data-source-ids` + `data-fact-ids` group metadata. Source images use `data-content-kind="source_asset"`. Run `faithful_report.py validate-svg` before export; no new text or derived number may be introduced during resume.
 
 > Note: this workflow does NOT duplicate Step 6 / Step 7 content. SKILL.md is the authoritative procedure; resume-execute only adds the resumption entry (When to Run + Step 1 sanity check above) and the source-materials guidance above.
 

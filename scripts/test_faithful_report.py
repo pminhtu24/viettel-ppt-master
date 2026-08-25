@@ -6,6 +6,7 @@ import json
 import sys
 import zipfile
 from pathlib import Path
+from types import SimpleNamespace
 
 
 ROOT = Path(__file__).parents[1]
@@ -26,89 +27,69 @@ def _project(tmp_path: Path, source_text: str) -> Path:
     return project
 
 
-def _contract(project: Path) -> tuple[dict, list[dict]]:
+def _contract(project: Path) -> dict:
     inventory = json.loads((project / "source_inventory.json").read_text(encoding="utf-8"))
-    ids = [block["id"] for block in inventory["blocks"]]
-    joined = ",".join(ids)
+    joined = ",".join(block["id"] for block in inventory["blocks"])
     project.joinpath("spec_lock.md").write_text(
         "## content_mode\n- mode: faithful_report\n- source_inventory: source_inventory.json\n- coverage_required: 100\n\n"
         f"## page_sources\n- P01: {joined}\n",
         encoding="utf-8",
     )
-    claims: list[dict] = []
-    claim_no = 0
-    for block in inventory["blocks"]:
-        if block["kind"] == "image":
-            claim_no += 1
-            claims.append(
-                {
-                    "id": f"P01-C{claim_no:02d}", "page": "P01", "text": "", "type": "asset",
-                    "source_ids": [block["id"]], "fact_ids": [],
-                }
-            )
-        for fact in block["facts"]:
-            claim_no += 1
-            claims.append(
-                {
-                    "id": f"P01-C{claim_no:02d}", "page": "P01", "text": fact["source_span"], "type": "mechanical",
-                    "source_ids": [block["id"]], "fact_ids": [fact["id"]],
-                }
-            )
-    claim_ids = ",".join(claim["id"] for claim in claims)
     project.joinpath("design_spec.md").write_text(
-        f"## IX. Content Outline\n\n#### Slide 01 - Báo cáo\n- **Source Blocks**: {joined}\n- **Claims**: {claim_ids}\n"
+        f"## IX. Content Outline\n\n#### Slide 01 - Báo cáo\n- **Source Blocks**: {joined}\n"
         "\n## X. Technical Constraints\n- viewBox: 0 0 1280 720\n",
         encoding="utf-8",
     )
-    _write_claims(project, claims, "forbidden", validate=False)
-    return inventory, claims
+    return inventory
 
 
-def _write_claims(project: Path, claims: list[dict], policy: str, validate: bool = True) -> dict | None:
-    project.joinpath("claim_manifest.json").write_text(
-        json.dumps({"content_mode": "faithful_report", "derived_content": policy, "claims": claims}, ensure_ascii=False),
-        encoding="utf-8",
-    )
-    return faithful_report.validate_spec(project) if validate else None
-
-
-def _svg(project: Path, claims: list[dict]) -> None:
-    groups = []
-    for claim in claims:
-        attrs = f'data-source-ids="{claim["source_ids"][0]}" data-claim-ids="{claim["id"]}"'
-        if claim["type"] == "asset":
-            groups.append(f"<g {attrs}><image href=\"asset.png\"/></g>")
-        else:
-            groups.append(f"<g {attrs}><text>{html.escape(claim['text'])}</text></g>")
+def _svg(project: Path, inventory: dict, split_fact: str | None = None) -> None:
+    groups: list[str] = []
+    for block in inventory["blocks"]:
+        if block["kind"] == "image":
+            groups.append(
+                f'<g data-source-ids="{block["id"]}" data-content-kind="source_asset"><image href="asset.png"/></g>'
+            )
+        for fact in block["facts"]:
+            text = str(fact["source_span"])
+            if fact["id"] == split_fact:
+                words = text.split()
+                cut = max(1, len(words) // 2)
+                visible = f"<text>{html.escape(' '.join(words[:cut]))}</text><text>{html.escape(' '.join(words[cut:]))}</text>"
+            else:
+                visible = f"<text>{html.escape(text)}</text>"
+            groups.append(
+                f'<g data-source-ids="{block["id"]}" data-fact-ids="{fact["id"]}">{visible}</g>'
+            )
     project.joinpath("svg_output/01_report.svg").write_text(
         '<svg xmlns="http://www.w3.org/2000/svg">' + "".join(groups) + "</svg>", encoding="utf-8"
     )
 
 
-def test_source_only_spec_and_svg_gate(tmp_path):
+def test_source_only_spec_and_svg_gate_without_claim_manifest(tmp_path):
     project = _project(
         tmp_path,
         "# BÁO CÁO GIAO BAN TUẦN\n\n## Kết quả thực hiện\n\n- KPI 4G đạt 127/361 vị trí, 35% kế hoạch.\n\n"
         "## Nhiệm vụ trọng tâm\n\n- Dự kiến hoàn thành 50 cổng ngày 31/8/2026.\n",
     )
-    inventory, claims = _contract(project)
+    inventory = _contract(project)
     assert inventory["version"] == 2
-    assert all("facts" in block for block in inventory["blocks"])
+    assert not project.joinpath("claim_manifest.json").exists()
     assert faithful_report.validate_spec(project)["status"] == "pass"
-    _svg(project, claims)
-    assert faithful_report.validate_svg(project)["status"] == "pass"
+    split = next(fact["id"] for block in inventory["blocks"] for fact in block["facts"] if "127/361" in fact["source_span"])
+    _svg(project, inventory, split)
+    report = faithful_report.validate_svg(project)
+    assert report["status"] == "pass"
+    assert report["facts_expected"] == report["facts_rendered"]
 
-    claims[-1]["text"] = "Dự kiến hoàn thành 50 cổng ngày 30/8/2026."
-    assert _write_claims(project, claims, "forbidden")["status"] == "fail"
 
-
-def test_status_and_tuple_changes_fail(tmp_path):
+def test_status_tuple_and_derived_changes_fail(tmp_path):
     project = _project(
         tmp_path,
         "# Báo cáo giao ban\n\n- Cosite đạt 43% KH Q3.\n- Cloud đạt 9,7/23,3 PB lũy kế.\n"
         "- UPS: 6/36 về đầu tháng 11, đủ 36 vào 20/11.\n- Tiến độ phủ lõm 21/75/160.\n",
     )
-    _, claims = _contract(project)
+    inventory = _contract(project)
     replacements = {
         "Cosite đạt 43% KH Q3.": "Cosite vượt 43% KH Q3.",
         "Cloud đạt 9,7/23,3 PB lũy kế.": "Cloud đạt khoảng 73% lũy kế.",
@@ -116,69 +97,134 @@ def test_status_and_tuple_changes_fail(tmp_path):
         "Tiến độ phủ lõm 21/75/160.": "Tiến độ phủ lõm 21/160.",
     }
     for source, changed in replacements.items():
-        mutated = [dict(claim) for claim in claims]
-        next(claim for claim in mutated if claim["text"] == source)["text"] = changed
-        assert _write_claims(project, mutated, "forbidden")["status"] == "fail"
+        _svg(project, inventory)
+        svg = project / "svg_output/01_report.svg"
+        svg.write_text(svg.read_text(encoding="utf-8").replace(source, changed), encoding="utf-8")
+        assert faithful_report.validate_svg(project)["status"] == "fail"
 
 
-def test_unsupported_deadline_and_derived_content_fail(tmp_path):
+def test_unsupported_deadline_and_ratio_fail(tmp_path):
     project = _project(tmp_path, "# Báo cáo giao ban\n\n- Gửi báo cáo tiến độ.\n- Cloud 9,7 PB trên kế hoạch 23,3 PB.\n")
-    _, claims = _contract(project)
-    deadline_claim = next(claim for claim in claims if claim["text"] == "Gửi báo cáo tiến độ.")
-    deadline_claim["text"] = "Gửi báo cáo tiến độ trước 31/8."
-    assert _write_claims(project, claims, "forbidden")["status"] == "fail"
+    inventory = _contract(project)
+    for source, changed in [
+        ("Gửi báo cáo tiến độ.", "Gửi báo cáo tiến độ trước 31/8."),
+        ("Cloud 9,7 PB trên kế hoạch 23,3 PB.", "Cloud 9,7 PB trên kế hoạch 23,3 PB, đạt ≈42%."),
+    ]:
+        _svg(project, inventory)
+        svg = project / "svg_output/01_report.svg"
+        svg.write_text(svg.read_text(encoding="utf-8").replace(source, changed), encoding="utf-8")
+        assert faithful_report.validate_svg(project)["status"] == "fail"
 
-    _, claims = _contract(project)
-    cloud = next(claim for claim in claims if "9,7 PB" in claim["text"])
-    cloud.update({"type": "derived", "text": "Cloud 41,6% kế hoạch.", "formula": "9.7 / 23.3 * 100"})
-    assert _write_claims(project, claims, "forbidden")["status"] == "fail"
-    assert _write_claims(project, claims, "allowed")["status"] == "pass"
+    _svg(project, inventory)
+    svg = project / "svg_output/01_report.svg"
+    svg.write_text(
+        svg.read_text(encoding="utf-8").replace(
+            "</svg>", '<text data-content-kind="brand_chrome">Deadline 31/8</text></svg>'
+        ),
+        encoding="utf-8",
+    )
+    assert any("unsupported brand_chrome" in error for error in faithful_report.validate_svg(project)["errors"])
 
 
-def test_svg_requires_claim_provenance(tmp_path):
-    project = _project(tmp_path, "# Báo cáo giao ban\n\n- Cosite đạt 43% KH Q3.\n")
-    _, claims = _contract(project)
-    _svg(project, claims)
-    svg = project.joinpath("svg_output/01_report.svg")
-    svg.write_text(svg.read_text(encoding="utf-8").replace("đạt", "vượt"), encoding="utf-8")
+def test_svg_requires_direct_fact_provenance(tmp_path):
+    project = _project(tmp_path, "# Báo cáo giao ban\n\n- Cosite đạt 43% KH Q3.\n- UPS đủ 36 vào 20/11.\n")
+    inventory = _contract(project)
+    facts = [fact for block in inventory["blocks"] for fact in block["facts"]]
+    blocks = inventory["blocks"]
+    _svg(project, inventory)
+    svg = project / "svg_output/01_report.svg"
+    content = svg.read_text(encoding="utf-8").replace(f' data-fact-ids="{facts[0]["id"]}"', "", 1)
+    svg.write_text(content, encoding="utf-8")
+    assert faithful_report.validate_svg(project)["status"] == "fail"
+
+    _svg(project, inventory)
+    content = svg.read_text(encoding="utf-8").replace(
+        f'data-source-ids="{blocks[0]["id"]}" data-fact-ids="{facts[0]["id"]}"',
+        f'data-source-ids="{blocks[1]["id"]}" data-fact-ids="{facts[0]["id"]}"',
+        1,
+    )
+    svg.write_text(content, encoding="utf-8")
     report = faithful_report.validate_svg(project)
     assert report["status"] == "fail"
-    assert any("SVG claim token mismatch" in error for error in report["errors"])
+    assert any("does not belong" in error for error in report["errors"])
 
-    _svg(project, claims)
-    svg.write_text(svg.read_text(encoding="utf-8").replace("</svg>", '<text data-content-kind="brand_chrome">Deadline 31/8</text></svg>'), encoding="utf-8")
+    _svg(project, inventory)
+    svg.rename(project / "svg_output/02_report.svg")
     report = faithful_report.validate_svg(project)
     assert report["status"] == "fail"
-    assert any("unsupported brand_chrome" in error for error in report["errors"])
+    assert any("not mapped to P02" in error for error in report["errors"])
 
 
-def test_chart_pages_require_source_locked_manifest(tmp_path):
+def test_chart_uses_same_fact_gate_and_needs_all_tokens(tmp_path):
     project = _project(tmp_path, "# Báo cáo giao ban\n\n- Cloud đạt 9,7 PB kế hoạch 23,3 PB trong Q3.\n")
-    _, claims = _contract(project)
-    lock = project.joinpath("spec_lock.md")
+    inventory = _contract(project)
+    lock = project / "spec_lock.md"
     lock.write_text(lock.read_text(encoding="utf-8") + "\n## page_charts\n- P01: bar_chart\n", encoding="utf-8")
-    assert faithful_report.validate_spec(project)["status"] == "fail"
+    _svg(project, inventory)
+    assert faithful_report.validate_svg(project)["status"] == "pass"
+    svg = project / "svg_output/01_report.svg"
+    svg.write_text(svg.read_text(encoding="utf-8").replace(" trong Q3", ""), encoding="utf-8")
+    report = faithful_report.validate_svg(project)
+    assert report["status"] == "fail"
+    assert report["chart_mismatches"] > 0
 
-    cloud = next(claim for claim in claims if "9,7 PB" in claim["text"])
-    manifest = {
-        "content_mode": "faithful_report", "derived_content": "forbidden", "claims": claims,
-        "charts": [{
-            "id": "P01-CH01", "page": "P01", "source_ids": cloud["source_ids"], "fact_ids": cloud["fact_ids"],
-            "series": [{"label": "Cloud", "values": ["9,7"]}, {"label": "kế hoạch", "values": ["23,3"]}],
-            "unit": "PB", "period": "Q3",
-        }],
-    }
-    project.joinpath("claim_manifest.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
-    assert faithful_report.validate_spec(project)["status"] == "pass"
+
+def test_source_asset_and_legacy_manifest_behavior(tmp_path):
+    project = _project(tmp_path, "# Báo cáo giao ban\n\n![Sơ đồ](diagram.png)\n")
+    inventory = _contract(project)
+    project.joinpath("claim_manifest.json").write_text("{}", encoding="utf-8")
+    design = project / "design_spec.md"
+    design.write_text(design.read_text(encoding="utf-8").replace("- **Source Blocks**", "- **Claims**: P01-C01\n- **Source Blocks**"), encoding="utf-8")
+    report = faithful_report.validate_spec(project)
+    assert report["status"] == "pass"
+    assert "legacy claim_manifest.json ignored by faithful_report V2" in report["warnings"]
+    _svg(project, inventory)
+    assert faithful_report.validate_svg(project)["status"] == "pass"
+
+
+def test_table_header_can_repeat_across_pages(tmp_path):
+    project = _project(
+        tmp_path,
+        "# Báo cáo giao ban\n\n| Hạng mục | Kết quả |\n|---|---|\n| A | Hoàn thành |\n| B | Đang triển khai |\n",
+    )
+    inventory = json.loads((project / "source_inventory.json").read_text(encoding="utf-8"))
+    heading = inventory["blocks"][0]
+    header, row_a, row_b = [block for block in inventory["blocks"] if block["kind"] == "table_row"]
+    page_blocks = {"P01": [heading, header, row_a], "P02": [header, row_b]}
+    project.joinpath("spec_lock.md").write_text(
+        "## content_mode\n- mode: faithful_report\n- source_inventory: source_inventory.json\n- coverage_required: 100\n\n## page_sources\n"
+        + "\n".join(f"- {page}: {','.join(block['id'] for block in blocks)}" for page, blocks in page_blocks.items())
+        + "\n",
+        encoding="utf-8",
+    )
+    project.joinpath("design_spec.md").write_text(
+        "## IX. Content Outline\n\n"
+        + "\n\n".join(
+            f"#### Slide {int(page[1:]):02d} - Bảng\n- **Source Blocks**: {','.join(block['id'] for block in blocks)}"
+            for page, blocks in page_blocks.items()
+        )
+        + "\n\n## X. Technical Constraints\n",
+        encoding="utf-8",
+    )
+    assert "duplicate mappings" in faithful_report.validate_spec(project)["warnings"][0]
+    for page, blocks in page_blocks.items():
+        groups = [
+            f'<g data-source-ids="{block["id"]}" data-fact-ids="{fact["id"]}"><text>{html.escape(str(fact["source_span"]))}</text></g>'
+            for block in blocks
+            for fact in block["facts"]
+        ]
+        project.joinpath(f"svg_output/{int(page[1:]):02d}_table.svg").write_text(
+            '<svg xmlns="http://www.w3.org/2000/svg">' + "".join(groups) + "</svg>", encoding="utf-8"
+        )
+    assert faithful_report.validate_svg(project)["status"] == "pass"
 
 
 def test_missing_block_fails_and_narrative_source_stays_standard(tmp_path):
     project = _project(tmp_path, "# A reflective essay\n\nThis is a long-form narrative without operational KPIs.\n")
-    inventory = json.loads((project / "source_inventory.json").read_text(encoding="utf-8"))
+    inventory = _contract(project)
     assert inventory["profile"]["recommended_mode"] == "standard"
-    _contract(project)
     project.joinpath("spec_lock.md").write_text(
-        "## content_mode\n- mode: faithful_report\n- coverage_required: 100\n\n"
+        "## content_mode\n- mode: faithful_report\n- source_inventory: source_inventory.json\n- coverage_required: 100\n\n"
         f"## page_sources\n- P01: {inventory['blocks'][0]['id']}\n",
         encoding="utf-8",
     )
@@ -197,6 +243,28 @@ def test_structured_report_routes_faithful_and_skips_table_separator(tmp_path):
     assert inventory["profile"]["recommended_mode"] == "faithful_report"
     assert not any(block["text"] == "|---|---|" for block in inventory["blocks"])
     assert sum(block["kind"] == "table_row" for block in inventory["blocks"]) == 2
+
+
+def test_pdf_text_presence_checks_facts_per_page(tmp_path, monkeypatch):
+    project = _project(tmp_path, "# Báo cáo giao ban\n\n- Cosite đạt 43% KH Q3.\n")
+    _contract(project)
+    pdf = tmp_path / "deck.pdf"
+    pdf.write_bytes(b"pdf")
+    monkeypatch.setattr(faithful_report.shutil, "which", lambda name: "/usr/bin/pdftotext" if name == "pdftotext" else None)
+    monkeypatch.setattr(
+        faithful_report.subprocess,
+        "run",
+        lambda *_args, **_kwargs: SimpleNamespace(stdout="Báo cáo giao ban\nCosite đạt 43% KH Q3.\f", stderr=""),
+    )
+    assert faithful_report._pdf_text_presence(project, pdf) == ("pass", [])
+    monkeypatch.setattr(
+        faithful_report.subprocess,
+        "run",
+        lambda *_args, **_kwargs: SimpleNamespace(stdout="Báo cáo giao ban\nCosite vượt 43% KH Q3.\f", stderr=""),
+    )
+    status, missing = faithful_report._pdf_text_presence(project, pdf)
+    assert status == "fail"
+    assert missing
 
 
 def test_renderer_selection_is_cross_platform():
@@ -246,8 +314,8 @@ def test_review_then_user_approval_promotes_status(tmp_path):
 
 def test_failed_powerpoint_falls_back_once_to_libreoffice(tmp_path, monkeypatch):
     project = _project(tmp_path, "# Báo cáo giao ban\n\n- Cosite đạt 43% KH Q3.\n")
-    _, claims = _contract(project)
-    _svg(project, claims)
+    inventory = _contract(project)
+    _svg(project, inventory)
     pptx = tmp_path / "deck.pptx"
     with zipfile.ZipFile(pptx, "w") as archive:
         archive.writestr("ppt/slides/slide1.xml", "<p:sld/>")

@@ -29,7 +29,7 @@
 - coverage_required: 100
 
 > Emit this section only for `faithful_report`; standard mode omits it. The values above are exact. Executor reads the inventory/page mapping per page, and export is blocked until coverage validation passes.
-> `faithful_report` also requires sibling `claim_manifest.json` with `content_mode: faithful_report`, `derived_content: forbidden` by default, and page-scoped source/fact claims. Do not add these fields to `spec_lock.md`; the validator reads the dedicated manifest.
+> `faithful_report` reads page-scoped facts directly from `source_inventory.json`; no claim or chart manifest is created. Derived content is forbidden.
 
 ## colors
 
