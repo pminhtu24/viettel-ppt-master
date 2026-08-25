@@ -22,6 +22,15 @@
 >
 > Emit `- profile: custom_override` only when the user explicitly says not to use Viettel, names another brand, or supplies an explicit non-Viettel template path. A color, font, mood, or visual-style request alone does not qualify. For `custom_override`, omit `deep_blue_scope` and record the explicit override reason in `design_spec.md`.
 
+## content_mode
+
+- mode: faithful_report
+- source_inventory: source_inventory.json
+- coverage_required: 100
+
+> Emit this section only for `faithful_report`; standard mode omits it. The values above are exact. Executor reads the inventory/page mapping per page, and export is blocked until coverage validation passes.
+> `faithful_report` also requires sibling `claim_manifest.json` with `content_mode: faithful_report`, `derived_content: forbidden` by default, and page-scoped source/fact claims. Do not add these fields to `spec_lock.md`; the validator reads the dedicated manifest.
+
 ## colors
 
 - bg: #FFFFFF
@@ -122,6 +131,13 @@
 > **Rhythm follows narrative**: `breathing` pages appear where narrative genuinely pauses — section transitions, a single argument worth standalone emphasis, a deliberate stop after a dense sequence. For Viettel decks with clear major headings or 8+ slides, proactively create meaningful section dividers from source structure. A data briefing may still be nearly all `dense` only when it has no real narrative break. **Do not invent filler pages** — every `breathing` page must answer "what independent thing is this page saying?".
 >
 > **Missing or empty section** → Executor falls back to `dense` for every page (legacy pre-rhythm behavior). Remove the section only for legacy decks; new decks MUST fill it.
+
+## page_sources
+
+- P01: SRC01-B0001,SRC01-B0002
+- P02: SRC01-B0003-SRC01-B0008
+
+> Required only for `faithful_report`. One row per page, matching `design_spec.md §IX Source Blocks`. Every required inventory block must appear at least once; ranges may use `SRC01-B0003-SRC01-B0008`. Duplicate mappings are allowed and reported. Standard mode omits this section.
 
 ## page_backgrounds
 

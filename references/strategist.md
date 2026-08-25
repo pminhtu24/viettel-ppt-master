@@ -12,6 +12,8 @@ As a top-tier AI presentation strategist, receive source documents, perform cont
 
 > **Viettel default brand gate (HARD rule)**: every normal run uses `brand.profile: viettel_default` on PPT 16:9. Keep Viettel logo/chrome, the locked Viettel font stack, Viettel red, white/approved-gray surfaces, and dark-neutral text. Deep blue `#12436D` is restricted to chart, diagram/infographic, icon marks, and cataloged builtin backgrounds explicitly marked `deep_blue_background: true`. Use `brand.profile: custom_override` only when the user explicitly says not to use Viettel, names another brand, or supplies an explicit non-Viettel template path. A color, font, mood, or visual-style request alone does not override Viettel.
 
+> **Content-mode gate**: read `source_inventory.json profile.recommended_mode` when it exists. If it selects `faithful_report`, or the user explicitly requests source-complete transformation, read [`strategist-faithful-report.md`](strategist-faithful-report.md). That reference overrides this file's SCQA, pyramid, narrative-bridge, page-count, divider, and web-image defaults; brand and technical constraints remain shared.
+
 ---
 
 ## Canvas Format Quick Reference

@@ -114,6 +114,8 @@ Before the first SVG page, output a confirmation listing: canvas dimensions, bod
 
 **Hard rule**: Before generating **each** SVG page, `read_file <project_path>/spec_lock.md`. Use only values from this file, not from memory. If context was auto-compacted, also `read_file <project_path>/design_spec.md` for the current page's §IX brief.
 
+**Faithful-report closed-source lock**: when `content_mode.mode: faithful_report`, look up the current `P<NN>` under `page_sources`, read those exact ids from `source_inventory.json`, and read that page's approved claims from `claim_manifest.json`. Do not rely on an earlier summary or on memory. Render only approved claim text—never add or calculate content. Preserve source order and all values/qualifiers. Wrap each visible content group (including chart/table groups) in `<g data-source-ids="<comma-separated ids>" data-claim-ids="P01-C01,...">`. Chart roots also carry the manifest's `data-chart-id="P09-CH01"`. Source assets use an `asset` claim. Only literal Viettel branding may use `data-content-kind="brand_chrome"`; page-number-only text uses `data-content-kind="page_number"`. These attributes are internal QA metadata and must never be rendered as text. If a mapped block cannot fit, split the slide and update `design_spec.md`, `spec_lock.md`, and `claim_manifest.json` before continuing—never drop the block or shrink below the text-fit floor.
+
 **Font preflight rule**: run `python3 scripts/check_fonts.py <project_path>` before the first SVG page (`py -3 ...` in native Windows PowerShell when needed). It must search for FS Magistral Book, Medium, and Bold first and install only missing trusted faces. On Windows it always installs into the current user's Fonts directory and HKCU, without requesting system/admin access. Never run manual `copy`, `reg`, or `%LOCALAPPDATA%` commands. If re-check still fails, state `brand fidelity degraded` and continue generating SVG with `"FS Magistral"`. `--allow-font-fallback` permits degraded host preview only; Viettel export still requires a valid embedded payload for every face used.
 
 **If `spec_lock.md` is missing**: Viettel generation/export is a hard error because the profile controls font validation and embedding. Only a legacy non-Viettel project may warn once and proceed from `design_spec.md`; new projects MUST have the lock (see [strategist.md](strategist.md) §6 step 4).
@@ -179,6 +181,7 @@ Hard constraints:
 - Do not attach unit labels to large numbers with fixed x offsets unless the combined number+unit width was budgeted. Prefer separate rows (`220,4` on one line, `nghìn tỷ đồng` below) or a `data-box`.
 - Every card must reserve inner padding: at least 18px for body cards, 14px for dense chart labels, 24px for KPI cards.
 - If content does not fit after wrapping at the role's minimum size, split the slide or remove lower-priority text. Never shrink body text below the declared annotation range to force fit.
+- In `faithful_report`, removal of source text is forbidden. Split the slide instead; "lower-priority" removal applies only to `standard` mode.
 - Keep chart marks, data labels, and cards below the title divider unless the page is a designed hero/breathing page. On Viettel 16:9 shells, content should normally start at y>=128, and large chart bars/labels should not enter y<255 when a large title block is present.
 
 Example:

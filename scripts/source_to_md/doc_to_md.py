@@ -9,7 +9,10 @@ Primary formats (pure Python, no external tools required):
     .ipynb  → nbconvert               (pyzmq stub for static conversion)
 
 Fallback formats (require pandoc installed):
-    .doc .odt .rtf .tex .latex .rst .org .typ
+    .odt .rtf .tex .latex .rst .org .typ
+
+Legacy Word:
+    .doc    → LibreOffice bridge to DOCX, then the native DOCX path
 
 All paths produce the same output convention:
     <input>.md                     Markdown file
@@ -28,11 +31,13 @@ import base64
 import hashlib
 import json
 import mimetypes
+import os
 import posixpath
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
 from urllib.parse import unquote, urlparse
@@ -103,7 +108,6 @@ NATIVE_FORMATS = {".docx", ".html", ".htm", ".epub", ".ipynb"}
 
 # Formats handled by pandoc fallback: suffix → (pandoc input format, description)
 PANDOC_FORMATS = {
-    ".doc":   ("doc",    "Microsoft Word 97-2003"),
     ".odt":   ("odt",    "OpenDocument Text"),
     ".rtf":   ("rtf",    "Rich Text Format"),
     ".tex":   ("latex",  "LaTeX"),
@@ -112,6 +116,7 @@ PANDOC_FORMATS = {
     ".org":   ("org",    "Emacs Org-mode"),
     ".typ":   ("typst",  "Typst"),
 }
+LEGACY_WORD_FORMATS = {".doc"}
 
 # Formats pandoc should extract embedded media from
 PANDOC_MEDIA_FORMATS = {".odt"}
@@ -951,6 +956,39 @@ def _convert_with_pandoc(input_file: Path, out_file: Path, suffix: str) -> str:
     return markdown
 
 
+def _convert_legacy_word(input_file: Path, out_file: Path) -> str:
+    """Bridge binary Word .doc through LibreOffice, then reuse DOCX conversion."""
+    soffice = shutil.which("libreoffice") or shutil.which("soffice")
+    if not soffice:
+        print("[ERROR] Legacy .doc conversion requires LibreOffice/soffice. Resave the file as .docx and retry.")
+        return ""
+
+    with tempfile.TemporaryDirectory(prefix="doc_to_md_") as temp_dir:
+        temp_path = Path(temp_dir)
+        profile = temp_path / "profile"
+        profile.mkdir()
+        result = subprocess.run(
+            [
+                soffice,
+                "--headless",
+                f"-env:UserInstallation={profile.as_uri()}",
+                "--convert-to",
+                "docx:Office Open XML Text",
+                "--outdir",
+                str(temp_path),
+                str(input_file.resolve()),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        converted = temp_path / f"{input_file.stem}.docx"
+        if result.returncode != 0 or not converted.exists():
+            detail = result.stderr.strip() or result.stdout.strip() or "no output"
+            print(f"[ERROR] LibreOffice .doc conversion failed: {detail}")
+            return ""
+        return _convert_docx(converted, out_file)
+
+
 # ─────────────────────────────────────────────────────────────
 # Dispatcher
 # ─────────────────────────────────────────────────────────────
@@ -971,8 +1009,9 @@ def convert_to_markdown(input_path: str, output_path: str | None = None) -> str:
         return ""
 
     suffix = input_file.suffix.lower()
-    if suffix not in NATIVE_FORMATS and suffix not in PANDOC_FORMATS:
-        supported = ", ".join(sorted(NATIVE_FORMATS | PANDOC_FORMATS.keys()))
+    supported_formats = NATIVE_FORMATS | PANDOC_FORMATS.keys() | LEGACY_WORD_FORMATS
+    if suffix not in supported_formats:
+        supported = ", ".join(sorted(supported_formats))
         print(f"[ERROR] Unsupported format: {suffix}")
         print(f"   Supported: {supported}")
         return ""
@@ -980,8 +1019,11 @@ def convert_to_markdown(input_path: str, output_path: str | None = None) -> str:
     out_file = Path(output_path) if output_path else input_file.with_suffix(".md")
     out_file.parent.mkdir(parents=True, exist_ok=True)
 
-    if suffix in NATIVE_FORMATS:
+    if suffix in NATIVE_FORMATS or suffix in LEGACY_WORD_FORMATS:
         _ensure_vendored_deps()
+        if suffix == ".doc":
+            print(f"[INFO] Converting legacy Microsoft Word via LibreOffice: {input_file.name}")
+            return _convert_legacy_word(input_file, out_file)
         desc = _FORMAT_DESC[suffix]
         print(f"[INFO] Converting {desc}: {input_file.name}")
         if suffix == ".docx":
@@ -1011,11 +1053,12 @@ Examples:
   python doc_to_md.py notebook.ipynb              # Jupyter → Markdown (nbconvert)
   python doc_to_md.py manuscript.tex              # LaTeX → Markdown (pandoc fallback)
 
-Native formats (no pandoc required):
+Native formats (no pandoc required; .doc needs LibreOffice):
+  .doc
   .docx  .html/.htm  .epub  .ipynb
 
 Pandoc fallback formats (require system pandoc):
-  .doc  .odt  .rtf  .tex/.latex  .rst  .org  .typ
+  .odt  .rtf  .tex/.latex  .rst  .org  .typ
         """,
     )
     parser.add_argument("input", help="Input document file")

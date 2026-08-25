@@ -65,7 +65,8 @@ description: >
 | Script                                             | Purpose                                                                                                                                 |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `${SKILL_DIR}/scripts/source_to_md/pdf_to_md.py`   | PDF to Markdown                                                                                                                         |
-| `${SKILL_DIR}/scripts/source_to_md/doc_to_md.py`   | Documents to Markdown — native Python for DOCX/HTML/EPUB/IPYNB, pandoc fallback for legacy formats (.doc/.odt/.rtf/.tex/.rst/.org/.typ) |
+| `${SKILL_DIR}/scripts/source_to_md/doc_to_md.py`   | Documents to Markdown — native Python for DOCX/HTML/EPUB/IPYNB, LibreOffice bridge for binary `.doc`, pandoc fallback for other legacy text formats |
+| `${SKILL_DIR}/scripts/faithful_report.py`          | Build source/fact inventory, enforce closed-source claims, validate SVG fidelity, and run render/release gates for `faithful_report` |
 | `${SKILL_DIR}/scripts/source_to_md/excel_to_md.py` | Excel workbooks to Markdown — supports .xlsx/.xlsm; legacy .xls should be resaved as .xlsx                                              |
 | `${SKILL_DIR}/scripts/source_to_md/ppt_to_md.py`   | PowerPoint to Markdown                                                                                                                  |
 | `${SKILL_DIR}/scripts/source_to_md/web_to_md.py`   | Web page to Markdown (supports WeChat via `curl_cffi`)                                                                                  |
@@ -174,6 +175,19 @@ Import source content (choose based on the situation):
 > - Any file already inside the repo is moved to avoid accidental commits.
 > Intermediate companion directories (e.g., `<stem>_files/`) are handled automatically.
 
+**Content-mode routing (source-backed projects only)**: after import, run:
+
+```bash
+python3 ${SKILL_DIR}/scripts/faithful_report.py prepare <project_path>
+```
+
+Read `<project_path>/source_inventory.json profile.recommended_mode`:
+
+- `faithful_report` → read [`references/strategist-faithful-report.md`](references/strategist-faithful-report.md) before Step 4. This mode is for already-structured weekly/monthly/meeting/operations reports where completeness outranks synthesis.
+- `standard` → keep the existing Strategist workflow. A user may still explicitly request `faithful_report`; preserve the inventory and follow the faithful reference.
+
+The classifier is advisory and MUST be disclosed inside the Eight Confirmations so the user can override it. Do not select `faithful_report` merely because a narrative document is long.
+
 **✅ Checkpoint — Confirm project structure created successfully, `sources/` contains all source files, converted materials are ready. Proceed to Step 3.**
 
 ---
@@ -212,12 +226,14 @@ Read references/strategist.md
 
 1. Canvas format
 2. Page count range
-3. Target audience
+3. Target audience and content mode (`standard` or `faithful_report`)
 4. Style objective
 5. Color scheme
 6. Icon usage approach
 7. Typography plan (the three locked FS Magistral static faces and TTF filenames; informational, not a font choice)
 8. Image usage approach
+
+For `faithful_report`, item 2 states an estimated readable page count with **no hard cap** and a 100% meaningful-source-block coverage target. Item 3 states that source order is authoritative and narrative synthesis is disabled. Item 8 defaults to source assets + native charts/icons, with no web images unless the user explicitly opts in. This remains the same eight-item checkpoint, not a ninth confirmation.
 
 **Viettel brand lock**: for every normal run, present PPT 16:9, Viettel red `#EE0033`, white/approved-gray reporting surfaces, dark-neutral text, the three locked static faces FS Magistral Book/Medium/Bold, top-right logo slot, footer/page-number treatment, and content safe area as fixed decisions. Typography is informational in the confirmation set, not a user choice. Deep blue `#12436D` is chart/diagram/icon-only except for cataloged builtin backgrounds explicitly marked `deep_blue_background: true`. `spec_lock.md` MUST keep `font_family: "FS Magistral"` for compatibility and record `brand.profile: viettel_default`; do not add fixed per-face configuration fields. Only an explicit hard non-Viettel request may record `brand.profile: custom_override`.
 
@@ -260,6 +276,20 @@ python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
 
 - `<project_path>/design_spec.md` — human-readable design narrative
 - `<project_path>/spec_lock.md` — machine-readable execution contract (skeleton: `templates/spec_lock_reference.md`); Executor re-reads before every page
+- `<project_path>/source_inventory.json` — required only for `faithful_report`; canonical source-block inventory and detection profile
+- `<project_path>/claim_manifest.json` — required only for `faithful_report`; approved visible claims and source/fact provenance
+
+For `faithful_report`, before completing Strategist run:
+
+1. Create `claim_manifest.json` from the v2 inventory. Every visible statement is `verbatim` or `mechanical`; source images use `asset`. Keep `derived_content: forbidden` unless the user explicitly enables formulas for this run.
+2. Treat assigned blocks as a closed set: add no insight, cause, risk, direction, deadline, owner, status, KPI, period, ratio, forecast, recommendation, or conclusion. Preserve status, negation, qualifiers, and numeric tuples exactly. If content does not fit, add slides.
+3. Run:
+
+```bash
+python3 ${SKILL_DIR}/scripts/faithful_report.py validate-spec <project_path>
+```
+
+Source block/fact coverage at 100%, unsupported claims at 0, and no protected-token mismatch are hard gates. Duplicate mappings are reported but allowed. Do not proceed to Executor on failure.
 
 **✅ Checkpoint — Phase deliverables complete, auto-proceed to next step**:
 
@@ -270,6 +300,7 @@ python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
 - [x] Split-mode note appended below the eight items (heavy or normal variant)
 - [x] Design Specification & Content Outline generated
 - [x] Execution lock (spec_lock.md) generated
+- [x] `faithful_report` spec coverage passed when that mode is active
 - [ ] **Next**: Auto-proceed to [Web Image Acquisition / Executor] phase
 ```
 
@@ -348,6 +379,8 @@ python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
 
 **Per-page spec_lock re-read (Mandatory)**: before **each** SVG page, `read_file <project_path>/spec_lock.md` and use only its colors / fonts / icons / images, plus the per-page `page_rhythm` / optional `page_backgrounds` / `page_layouts` / `page_charts` lookups (resolves to background/template/chart SVGs already loaded in the batch read above). Missing `page_backgrounds` means no decorative background for that page. Resists context-compression drift on long decks. See executor-base.md §2.1.
 
+When `spec_lock.md ## content_mode` is `faithful_report`, resolve the current page's `page_sources`, read those exact inventory blocks, then render only that page's approved claims. Wrap every visible content group in `<g data-source-ids="SRC01-B0001,..." data-claim-ids="P01-C01,...">`; source images use `asset` claims. Only literal Viettel branding may use `data-content-kind="brand_chrome"`, and page-number-only text uses `data-content-kind="page_number"`. QA IDs are internal and MUST NOT appear as visible text.
+
 **Font-preflight gate (Mandatory for bundled brand fonts)**: before the first SVG page, run `python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>`. It searches the full host catalog for FS Magistral Book, Medium, and Bold and installs only missing trusted faces. On Windows it always uses the current user's Fonts directory and HKCU, registers the face with Windows, and verifies it again without requiring system/admin access. Never issue manual `copy`, `reg`, or `%LOCALAPPDATA%` commands. If the re-check still reports missing faces, surface `brand fidelity degraded` but continue generating SVG with the exact locked family. The exporter repeats installation and validation, blocks missing host faces by default, and always rejects Arial/Calibri/Aptos drift. Explicit `--allow-font-fallback` bypasses only the missing-host preview check; missing or invalid embedded payloads always hard-fail Viettel export.
 
 > ⚠️ **Main-agent only**: SVG generation MUST stay in the current main agent — page design depends on full upstream context. Do NOT delegate to sub-agents.
@@ -383,6 +416,13 @@ python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
 Chrome normalization also removes marked background groups and near-full-height Viettel-red left rails from every page except cover, chapter, and ending before the final scan.
 
 - `custom_override` omits chrome normalization but still runs the final scan. The final project scan must report `0 errors` before native export.
+- For `faithful_report`, run the final content gate after chart verification/chrome normalization and before export:
+
+```bash
+python3 ${SKILL_DIR}/scripts/faithful_report.py validate-svg <project_path>
+```
+
+Export is blocked unless required block/fact coverage is 100%, unsupported claims are 0, and every approved claim—including numeric tuples, dates, units, periods, status, negation, and qualifiers—survives in the final SVGs.
 
 **✅ Checkpoint — Confirm all SVGs are fully generated and quality-checked. Proceed directly to export**:
 
@@ -407,6 +447,23 @@ python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>
 ```
 
 The exporter reads `svg_output/` directly and produces editable native DrawingML.
+
+For `faithful_report`, the timestamped export is only an unsigned candidate. Run one final render gate—not after every slide:
+
+```bash
+python3 ${SKILL_DIR}/scripts/faithful_report.py render-check <project_path> <candidate.pptx>
+```
+
+Renderer order is Microsoft PowerPoint via PowerShell/COM on Windows, Microsoft PowerPoint via AppleScript on macOS, then LibreOffice/soffice as fallback; Linux uses LibreOffice. Keynote is never automatic. If no renderer exists, or `--fast` is supplied, keep `_DRAFT.pptx` and explain that REVIEW is unavailable on this host.
+
+Inspect `render_report.json` and its PDF/preview pages for overlap, clipping, font drift, and chart breakage, then record the visual decision:
+
+```bash
+python3 ${SKILL_DIR}/scripts/faithful_report.py render-review <project_path> --pass
+# or: --fail --layout-error P03 --layout-error P05
+```
+
+A passing visual review creates `_REVIEW.pptx`. It remains REVIEW until the user explicitly approves it; only then run `python3 ${SKILL_DIR}/scripts/faithful_report.py approve-final <project_path>` to create `_FINAL.pptx`. Never describe DRAFT or REVIEW as ready for release.
 
 **Optional animation flags** (the defaults already enable rich entrance animations — adjust only when the user asks for something different):
 

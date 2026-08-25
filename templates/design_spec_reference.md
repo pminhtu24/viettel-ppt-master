@@ -13,6 +13,8 @@
 | **Project Name** | {project_name} |
 | **Canvas Format** | {canvas_info['name']} ({canvas_info['dimensions']}) |
 | **Page Count** | [Filled by Strategist] |
+| **Content Mode** | standard / faithful_report |
+| **Coverage Target** | standard: n/a; faithful_report: 100% required source blocks, no hard cap |
 | **Design Style** | {design_style} |
 | **Target Audience** | [Filled by Strategist] |
 | **Use Case** | [Filled by Strategist] |
@@ -325,6 +327,8 @@ Catalog read: 71 templates
 
 #### Slide 01 - Cover
 
+- **Source Blocks**: [Required in faithful_report; omit in standard mode]
+- **Claims**: [Required in faithful_report; e.g., P01-C01,P01-C02,P01-C03,P01-C04]
 - **Layout**: Full-screen background image + centered title
 - **Title**: [Main title]
 - **Subtitle**: [Subtitle]
@@ -332,6 +336,8 @@ Catalog read: 71 templates
 
 #### Slide 02 - [Page Name]
 
+- **Source Blocks**: [Required in faithful_report; e.g., SRC01-B0038-SRC01-B0042]
+- **Claims**: [Required in faithful_report; e.g., P02-C01,P02-C02]
 - **Layout**: [Choose a pattern from §V, combine two, or break the grid as the content demands]
 - **Title**: [Page title]
 - **Visualization**: [visualization_type] (see VII. Visualization Reference List)
@@ -341,6 +347,8 @@ Catalog read: 71 templates
   - [Point 3]
 
 > **Visualization field**: add only when the page has data visualization or structured infographic elements. Type must be listed in §VII.
+>
+> **Faithful-report fields**: every slide declares `Source Blocks` and its approved claim ids. Source mapping is mirrored under `spec_lock.md ## page_sources`; full claim text/provenance lives in `claim_manifest.json`. Standard-mode decks omit both fields.
 
 ---
 
