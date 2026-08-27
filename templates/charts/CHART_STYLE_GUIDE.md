@@ -81,14 +81,14 @@ font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Micr
 
 | Level   | Size      | font-weight  | Purpose                            |
 | ------- | --------- | ------------ | ---------------------------------- |
-| H1      | `34px`    | `bold` (700) | Main chart title                   |
-| H2      | `22px`    | `600`        | Area title (e.g., "Detailed Data") |
-| Body L  | `18-20px` | `600`        | Key values, percentages            |
-| Body M  | `15-16px` | `600`        | Data labels, category names        |
-| Body S  | `14px`    | Normal       | Subtitles, legends, sources        |
-| Caption | `12-13px` | Normal       | Axis scales, annotations           |
+| H1      | `38px`    | `bold` (700) | Main chart title                   |
+| H2      | `32px`    | `600`        | Area title (e.g., "Detailed Data") |
+| Body L  | `26px`    | `600`        | Key values, percentages            |
+| Body M  | `26px`    | `600`        | Data labels, category names        |
+| Body S  | `17px`    | Normal       | Subtitles, legends, sources        |
+| Caption | `17px`    | Normal       | Axis scales, annotations           |
 
-> **Minimum font size limit: 12px**. No text elements may be smaller than 12px.
+> **Normal Viettel size lock:** title `38px`, body `26px`, subtitle/secondary `32px`, and caption/annotation `17px`. Reflow or split crowded charts instead of shrinking below these anchors.
 
 ### 2.3 `<tspan>` Requirement
 
@@ -96,12 +96,12 @@ All text content in `<text>` elements **must** be wrapped in `<tspan>`:
 
 ```xml
 <!-- Correct -->
-<text x="60" y="80" font-size="34" fill="#0F172A">
+<text x="60" y="80" font-size="38" fill="#0F172A">
     <tspan>Chart Title</tspan>
 </text>
 
 <!-- Incorrect -->
-<text x="60" y="80" font-size="34" fill="#0F172A">Chart Title</text>
+<text x="60" y="80" font-size="38" fill="#0F172A">Chart Title</text>
 ```
 
 ### 2.4 Inline Formatting Rules (shared-standards SS4)
@@ -423,11 +423,11 @@ After adding or modifying a chart, verify the following:
 
 ### Typography
 
-- [ ] No text has a `font-size < 12`
+- [ ] No caption/annotation text has a `font-size < 17`; normal body text is 26px
 - [ ] All `<text>` content is wrapped in `<tspan>`
 - [ ] Multi-styled text in a single line uses inline `<tspan>` elements, **not** multiple adjacent `<text>` elements
 - [ ] Inline `<tspan>` elements do not carry `x` / `y` / `dy` attributes
-- [ ] Titles are 34px, subtitles are 18px, and sources are 14px
+- [ ] Titles are 38px, subtitles are 32px, and sources are 17px
 
 ### Structure
 

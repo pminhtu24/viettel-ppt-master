@@ -114,25 +114,25 @@
 
 ### Font Size Hierarchy
 
-> **Ramp discipline, not a fixed menu.** `body` is the single anchor; every other size is a ratio of it. Each row below gives the role's allowed ratio band — Executor may pick any px value inside the band (e.g., 40px hero number, 13px chart annotation, 72px cover headline) without pre-declaring intermediates in `spec_lock.md`.
+> **Ramp discipline.** Normal Viettel runs lock page title `38px`, body `26px`, subtitle/secondary `32px`, and caption/annotation `17px`. Cover, chapter, and KPI roles scale upward from the body anchor. Reflow or split content instead of shrinking below the locked anchors. Ratio bands remain available for explicit custom overrides and larger role-specific slots.
 > **Unit**: px uniformly (SVG native) to avoid pt/px conversion errors.
-> **Baseline selection**: drive by **content density**, not design style.
+> **Baseline selection**: `26px` for every normal Viettel run. Content density changes pagination and layout, not the locked baseline.
 
-**Baseline**: Body font size = [fill in]px (any reasonable integer — `18` and `24` are most common; `16` for chart-heavy, `20`/`22` for medium density, `28-32` for poster / cover decks are all valid. Drive by content density.)
+**Baseline**: Body font size = `26px` under `viettel_default`. For an explicit `custom_override`, choose another integer by content density and record it in `spec_lock.md`.
 
-| Purpose | Ratio to body | Example @ body=24 (relaxed) | Example @ body=18 (dense) | Weight |
-| ------- | ------------- | --------------------------- | ------------------------- | ------ |
-| Cover title (hero headline) | 2.5-5x | 60-120px | 45-90px | Bold (`700`) |
-| Chapter / section opener | 2-2.5x | 48-60px | 36-45px | Bold (`700`) |
-| Page title | 1.5-2x | 36-48px | 27-36px | Bold (`700`) |
-| Hero number (consulting KPIs) | 1.5-2x | 36-48px | 27-36px | Bold (`700`) |
-| Section/card header | 1-1.3x | 24-31px | 18-23px | Bold (`700`) |
-| Subtitle | 1.2-1.5x | 29-36px | 22-27px | Medium (`500`) |
-| **Body content** | **1x** | **24px** | **18px** | Book (`400`) |
-| Annotation / caption | 0.7-0.85x | 17-20px | 13-15px | Book (`400`) |
-| Page number / footnote | 0.5-0.65x | 12-16px | 9-12px | Book (`400`) |
+| Purpose | Ratio to body | Viettel default @ body=26 | Custom dense example @ body=18 | Weight |
+| ------- | ------------- | ------------------------- | ----------------------------- | ------ |
+| Cover title (hero headline) | 2.5-5x | 65-130px | 45-90px | Bold (`700`) |
+| Chapter / section opener | 2-2.5x | 52-65px | 36-45px | Bold (`700`) |
+| Page title | 1.45-2x | **38px locked** | 26-36px | Bold (`700`) |
+| Hero number (consulting KPIs) | 1.5-2x | 39-52px | 27-36px | Bold (`700`) |
+| Section/card header | 1-1.3x | 26-34px | 18-23px | Bold (`700`) |
+| Subtitle | 1.2-1.5x | **32px locked** | 22-27px | Medium (`500`) |
+| **Body content** | **1x** | **26px locked** | **18px** | Book (`400`) |
+| Annotation / caption | 0.65-0.85x | **17px locked** | 12-15px | Book (`400`) |
+| Page number / footnote | 0.5-0.65x | 13-17px | 9-12px | Book (`400`) |
 
-> The two px columns are illustrations for common baselines. For any other `body` value, multiply by each row's ratio — the checker (`svg_quality_checker._check_spec_lock_drift`) reads the live `body` from `spec_lock.md` and applies the bands, so no code change is needed for a different baseline.
+> The Viettel column contains locked anchors plus upward-scaling role bands. For a `custom_override`, multiply the chosen `body` by each row's ratio. The checker (`svg_quality_checker._check_spec_lock_drift`) reads the live `body` from `spec_lock.md`, so no code change is needed.
 
 > Sizes outside **every** band remain forbidden — surface the need and extend `spec_lock.md typography` (e.g., `cover_title: 96`) rather than invent a one-off value.
 

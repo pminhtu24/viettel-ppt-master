@@ -130,19 +130,20 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 
 ### Font Size Hierarchy
 
-| Purpose       | Ratio to body | @body=18px (dense) | @body=20px (standard) | SVG face selector |
-| ------------- | ------------- | ------------------ | --------------------- | ------- |
-| Cover title   | 2.5-3x        | 45-54px            | 50-60px               | 700     |
-| Chapter title | 2-2.5x        | 36-45px            | 40-50px               | 700     |
-| Page title    | 1.5-2x        | 27-36px            | 30-40px               | 700     |
-| Section/card header | 1-1.3x  | 18-24px            | 20-26px               | 700     |
-| KPI/hero number | 1.5-2.5x    | 27-45px            | 30-50px               | 700     |
-| Subtitle      | 1.2-1.5x      | 22-27px            | 24-30px               | 500     |
-| **Body**      | **1x**        | **18px**           | **20px**              | 400     |
-| Caption       | 0.7-0.85x     | 13-15px            | 14-17px               | 400     |
-| Page number   | 0.6-0.75x     | 11-14px            | 12-15px               | 400     |
+| Purpose       | Ratio to body | Viettel default @ body=26px | SVG face selector |
+| ------------- | ------------- | --------------------------- | ----------------- |
+| Cover title   | 2.5-3x        | 65-78px                     | 700               |
+| Chapter title | 2-2.5x        | 52-65px                     | 700               |
+| Page title    | 1.45-2x       | **38px locked**             | 700               |
+| Section/card header | 1-1.3x  | 26-34px                     | 700               |
+| KPI/hero number | 1.5-2.5x    | 39-65px                     | 700               |
+| Subtitle      | 1.2-1.5x      | **32px locked**             | 500               |
+| **Body**      | **1x**        | **26px locked**             | 400               |
+| Caption       | 0.65-0.85x    | **17px locked**             | 400               |
+| Page number   | 0.5-0.65x     | 13-17px                     | 400               |
 
 > Keep `font_family: "FS Magistral"` in `spec_lock.md` for compatibility. Do not introduce ad-hoc fonts in page SVGs.
+> Reflow or split crowded Viettel slides instead of shrinking page title, body, subtitle, or caption below the locked anchors.
 > For Viettel decks, Strategist MUST name the three static faces and TTF files; do not ask the user to choose typography. SVG `400`/omitted, `500`, and `700` select Book, Medium, and Bold respectively; never use `800`/ExtraBold.
 > Viettel template projects ship a local `fonts/` bundle. After project setup, run `scripts/check_fonts.py <project_path>`; it searches for Book, Medium, and Bold first and installs only missing trusted faces. On Windows it always installs into the current user's Fonts directory and HKCU without system/admin access; never use shell `copy` or `%LOCALAPPDATA%` expansion. If re-check still fails, keep `"FS Magistral"` in SVG and report `brand fidelity degraded`.
 
@@ -230,10 +231,10 @@ Viettel decks are chart-heavy and often use compact cards. Every text block insi
 | Slot | Default Budget |
 | --- | --- |
 | KPI value | 1 line; unit below if combined width exceeds tile width |
-| KPI caption | 1-2 lines, 14-16px |
-| Insight/card body | 2-3 lines, 14-16px, line-height 1.4-1.5 |
-| Chart annotation | 1-2 lines, 12-14px |
-| Footer/source | 1 line; must leave 64px clearance from page badge |
+| KPI caption | 1-2 lines, 17px |
+| Insight/card body | 2-3 lines, 26px, line-height 1.4-1.5 |
+| Chart annotation | 1-2 lines, 17px |
+| Footer/source | 1 line, 17px; must leave 64px clearance from page badge |
 
 Implementation rules:
 
@@ -307,9 +308,9 @@ Implementation rules:
 |------|----------|---------|
 | Top Bar | y: 0-5, full width | Red accent bar |
 | Logo | top-right corner | Viettel logo image |
-| Title | x=72, y=70 | Page title ({{PAGE_TITLE}}) |
-| Summary | x=72, y=104 | TOC description ({{TOC_SUMMARY}}) |
-| Divider | y=132 | Gray horizontal line |
+| Title | x=72, y=72 | Page title ({{PAGE_TITLE}}) |
+| Summary | x=72, y=116 | TOC description ({{TOC_SUMMARY}}) |
+| Divider | y=142 | Gray horizontal line |
 | TOC Items | y: 172-492 | 5 numbered items, 80px apart |
 | Footer | bottom | Red pill + page number |
 
@@ -331,8 +332,8 @@ Implementation rules:
 <!-- TOC item with number badge -->
 <g transform="translate(88,172)">
   <circle cx="18" cy="18" r="18" fill="#EE0033"/>
-  <text x="18" y="25" text-anchor="middle" font-size="16" font-weight="700" fill="#FFFFFF">01</text>
-  <text x="64" y="26" font-size="24" font-weight="700" fill="#000000">{{TOC_ITEM_1_TITLE}}</text>
+  <text x="18" y="25" text-anchor="middle" font-size="17" font-weight="700" fill="#FFFFFF">01</text>
+  <text x="64" y="27" font-size="26" font-weight="700" fill="#000000">{{TOC_ITEM_1_TITLE}}</text>
 </g>
 ```
 
@@ -396,9 +397,9 @@ Implementation rules:
 | Top Bar | y: 0-5, full width | Red accent bar |
 | Logo | top-right corner | Viettel logo image |
 | Title Bar | x=64-88, y=38-76 | Red vertical bar + title text |
-| Title | x=88-1048, y=36-92 | Page title ({{PAGE_TITLE}}), wrapped before logo slot |
-| Divider | y=102 | Gray horizontal line |
-| Content Area | x=72-1208, y=132-618 | Dashed border frame |
+| Title | x=88-1048, y=30-102 | Page title ({{PAGE_TITLE}}), wrapped before logo slot |
+| Divider | y=116 | Gray horizontal line |
+| Content Area | x=72-1208, y=146-618 | Dashed border frame |
 | Footer | y=674-720 | Gray bar with section info |
 | Page Number | x=1174, y=684 | Red badge with number |
 
@@ -415,11 +416,11 @@ Implementation rules:
 
 ```xml
 <!-- Title vertical bar -->
-<rect x="64" y="38" width="7" height="38" rx="3.5" fill="#EE0033"/>
-<text x="88" y="66" data-box="88,36,960,58" data-wrap="true" font-size="32" font-weight="700" fill="#000000">{{PAGE_TITLE}}</text>
+<rect x="64" y="34" width="7" height="46" rx="3.5" fill="#EE0033"/>
+<text x="88" y="70" data-box="88,30,960,72" data-wrap="true" font-size="38" font-weight="700" fill="#000000">{{PAGE_TITLE}}</text>
 
 <!-- Dashed content frame -->
-<rect x="72" y="132" width="1136" height="486" rx="6" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="6 6"/>
+<rect x="72" y="146" width="1136" height="472" rx="6" fill="#FFFFFF" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="6 6"/>
 
 <!-- Footer with section name -->
 <rect x="0" y="674" width="1280" height="46" fill="#F2F2F2"/>
@@ -427,7 +428,7 @@ Implementation rules:
 
 <!-- Page number badge -->
 <rect x="1174" y="684" width="42" height="26" rx="4" fill="#EE0033"/>
-<text x="1195" y="703" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">{{PAGE_NUM}}</text>
+<text x="1195" y="703" text-anchor="middle" font-size="17" font-weight="700" fill="#FFFFFF">{{PAGE_NUM}}</text>
 ```
 
 ---

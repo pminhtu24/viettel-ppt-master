@@ -54,6 +54,7 @@ description: >
 >   - Title / KPI / emphasis: FS Magistral Bold — `FS Magistral-Bold.ttf`
 >   - Body / caption / source: FS Magistral Book — `FS Magistral-Book.ttf`
 >   - Subtitle / secondary label: FS Magistral Medium — `FS Magistral-Medium.ttf`
+> - Default normal-run size anchors are fixed at page title `38px`, body `26px`, subtitle/secondary `32px`, and caption/annotation `17px`. Cover, chapter, and KPI text may scale upward by role. If content does not fit, reflow or split the slide; do not shrink below these anchors.
 > - During Eight Confirmations, state the typography lock for visibility; do not ask the user to choose or approve a typeface.
 > - SVG `700`, `400`/omitted, and `500` are selectors for Bold, Book, and Medium respectively. PPTX must write the exact Windows typeface (`FS Magistral Bold`, `FS Magistral Book`, or `FS Magistral Medium`) and embed every face used. Arial/Calibri substitution and synthetic bold are forbidden.
 > - Viettel red `#EE0033` is the brand accent. Deep blue `#12436D` is restricted to chart, diagram/infographic, icon marks, and cataloged builtin backgrounds whose `backgrounds_index.json` item explicitly sets `deep_blue_background: true`. Never use it for text, cards, rails, footer, dividers, ad-hoc backgrounds, or unregistered decoration.

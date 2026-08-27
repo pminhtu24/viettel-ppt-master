@@ -50,8 +50,8 @@ Every MBB-level presentation follows the SCQA narrative structure:
 
 ```xml
 <text x="160" y="280" text-anchor="middle" font-size="42" font-weight="bold" fill="#1E293B">97.3%</text>
-<text x="160" y="310" text-anchor="middle" font-size="13" fill="#64748B">Industry avg 82% | Competitor A 89%</text>
-<text x="160" y="335" text-anchor="middle" font-size="12" fill="#059669">Leading industry by 15.3 percentage points</text>
+<text x="160" y="312" text-anchor="middle" font-size="17" fill="#64748B">Industry avg 82% | Competitor A 89%</text>
+<text x="160" y="340" text-anchor="middle" font-size="17" fill="#059669">Leading industry by 15.3 percentage points</text>
 ```
 
 ---
@@ -70,13 +70,13 @@ Every MBB-level presentation follows the SCQA narrative structure:
   └───────┘  └───────┘  └───────┘
 ```
 
-| Level | Position | Font Size (example @ body=14px dense baseline) |
+| Level | Position | Font Size (Viettel default @ body=26px) |
 |-------|----------|-----------|
-| Core conclusion | Takeaway Box | 16-18px bold (~1.2x body) |
-| Arguments | Content area body | 14-16px (~1x body) |
-| Supporting data | Charts / cards | 12-14px (~0.85x body) |
+| Core conclusion | Takeaway Box | 32px bold (subtitle anchor) |
+| Arguments | Content area body | 26px (body anchor) |
+| Supporting data | Charts / cards | 17px (caption anchor) |
 
-> MBB decks typically run on a dense `body` baseline (14-18px) for information density. The px ranges above assume that; if a particular consulting deck declares a different body size in `spec_lock.md`, multiply by the ratios listed above rather than taking the px figures literally.
+> Preserve the locked Viettel sizes even for consulting layouts. Split or reflow dense argument trees; use smaller ratios only under an explicit `custom_override` baseline.
 
 **Contrast**: Title "Market Research Results" (wrong) → "Metaverse needs 5-10 years to reach scale" (right); Body "We researched... and found..." (wrong) → "Three arguments: (1)... (2)... (3)..." (right)
 

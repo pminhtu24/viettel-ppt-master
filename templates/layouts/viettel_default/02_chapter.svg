@@ -6,8 +6,8 @@
   <text x="110" y="206" font-family="&quot;FS Magistral&quot;" font-size="96" font-weight="700" fill="#44494D">{{CHAPTER_NUM}}</text>
   <rect x="110" y="238" width="90" height="10" rx="5" fill="#EE0033"/>
   <text x="110" y="328" data-box="110,274,720,72" data-wrap="true" font-family="&quot;FS Magistral&quot;" font-size="52" font-weight="700" fill="#000000">{{CHAPTER_TITLE}}</text>
-  <text x="112" y="376" data-box="112,350,720,42" data-wrap="true" font-family="&quot;FS Magistral&quot;" font-size="22" font-weight="500" fill="#44494D">{{CHAPTER_DESC}}</text>
+  <text x="112" y="386" data-box="112,350,720,52" data-wrap="true" font-family="&quot;FS Magistral&quot;" font-size="32" font-weight="500" fill="#44494D">{{CHAPTER_DESC}}</text>
 
   <line x1="110" y1="620" x2="1170" y2="620" stroke="#E6E6E6" stroke-width="1"/>
-  <text x="1170" y="654" text-anchor="end" font-family="&quot;FS Magistral&quot;" font-size="13" fill="#44494D">{{PAGE_NUM}}</text>
+  <text x="1170" y="654" text-anchor="end" font-family="&quot;FS Magistral&quot;" font-size="17" fill="#44494D">{{PAGE_NUM}}</text>
 </svg>

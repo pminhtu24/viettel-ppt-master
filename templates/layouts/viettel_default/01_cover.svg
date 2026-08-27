@@ -4,15 +4,15 @@
   <rect x="18" y="0" width="6" height="720" fill="#E6E6E6"/>
   <image href="../images/viettel-logo.png" x="1088" y="28" width="128" height="42" preserveAspectRatio="xMidYMid meet"/>
 
-  <text x="96" y="168" font-family="&quot;FS Magistral&quot;" font-size="16" font-weight="700" fill="#EE0033" letter-spacing="2">VIETTEL REPORT</text>
-  <text x="96" y="242" data-box="96,194,900,64" data-wrap="true" font-family="&quot;FS Magistral&quot;" font-size="48" font-weight="700" fill="#000000">{{TITLE}}</text>
-  <rect x="96" y="282" width="760" height="2" fill="#EE0033"/>
-  <text x="96" y="330" data-box="96,302,900,38" data-wrap="true" font-family="&quot;FS Magistral&quot;" font-size="24" font-weight="500" fill="#44494D">{{SUBTITLE}}</text>
+  <text x="96" y="168" font-family="&quot;FS Magistral&quot;" font-size="17" font-weight="700" fill="#EE0033" letter-spacing="2">VIETTEL REPORT</text>
+  <text x="96" y="252" data-box="96,184,900,90" data-wrap="true" font-family="&quot;FS Magistral&quot;" font-size="65" font-weight="700" fill="#000000">{{TITLE}}</text>
+  <rect x="96" y="300" width="760" height="2" fill="#EE0033"/>
+  <text x="96" y="350" data-box="96,316,900,48" data-wrap="true" font-family="&quot;FS Magistral&quot;" font-size="32" font-weight="500" fill="#44494D">{{SUBTITLE}}</text>
 
-  <rect x="96" y="492" width="520" height="72" rx="6" fill="#F2F2F2" stroke="#E6E6E6" stroke-width="1"/>
-  <text x="124" y="522" font-family="&quot;FS Magistral&quot;" font-size="14" font-weight="700" fill="#EE0033">Prepared by</text>
-  <text x="124" y="550" font-family="&quot;FS Magistral&quot;" font-size="18" font-weight="700" fill="#000000">{{AUTHOR}}</text>
-  <text x="1030" y="660" text-anchor="end" font-family="&quot;FS Magistral&quot;" font-size="14" fill="#44494D">{{DATE}}</text>
+  <rect x="96" y="486" width="520" height="90" rx="6" fill="#F2F2F2" stroke="#E6E6E6" stroke-width="1"/>
+  <text x="124" y="520" font-family="&quot;FS Magistral&quot;" font-size="17" font-weight="700" fill="#EE0033">Prepared by</text>
+  <text x="124" y="558" font-family="&quot;FS Magistral&quot;" font-size="26" font-weight="700" fill="#000000">{{AUTHOR}}</text>
+  <text x="1030" y="660" text-anchor="end" font-family="&quot;FS Magistral&quot;" font-size="17" fill="#44494D">{{DATE}}</text>
   <rect x="96" y="642" width="100" height="6" rx="3" fill="#EE0033"/>
   <rect x="208" y="642" width="60" height="6" rx="3" fill="#E6E6E6"/>
 </svg>

@@ -126,7 +126,7 @@ Before the first SVG page, output a confirmation listing: canvas dimensions, bod
 - Under `viettel_default`, every `#12436D` mark MUST be inside `<g data-viettel-blue-scope="chart|diagram|icon|background">`; `background` is reserved for cataloged builtin layers marked `deep_blue_background: true`. `<text>` may never use deep blue, even inside a scoped group
 - Icons MUST come from `icons.inventory`; library MUST equal `icons.library`
 - Font family from `typography`: under `viettel_default`, use only `font_family: "FS Magistral"` and reject role-family overrides; under `custom_override`, use a declared role override if present, else fall back to `font_family`
-- Font sizes follow a **ramp anchored on `typography.body`**, not a closed menu. Use the declared slots when they fit. Intermediate sizes (e.g., 40px hero number, 13px annotation) are allowed if the ratio to `body` falls within the role's band (see `design_spec.md §IV ramp table`). Sizes outside every band require extending the lock first.
+- Under `viettel_default`, normal-run sizes are locked to page title `38px`, body `26px`, subtitle/secondary `32px`, and caption/annotation `17px`; reflow or split instead of shrinking them. Cover, chapter, and KPI roles may scale upward. `custom_override` may use the ratio ramp in `design_spec.md §IV`.
 - Images MUST reference files listed under `images`; no invented filenames
 
 If a page needs a value not in `spec_lock.md`, surface it — do not silently invent one.
@@ -188,11 +188,11 @@ Example:
 
 ```xml
 <rect x="96" y="280" width="268" height="200" rx="8" fill="#F2F2F2"/>
-<text x="120" y="360"
-      data-box="120,344,220,48"
+<text x="120" y="350"
+      data-box="120,320,220,120"
       data-wrap="true"
       font-family="FS Magistral"
-      font-size="14"
+      font-size="26"
       fill="#44494D">Mức tăng trưởng hai chữ số liên tục trên quy mô lớn</text>
 ```
 

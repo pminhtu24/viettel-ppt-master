@@ -52,16 +52,18 @@
 ## typography
 
 - font_family: "FS Magistral"
-- body: 22
-- title: 32
-- subtitle: 24
-- annotation: 14
+- body: 26
+- title: 38
+- subtitle: 32
+- annotation: 17
 
 > `font_family` is the only family declaration for `viettel_default`; every role inherits it. Do not emit `title_family`, `body_family`, `emphasis_family`, or `code_family` for normal Viettel runs.
 >
 > **Viettel default for this skill**: keep `font_family: "FS Magistral"` for compatibility, representing the three locked static faces FS Magistral Book, Medium, and Bold. Typography is not a user choice in normal runs. Do not add fixed per-face configuration fields or introduce FS PF BeauSans Pro, Sarabun, Microsoft YaHei, Arial, Georgia, Consolas, or another design font. Runtime missing-font handling belongs to `scripts/check_fonts.py` and must be reported as `brand fidelity degraded`.
 >
 > **Static-face lock**: SVG `700` selects FS Magistral Bold (`FS Magistral-Bold.ttf`) for titles/KPIs/emphasis; `400` or omitted selects FS Magistral Book (`FS Magistral-Book.ttf`) for body/captions/sources; `500` selects FS Magistral Medium (`FS Magistral-Medium.ttf`) for subtitles/secondary labels. These are selectors, not synthetic weights. Do not use `600`, `800`, or `900`.
+>
+> **Normal-run size lock**: keep page title `38px`, body `26px`, subtitle/secondary `32px`, and caption/annotation `17px`. Cover, chapter, and KPI roles may scale upward. Reflow or split crowded slides instead of shrinking below these anchors.
 >
 > Sizes (`body` / `title` / etc.) are in px, matching SVG units. `body` is the **required baseline anchor** — all other sizes derive as ratios of it (ramp table: `design_spec_reference.md §IV`).
 >

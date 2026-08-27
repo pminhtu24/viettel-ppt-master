@@ -206,27 +206,28 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 
 #### Font Size Ramp (all sizes in px)
 
-> **Ramp, not a fixed menu.** All sizes derive from the `body` baseline as a ratio. `spec_lock.md typography` declares `body` plus the slots this deck uses (`title` / `subtitle` / `annotation` by default; add `cover_title` / `hero_number` / `chart_annotation` as needed). Executor may pick any intermediate px within a role's ratio band.
+> **Normal Viettel size lock.** Write `body: 26`, `title: 38`, `subtitle: 32`, and `annotation: 17` to `spec_lock.md`. Cover, chapter, and KPI roles may scale upward. Reflow or split crowded slides; do not lower these anchors. Ratio-based selection applies only to explicit `custom_override` runs and larger role-specific slots.
 
-Baseline choice follows **content density**, not style. Common: `18px` (dense) / `24px` (relaxed). Other integers are fine — `16px` for chart-heavy, `20-22px` for medium, `28-32px` for poster/cover.
+For `viettel_default`, content density changes pagination and layout—not the `26px` body baseline. For `custom_override`, choose the baseline by density and record it explicitly.
 
 | Common recommendation | Points per Page | Body Baseline | Suitable Scenarios |
 |----------------|----------------|---------------|-------------------|
-| Relaxed | 3-5 items | 24px | Keynote-style, training materials |
-| Dense | 6+ items | 18px | Data reports, consulting analysis |
+| Viettel default | Any | 26px | Reflow or split when content is dense |
+| Custom relaxed | 3-5 items | 24px | Explicit non-Viettel override |
+| Custom dense | 6+ items | 18px | Explicit non-Viettel override |
 
-| Level | Ratio to body | 24px baseline | 18px baseline |
-|-------|---------------|---------------|---------------|
-| Cover title (hero headline) | 2.5-5x | 60-120px | 45-90px |
-| Chapter / section opener | 2-2.5x | 48-60px | 36-45px |
-| Page title | 1.5-2x | 36-48px | 27-36px |
-| Hero number (consulting KPIs) | 1.5-2x | 36-48px | 27-36px |
-| Subtitle | 1.2-1.5x | 29-36px | 22-27px |
-| **Body** | **1x** | **24px** | **18px** |
-| Annotation / caption | 0.7-0.85x | 17-20px | 13-15px |
-| Page number / footnote | 0.5-0.65x | 12-16px | 9-12px |
+| Level | Ratio to body | Viettel default @ 26px | Custom dense @ 18px |
+|-------|---------------|------------------------|---------------------|
+| Cover title (hero headline) | 2.5-5x | 65-130px | 45-90px |
+| Chapter / section opener | 2-2.5x | 52-65px | 36-45px |
+| Page title | 1.45-2x | **38px locked** | 26-36px |
+| Hero number (consulting KPIs) | 1.5-2x | 39-52px | 27-36px |
+| Subtitle | 1.2-1.5x | **32px locked** | 22-27px |
+| **Body** | **1x** | **26px locked** | **18px** |
+| Annotation / caption | 0.65-0.85x | **17px locked** | 12-15px |
+| Page number / footnote | 0.5-0.65x | 13-17px | 9-12px |
 
-> Two baseline columns are illustrative only — for any other baseline (16/20/22/28/32…), multiply the row's ratio. Checker reads live `body` from `spec_lock.md`. Executor may pick any px within a role's band without pre-declaring; values outside **every** band require lock extension first.
+> The Viettel anchors are mandatory. For a `custom_override`, multiply the chosen baseline by the role ratio. Checker reads live `body` from `spec_lock.md`; values outside every band require lock extension first.
 
 ### h. Image Usage Confirmation
 
