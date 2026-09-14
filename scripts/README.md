@@ -23,6 +23,7 @@ python3 scripts/source_to_md/ppt_to_md.py <deck.pptx>
 python3 scripts/source_to_md/excel_to_md.py <workbook.xlsx>
 python3 scripts/project_manager.py init <project_name> --format ppt169 --brand-profile viettel_default
 python3 scripts/project_manager.py import-sources <project_path> <source_files...>
+python3 scripts/content_verify.py <project_path>
 python3 scripts/svg_quality_checker.py <project_path>
 python3 scripts/animation_config.py scaffold <project_path>  # optional object-level animation overrides
 python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel
@@ -44,6 +45,7 @@ python3 scripts/update_repo.py
 | Project management | `project_manager.py`, `batch_validate.py`, `generate_examples_index.py`, `error_helper.py`, `pptx_template_import.py` | [docs/project.md](./docs/project.md) |
 | SVG pipeline | `svg_to_pptx.py`, `svg_quality_checker.py`, `animation_config.py` | [docs/svg-pipeline.md](./docs/svg-pipeline.md) |
 | Spec maintenance | `update_spec.py`, `check_fonts.py` | [docs/update_spec.md](./docs/update_spec.md) |
+| Content gate | `content_verify.py` | Source coverage, anchored claims, final PPTX verification |
 | Image tools | `image_search.py`, `analyze_images.py`, `gemini_watermark_remover.py` | [docs/image.md](./docs/image.md) |
 | Repo maintenance | `update_repo.py` | README install/update section |
 | Troubleshooting | validation, preview, export, dependency issues | [docs/troubleshooting.md](./docs/troubleshooting.md) |
@@ -67,6 +69,8 @@ python3 scripts/project_manager.py init <project_name> --format ppt169 --brand-p
 python3 scripts/project_manager.py import-sources <project_path> <source_files...>
 python3 scripts/project_manager.py validate <project_path>
 python3 scripts/check_fonts.py <project_path>
+python3 scripts/content_verify.py <project_path>
+python3 scripts/content_verify.py <project_path> --artifact <project_path>/svg_output
 ```
 
 Native Windows PowerShell may use `py -3` in place of `python3`; do not invoke these commands through `cmd.exe` path expansion.
@@ -85,7 +89,8 @@ Quality check and export:
 python3 scripts/svg_quality_checker.py <project_path>
 python3 scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel  # after repairs/chart verification
 python3 scripts/svg_quality_checker.py <project_path>  # final scan, must report 0 errors
-python3 scripts/svg_to_pptx.py <project_path>
+python3 scripts/svg_to_pptx.py <project_path>  # content-gated; promotes only a clean PPTX
+python3 scripts/content_verify.py <project_path> --artifact <output.pptx>
 ```
 
 Image acquisition and analysis:

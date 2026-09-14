@@ -65,7 +65,7 @@ description: >
 | Script                                             | Purpose                                                                                                                                 |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `${SKILL_DIR}/scripts/source_to_md/pdf_to_md.py`   | PDF to Markdown                                                                                                                         |
-| `${SKILL_DIR}/scripts/source_to_md/doc_to_md.py`   | Documents to Markdown — native Python for DOCX/HTML/EPUB/IPYNB, pandoc fallback for legacy formats (.doc/.odt/.rtf/.tex/.rst/.org/.typ) |
+| `${SKILL_DIR}/scripts/source_to_md/doc_to_md.py`   | Documents to Markdown — `.doc` via temporary DOCX (LibreOffice; Word fallback on Windows), DOCX via Mammoth, Pandoc for other legacy formats |
 | `${SKILL_DIR}/scripts/source_to_md/excel_to_md.py` | Excel workbooks to Markdown — supports .xlsx/.xlsm; legacy .xls should be resaved as .xlsx                                              |
 | `${SKILL_DIR}/scripts/source_to_md/ppt_to_md.py`   | PowerPoint to Markdown                                                                                                                  |
 | `${SKILL_DIR}/scripts/source_to_md/web_to_md.py`   | Web page to Markdown (supports WeChat via `curl_cffi`)                                                                                  |
@@ -76,6 +76,7 @@ description: >
 | `${SKILL_DIR}/scripts/svg_to_pptx.py`              | Export to PPTX                                                                                                                          |
 | `${SKILL_DIR}/scripts/update_spec.py`              | Propagate a `spec_lock.md` color / font_family change across all generated SVGs                                                         |
 | `${SKILL_DIR}/scripts/check_fonts.py`              | Search for and, when needed, auto-install the three bundled FS Magistral faces                                                          |
+| `${SKILL_DIR}/scripts/content_verify.py`           | Blocking source coverage, source-anchored claim, and final-PPTX content gate                                                            |
 
 For complete tool documentation, see `${SKILL_DIR}/scripts/README.md`.
 
@@ -261,6 +262,14 @@ python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
 - `<project_path>/design_spec.md` — human-readable design narrative
 - `<project_path>/spec_lock.md` — machine-readable execution contract (skeleton: `templates/spec_lock_reference.md`); Executor re-reads before every page
 
+**Mandatory content review gate — before Web Image Acquisition / Executor**:
+
+```bash
+python3 ${SKILL_DIR}/scripts/content_verify.py <project_path>
+```
+
+The script requires §I `Source Coverage Map` and validates every factual §IX claim against its adjacent `<!-- source: raw_source.md:Lx-Ly -->` comment. Exit `1` means a content finding and blocks Executor; exit `2` means invalid input/structure. Fix the cited claim, range, or coverage row and re-run until exit `0`.
+
 **✅ Checkpoint — Phase deliverables complete, auto-proceed to next step**:
 
 ```markdown
@@ -270,6 +279,7 @@ python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
 - [x] Split-mode note appended below the eight items (heavy or normal variant)
 - [x] Design Specification & Content Outline generated
 - [x] Execution lock (spec_lock.md) generated
+- [x] Content verification report reviewed; every finding handled
 - [ ] **Next**: Auto-proceed to [Web Image Acquisition / Executor] phase
 ```
 
@@ -407,6 +417,8 @@ python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>
 ```
 
 The exporter reads `svg_output/` directly and produces editable native DrawingML.
+
+**Final content gate (automatic, mandatory)**: the exporter verifies source → spec, spec → SVG, and the temporary PPTX, then creates the requested output only when all three checks are clean. Exit `1` or `2` blocks delivery; fix only the SVG(s) named by the finding and export again.
 
 **Optional animation flags** (the defaults already enable rich entrance animations — adjust only when the user asks for something different):
 

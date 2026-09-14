@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -15,12 +17,23 @@ from .pptx_discovery import find_svg_files
 from .pptx_slide_xml import TRANSITIONS
 
 from check_fonts import build_report
+from content_verify import print_report, verify
 from svg_quality_checker import SVGQualityChecker
 
 try:
     from pptx_animations import ANIMATIONS as _ANIMATIONS
 except ImportError:
     _ANIMATIONS = {}
+
+
+def _run_content_gate(project_path: Path, artifact: Path | None = None) -> int:
+    try:
+        report = verify(project_path.resolve(), artifact.resolve() if artifact else None)
+        print_report(report)
+    except (OSError, UnicodeError, ValueError) as error:
+        print(f"ERROR | {error}")
+        return 2
+    return 1 if report["errors"] or report["warnings"] else 0
 
 
 def _font_gate_errors(
@@ -162,6 +175,10 @@ Per-element entrance animation:
     if not svg_files:
         parser.error(f"no SVG files found in {project_path / 'svg_output'}")
 
+    for artifact in (None, project_path / "svg_output"):
+        if status := _run_content_gate(project_path, artifact):
+            raise SystemExit(status)
+
     font_report = build_report(project_path) if (project_path / "spec_lock.md").exists() else None
     font_errors = _font_gate_errors(
         project_path,
@@ -260,25 +277,34 @@ Per-element entrance animation:
         print(f"  Output file: {output_path}")
         print()
 
-    success = create_pptx_with_native_svg(
-        svg_files=svg_files,
-        output_path=output_path,
-        canvas_format=(
-            args.format
-            or (detected_format if detected_format and detected_format != "unknown" else None)
-        ),
-        verbose=verbose,
-        transition=transition,
-        transition_duration=transition_duration,
-        auto_advance=args.auto_advance,
-        animation=animation,
-        animation_duration=animation_duration,
-        animation_stagger=animation_stagger,
-        animation_trigger=animation_trigger,
-        animation_config=animation_config,
-        animation_cli_overrides=animation_cli_overrides,
-        embed_viettel_fonts=bool(
-            font_report and font_report.get("brand_profile") == "viettel_default"
-        ),
-    )
-    raise SystemExit(0 if success else 1)
+    with tempfile.TemporaryDirectory(prefix="pptx_content_gate_", dir=output_path.parent) as directory:
+        candidate = Path(directory) / output_path.name
+        success = create_pptx_with_native_svg(
+            svg_files=svg_files,
+            output_path=candidate,
+            canvas_format=(
+                args.format
+                or (detected_format if detected_format and detected_format != "unknown" else None)
+            ),
+            verbose=verbose,
+            transition=transition,
+            transition_duration=transition_duration,
+            auto_advance=args.auto_advance,
+            animation=animation,
+            animation_duration=animation_duration,
+            animation_stagger=animation_stagger,
+            animation_trigger=animation_trigger,
+            animation_config=animation_config,
+            animation_cli_overrides=animation_cli_overrides,
+            embed_viettel_fonts=bool(
+                font_report and font_report.get("brand_profile") == "viettel_default"
+            ),
+        )
+        if not success:
+            raise SystemExit(1)
+        if status := _run_content_gate(project_path, candidate):
+            raise SystemExit(status)
+        os.replace(candidate, output_path)
+    if verbose:
+        print(f"[Verified] Saved final output: {output_path}")
+    raise SystemExit(0)

@@ -46,6 +46,10 @@ universal wheels in `scripts/source_to_md/vendor_wheels/universal/`.
 The script auto-loads them at startup, so `.docx`, `.html`, `.epub`, and
 `.ipynb` conversion works without internet access or `pip install`.
 
+Legacy `.doc` is first converted to a temporary `.docx`, then passed through
+the same Mammoth path. LibreOffice `soffice` is preferred on Linux and Windows;
+Windows falls back to installed Microsoft Word COM. The temporary DOCX is deleted.
+
 For `.epub`, if `lxml` (C extension) is not available on the system, a
 stdlib fallback using `zipfile` + `xml.etree.ElementTree` handles extraction
 instead of `ebooklib`.
@@ -61,10 +65,11 @@ Native path (no external binary or pip install required):
 - `.ipynb` — via `nbconvert` (bundled wheel) + `pyzmq_stub`
 
 Pandoc fallback (only if you need these):
-- `.doc`, `.odt`, `.rtf`, `.tex`/`.latex`, `.rst`, `.org`, `.typ`
+- `.odt`, `.rtf`, `.tex`/`.latex`, `.rst`, `.org`, `.typ`
 
 ```bash
 python3 scripts/source_to_md/doc_to_md.py lecture.docx
+python3 scripts/source_to_md/doc_to_md.py legacy.doc
 python3 scripts/source_to_md/doc_to_md.py lecture.docx -o output.md
 python3 scripts/source_to_md/doc_to_md.py notes.epub
 python3 scripts/source_to_md/doc_to_md.py paper.tex -o paper.md  # uses pandoc
@@ -76,7 +81,11 @@ Optional system dependencies:
 # Only needed for .epub if you want ebooklib's full fidelity (otherwise stdlib fallback)
 pip install lxml
 
-# Fallback path — only for .doc/.odt/.rtf/.tex/.rst/.org/.typ
+# Legacy .doc conversion (Word COM is an automatic Windows-only fallback)
+# Ubuntu:  sudo apt install libreoffice
+# Windows: install LibreOffice or Microsoft Word
+
+# Pandoc fallback — only for .odt/.rtf/.tex/.rst/.org/.typ
 # macOS:   brew install pandoc
 # Ubuntu:  sudo apt install pandoc
 # Windows: https://pandoc.org/installing.html

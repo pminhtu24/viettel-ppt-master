@@ -523,6 +523,12 @@ Divider rules:
 
 ### 6.1 Content Planning Strategy
 
+#### Step 0 — Preserve the complete source before analysis
+
+Before the Eight Confirmations or any content analysis, mechanically normalize every user source into Markdown with the existing `scripts/source_to_md/` converter and save the complete, unabridged result as `<project_path>/sources/raw_source.md`. For multiple sources, use `raw_source_1.md`, `raw_source_2.md`, ... and keep each source boundary intact. Copy pasted chat text verbatim into the same naming scheme. Do not summarize, select, interpret, or rewrite during this step.
+
+From the Eight Confirmations onward, every statement about what the source contains must be checked against these `raw_source*.md` files, not against memory of the original read. For legacy `.doc`, `doc_to_md.py` creates a temporary DOCX with LibreOffice (or Microsoft Word on Windows), then uses the same Mammoth path as `.docx`; the temporary file is deleted. Existing PDF/DOCX/XLSX/PPTX/URL converters remain authoritative.
+
 | Style | Content Outline |
 |-------|-----------------|
 | A) General Versatile | Per-page core theme from source doc |
@@ -533,7 +539,7 @@ Divider rules:
 
 | Chapter | Content Requirements |
 |---------|---------------------|
-| I. Project Information | Project name, canvas format, page count, style, audience, scenario, date |
+| I. Project Information | Project name, canvas format, page count, style, audience, scenario, date, Source Coverage Map |
 | II. Canvas Specification | Format, dimensions, viewBox, margins, content area |
 | III. Visual Theme | Style description, locked Viettel light theme (or explicit override theme), tone, color scheme (with HEX table), gradient scheme only for `custom_override` |
 | IV. Typography System | Locked FS Magistral Book/Medium/Bold static faces with TTF filenames and font size hierarchy |
@@ -558,6 +564,10 @@ Divider rules:
    - **page_charts (write only for chart pages that match a catalog template)**: For each page in `design_spec.md §VII` whose `reference template path` points to `templates/charts/<name>.svg`, add `P<NN>: <chart_name>`. Pages with `no-template-match` in §VII MUST NOT appear here (Executor would look for a non-existent reference). If the deck has no data-visualization or structural-pattern pages, omit the section only after §VII explicitly states that no catalog template fit.
    - **page_charts audit is mandatory**: Before checkpointing Strategist complete, compare §VII against `spec_lock.md ## page_charts`. Any `templates/charts/<name>.svg` row missing from `page_charts` must be fixed immediately. This is especially important for brand templates such as Viettel, where `page_layouts` supplies only the shell and `page_charts` supplies the visualization structure.
    - **Hard rule**: Use both `page_layouts` and `page_charts` for the same page only when the layout template is a compatible shell for the chart. Do not pair chart pages with conflicting page layouts (e.g., `waterfall_chart` + timeline layout, KPI cards + circle-diagram layout). If no compatible layout exists, omit the page from `page_layouts`.
+5. **Ground and gate the content**:
+   - In §I, add `### Source Coverage Map`: one row for each non-overlapping heading unit detected in `raw_source*.md`, including `Document preamble`. Its disposition is `P<NN>`, a slide range, or `Excluded — <reason>`.
+   - In §IX, put `<!-- source: raw_source.md:L108-L110 -->` immediately after every factual claim containing a number, date, ratio, proper name, deadline, or status. Each range stays inside one coverage unit and spans at most 30 lines; multiple local ranges are comma-separated. Copy number punctuation and qualifiers exactly; do not normalize `1.100` to `1,100`.
+   - Run `python3 scripts/content_verify.py <project_path>`. Any exit code other than `0` blocks Executor. Fix the cited map, claim, or range and re-run; do not waive a finding by inspection.
 
 ---
 
@@ -575,7 +585,7 @@ Save outputs to `projects/<project_name>_<format>_<YYYYMMDD>/design_spec.md`.
 
 ## 8. Complete Design Spec and Prompt Next Steps
 
-After writing `design_spec.md` and `spec_lock.md`, output the next-step prompt below. This is a handoff instruction, not part of `design_spec.md`. Pick the variant by whether pages inherit layout SVGs.
+After writing `design_spec.md` and `spec_lock.md` and reviewing the `content_verify.py` report, output the next-step prompt below. This is a handoff instruction, not part of `design_spec.md`. Pick the variant by whether pages inherit layout SVGs.
 
 ### Template mode (template applied in Step 3)
 

@@ -2,14 +2,15 @@
 """
 Document to Markdown Converter (hybrid Python + Pandoc fallback)
 
-Primary formats (pure Python, no external tools required):
+Primary formats:
+    .doc    → temporary .docx (LibreOffice; Word COM fallback on Windows) → mammoth
     .docx   → mammoth
     .html   → markdownify + BeautifulSoup
     .epub   → ebooklib + markdownify  (stdlib fallback if lxml missing)
     .ipynb  → nbconvert               (pyzmq stub for static conversion)
 
 Fallback formats (require pandoc installed):
-    .doc .odt .rtf .tex .latex .rst .org .typ
+    .odt .rtf .tex .latex .rst .org .typ
 
 All paths produce the same output convention:
     <input>.md                     Markdown file
@@ -28,11 +29,13 @@ import base64
 import hashlib
 import json
 import mimetypes
+import os
 import posixpath
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
 from urllib.parse import unquote, urlparse
@@ -103,7 +106,6 @@ NATIVE_FORMATS = {".docx", ".html", ".htm", ".epub", ".ipynb"}
 
 # Formats handled by pandoc fallback: suffix → (pandoc input format, description)
 PANDOC_FORMATS = {
-    ".doc":   ("doc",    "Microsoft Word 97-2003"),
     ".odt":   ("odt",    "OpenDocument Text"),
     ".rtf":   ("rtf",    "Rich Text Format"),
     ".tex":   ("latex",  "LaTeX"),
@@ -112,6 +114,7 @@ PANDOC_FORMATS = {
     ".org":   ("org",    "Emacs Org-mode"),
     ".typ":   ("typst",  "Typst"),
 }
+LEGACY_DOC_FORMATS = {".doc"}
 
 # Formats pandoc should extract embedded media from
 PANDOC_MEDIA_FORMATS = {".odt"}
@@ -447,8 +450,9 @@ def _manifest_entry(
 def _convert_docx(input_file: Path, out_file: Path) -> str:
     try:
         import mammoth
+        from markdownify import markdownify
     except ImportError:
-        print("[ERROR] mammoth not available. The bundled wheel may be corrupted.")
+        print("[ERROR] mammoth/markdownify not available. The bundled wheel may be corrupted.")
         print(f"   Vendor dir: {_VENDOR_UNIVERSAL}")
         return ""
 
@@ -498,12 +502,13 @@ def _convert_docx(input_file: Path, out_file: Path) -> str:
         return {"src": f"{rel_media_dir}/{filename}"}
 
     with input_file.open("rb") as f:
-        result = mammoth.convert_to_markdown(
+        result = mammoth.convert_to_html(
             f,
             convert_image=mammoth.images.img_element(_save_image),
         )
 
-    markdown = _html_img_to_md(result.value)
+    markdown = markdownify(result.value, heading_style="ATX", bullets="-")
+    markdown = re.sub(r"\n{3,}", "\n\n", _html_img_to_md(markdown)).strip() + "\n"
     out_file.write_text(markdown, encoding="utf-8")
 
     if manifest:
@@ -522,6 +527,91 @@ def _convert_docx(input_file: Path, out_file: Path) -> str:
 
     _report_result(out_file, media_dir)
     return markdown
+
+
+def _find_soffice() -> str | None:
+    """Find LibreOffice without adding a platform dependency."""
+    found = shutil.which("soffice") or shutil.which("libreoffice")
+    if found or os.name != "nt":
+        return found
+    for variable in ("PROGRAMFILES", "PROGRAMFILES(X86)"):
+        root = os.environ.get(variable)
+        if root:
+            candidate = Path(root) / "LibreOffice" / "program" / "soffice.exe"
+            if candidate.is_file():
+                return str(candidate)
+    return None
+
+
+def _word_com_to_docx(input_file: Path, docx_file: Path) -> bool:
+    """Use installed Microsoft Word as the Windows-only DOC fallback."""
+    powershell = shutil.which("powershell.exe") or shutil.which("powershell") or shutil.which("pwsh")
+    if not powershell:
+        return False
+    script = r"""
+$word = $null
+$document = $null
+try {
+    $word = New-Object -ComObject Word.Application
+    $word.Visible = $false
+    $word.DisplayAlerts = 0
+    $document = $word.Documents.Open($env:VPM_DOC_INPUT, $false, $true)
+    $document.SaveAs2($env:VPM_DOCX_OUTPUT, 16)
+} finally {
+    if ($null -ne $document) { $document.Close($false) }
+    if ($null -ne $word) { $word.Quit() }
+}
+"""
+    environment = os.environ.copy()
+    environment["VPM_DOC_INPUT"] = str(input_file.resolve())
+    environment["VPM_DOCX_OUTPUT"] = str(docx_file.resolve())
+    try:
+        completed = subprocess.run(
+            [powershell, "-NoProfile", "-NonInteractive", "-Command", script],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=environment,
+        )
+    except OSError:
+        return False
+    return completed.returncode == 0 and docx_file.is_file()
+
+
+def _is_windows() -> bool:
+    return os.name == "nt"
+
+
+def _convert_doc(input_file: Path, out_file: Path) -> str:
+    """Convert legacy DOC to a temporary DOCX, then use the normal DOCX path."""
+    with tempfile.TemporaryDirectory(prefix="doc_to_docx_") as directory:
+        docx_file = Path(directory) / f"{input_file.stem}.docx"
+        soffice = _find_soffice()
+        if soffice:
+            print(f"[INFO] Converting Microsoft Word 97-2003 via LibreOffice: {input_file.name}")
+            try:
+                completed = subprocess.run(
+                    [soffice, "--headless", "--convert-to", "docx", "--outdir", directory, str(input_file)],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+            except OSError:
+                completed = None
+            if completed and completed.returncode != 0:
+                print(f"[WARN] LibreOffice conversion failed: {completed.stderr.strip()}")
+
+        if not docx_file.is_file() and _is_windows():
+            print(f"[INFO] Trying Microsoft Word fallback: {input_file.name}")
+            _word_com_to_docx(input_file, docx_file)
+
+        if not docx_file.is_file():
+            print("[ERROR] Could not convert legacy .doc input.")
+            print("   Install LibreOffice, or open the file in Microsoft Word and save it as .docx.")
+            return ""
+
+        _ensure_vendored_deps()
+        return _convert_docx(docx_file, out_file)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -971,14 +1061,17 @@ def convert_to_markdown(input_path: str, output_path: str | None = None) -> str:
         return ""
 
     suffix = input_file.suffix.lower()
-    if suffix not in NATIVE_FORMATS and suffix not in PANDOC_FORMATS:
-        supported = ", ".join(sorted(NATIVE_FORMATS | PANDOC_FORMATS.keys()))
+    if suffix not in NATIVE_FORMATS and suffix not in PANDOC_FORMATS and suffix not in LEGACY_DOC_FORMATS:
+        supported = ", ".join(sorted(NATIVE_FORMATS | PANDOC_FORMATS.keys() | LEGACY_DOC_FORMATS))
         print(f"[ERROR] Unsupported format: {suffix}")
         print(f"   Supported: {supported}")
         return ""
 
     out_file = Path(output_path) if output_path else input_file.with_suffix(".md")
     out_file.parent.mkdir(parents=True, exist_ok=True)
+
+    if suffix == ".doc":
+        return _convert_doc(input_file, out_file)
 
     if suffix in NATIVE_FORMATS:
         _ensure_vendored_deps()
@@ -1005,17 +1098,18 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python doc_to_md.py lecture.docx                # Word → Markdown (mammoth)
+  python doc_to_md.py legacy.doc                  # DOC → temporary DOCX → Markdown
+  python doc_to_md.py lecture.docx                # DOCX → Markdown (mammoth)
   python doc_to_md.py article.html                # HTML → Markdown (markdownify)
   python doc_to_md.py book.epub                   # EPUB → Markdown (ebooklib)
   python doc_to_md.py notebook.ipynb              # Jupyter → Markdown (nbconvert)
   python doc_to_md.py manuscript.tex              # LaTeX → Markdown (pandoc fallback)
 
-Native formats (no pandoc required):
-  .docx  .html/.htm  .epub  .ipynb
+Primary formats:
+  .doc (LibreOffice/Word)  .docx  .html/.htm  .epub  .ipynb
 
 Pandoc fallback formats (require system pandoc):
-  .doc  .odt  .rtf  .tex/.latex  .rst  .org  .typ
+  .odt  .rtf  .tex/.latex  .rst  .org  .typ
         """,
     )
     parser.add_argument("input", help="Input document file")

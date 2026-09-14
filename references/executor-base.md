@@ -112,7 +112,7 @@ Before the first SVG page, output a confirmation listing: canvas dimensions, bod
 
 > Long decks drift off the declared palette/icons mid-deck due to context compression. `spec_lock.md` is the canonical execution reference — re-read it per page to bypass model memory.
 
-**Hard rule**: Before generating **each** SVG page, `read_file <project_path>/spec_lock.md`. Use only values from this file, not from memory. If context was auto-compacted, also `read_file <project_path>/design_spec.md` for the current page's §IX brief.
+**Hard rule**: Before generating **each** SVG page, `read_file <project_path>/spec_lock.md`, the current page's §IX brief in `design_spec.md`, and every `raw_source*.md:Lx-Ly` range cited by that brief. §IX is the factual ceiling; source ranges prove its claims but never authorize adding another number, name, time, deadline, status, or subject–value pairing. If a required claim has no valid source comment, stop that page and run `content_verify.py` again.
 
 **Font preflight rule**: run `python3 scripts/check_fonts.py <project_path>` before the first SVG page (`py -3 ...` in native Windows PowerShell when needed). It must search for FS Magistral Book, Medium, and Bold first and install only missing trusted faces. On Windows it always installs into the current user's Fonts directory and HKCU, without requesting system/admin access. Never run manual `copy`, `reg`, or `%LOCALAPPDATA%` commands. If re-check still fails, state `brand fidelity degraded` and continue generating SVG with `"FS Magistral"`. `--allow-font-fallback` permits degraded host preview only; Viettel export still requires a valid embedded payload for every face used.
 

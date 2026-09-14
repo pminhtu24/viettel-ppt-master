@@ -18,6 +18,15 @@
 | **Use Case** | [Filled by Strategist] |
 | **Created Date** | {date_str} |
 
+### Source Coverage Map
+
+> One row per non-overlapping heading unit in `sources/raw_source*.md`, including `Document preamble`. Map it to slide(s), or use `Excluded — <reason>`.
+
+| Source section | Disposition |
+| --- | --- |
+| Document preamble | [P01 or Excluded — reason] |
+| [Exact source heading] | [P02 or P03–P04 or Excluded — reason] |
+
 ---
 
 ## II. Canvas Specification
@@ -327,18 +336,27 @@ Catalog read: 71 templates
 
 - **Layout**: Full-screen background image + centered title
 - **Title**: [Main title]
+  <!-- source: raw_source.md:L1-L3 -->
 - **Subtitle**: [Subtitle]
+  <!-- source: raw_source.md:L1-L3 -->
 - **Info**: [Author / Date / Organization]
+  <!-- source: raw_source.md:L1-L5 -->
 
 #### Slide 02 - [Page Name]
 
 - **Layout**: [Choose a pattern from §V, combine two, or break the grid as the content demands]
 - **Title**: [Page title]
+  <!-- source: raw_source.md:L100-L100 -->
 - **Visualization**: [visualization_type] (see VII. Visualization Reference List)
 - **Content**:
-  - [Point 1]
+  - [Point 1 with every number/name/date/status copied from the cited range]
+    <!-- source: raw_source.md:L108-L110 -->
   - [Point 2]
+    <!-- source: raw_source.md:L120-L123 -->
   - [Point 3]
+    <!-- source: raw_source.md:L130-L130 -->
+
+> A source comment is mandatory immediately after every factual §IX claim containing a number, date, ratio, proper name, deadline, or status. Multiple ranges are comma-separated. Keep source number punctuation exactly (`1.100` stays `1.100`).
 
 > **Visualization field**: add only when the page has data visualization or structured infographic elements. Type must be listed in §VII.
 
