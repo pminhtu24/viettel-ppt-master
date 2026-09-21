@@ -130,17 +130,26 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 
 ### Font Size Hierarchy
 
-| Purpose       | Ratio to body | @body=18px (dense) | @body=20px (standard) | SVG face selector |
+Use body **20px for dense content** and **22px for standard content** in new Viettel decks. These replace the former 18px / 20px recommendations. Sizes below are SVG px, not PowerPoint pt; ranges are choices by role, not a requirement to use their upper limits. Explicit user sizes and existing project `spec_lock.md` values take precedence; a deck already at 22px does not receive another automatic increase.
+
+| Purpose       | Ratio to body | @body=20px (dense) | @body=22px (standard) | SVG face selector |
 | ------------- | ------------- | ------------------ | --------------------- | ------- |
-| Cover title   | 2.5-3x        | 45-54px            | 50-60px               | 700     |
-| Chapter title | 2-2.5x        | 36-45px            | 40-50px               | 700     |
-| Page title    | 1.5-2x        | 27-36px            | 30-40px               | 700     |
-| Section/card header | 1-1.3x  | 18-24px            | 20-26px               | 700     |
-| KPI/hero number | 1.5-2.5x    | 27-45px            | 30-50px               | 700     |
-| Subtitle      | 1.2-1.5x      | 22-27px            | 24-30px               | 500     |
-| **Body**      | **1x**        | **18px**           | **20px**              | 400     |
-| Caption       | 0.7-0.85x     | 13-15px            | 14-17px               | 400     |
-| Page number   | 0.6-0.75x     | 11-14px            | 12-15px               | 400     |
+| Cover title   | 2.5-3x        | 50-60px            | 55-66px               | 700     |
+| Chapter title | 2-2.5x        | 40-50px            | 44-55px               | 700     |
+| Page title    | 1.5-2x        | 30-40px            | 33-44px               | 700     |
+| Section/card header | 1-1.3x  | 20-26px            | 22-28px               | 700     |
+| KPI/hero number | 1.5-2.5x    | 30-50px            | 33-55px               | 700     |
+| Subtitle      | 1.2-1.5x      | 24-30px            | 27-33px               | 500     |
+| **Body**      | **1x**        | **20px**           | **22px**              | 400     |
+| Caption / annotation | 0.7-0.85x | 14-17px        | 16-18px               | 400     |
+| Page number   | Fixed chrome; do not scale | 11-14px | 12-15px            | 400     |
+
+Recommended starting slots: dense `body: 20`, `title: 32`, `subtitle: 26`, `annotation: 15`; standard `body: 22`, `title: 34`, `subtitle: 28`, `annotation: 16`. Keep the existing shell page badge and its font face/size unchanged.
+
+- **Chart labels** use Book and the body/caption role appropriate to their lane. When adapting an older chart, target a 1-2px increase only where it fits; use `chart_annotation: 14` or `15` for compact annotations and declare that slot explicitly when outside the selected role band.
+- **Source / footnote** uses Book. Preserve a readable existing size; 11-12px text may increase to 12-13px if the footer budget allows. Declare `footnote` separately instead of scaling it with body.
+- **Emphasis** uses Bold at its enclosing role's size; it is not a separate size multiplier.
+- Adapt layout/chart sample text to the project lock during authoring; do not bulk-scale SVGs. Preserve shell geometry, logo clearance, chart marks, padding, and text-box bounds. Re-measure manual lines at the selected font size and keep `data-box` / `data-wrap` contracts. Larger text can change line breaks; use the existing overflow repair and quality gates before export. Mirror templates retain their own typography contract.
 
 > Keep `font_family: "FS Magistral"` in `spec_lock.md` for compatibility. Do not introduce ad-hoc fonts in page SVGs.
 > For Viettel decks, Strategist MUST name the three static faces and TTF files; do not ask the user to choose typography. SVG `400`/omitted, `500`, and `700` select Book, Medium, and Bold respectively; never use `800`/ExtraBold.

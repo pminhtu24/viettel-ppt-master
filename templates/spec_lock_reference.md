@@ -4,7 +4,7 @@
 >
 > Machine-readable execution contract. Executor MUST `read_file` this before every SVG page. Values not listed here must NOT appear in SVGs. For design narrative (rationale, audience, style), see `design_spec.md`.
 >
-> After SVG generation begins, this is the canonical source for color / font / icon / image values. Modifications should go through `scripts/update_spec.py` to keep this file and generated SVGs in sync.
+> After SVG generation begins, this is the canonical source for color / font / icon / image values. Use `scripts/update_spec.py` for supported color/font-family changes. Font-size changes require editing this lock and re-authoring the affected SVG text with fit checks; the script does not propagate sizes.
 
 ## canvas
 
@@ -44,9 +44,11 @@
 
 - font_family: "FS Magistral"
 - body: 22
-- title: 32
-- subtitle: 24
-- annotation: 14
+- title: 34
+- subtitle: 28
+- annotation: 16
+
+> These are starting slots for a **new standard Viettel deck**. For dense content, use `body: 20`, `title: 32`, `subtitle: 26`, `annotation: 15`. Select other roles from [`viettel_default/design_spec.md §IV`](layouts/viettel_default/design_spec.md#iv-typography-system), keeping the Design Spec consistent. Preserve page-number sizes; declare compact chart annotations and footnotes separately when used. Existing project locks and explicit user sizes take precedence; do not increment an existing body size again.
 
 > `font_family` is the only family declaration for `viettel_default`; every role inherits it. Do not emit `title_family`, `body_family`, `emphasis_family`, or `code_family` for normal Viettel runs.
 >
@@ -54,9 +56,9 @@
 >
 > **Static-face lock**: SVG `700` selects FS Magistral Bold (`FS Magistral-Bold.ttf`) for titles/KPIs/emphasis; `400` or omitted selects FS Magistral Book (`FS Magistral-Book.ttf`) for body/captions/sources; `500` selects FS Magistral Medium (`FS Magistral-Medium.ttf`) for subtitles/secondary labels. These are selectors, not synthetic weights. Do not use `600`, `800`, or `900`.
 >
-> Sizes (`body` / `title` / etc.) are in px, matching SVG units. `body` is the **required baseline anchor** — all other sizes derive as ratios of it (ramp table: `design_spec_reference.md §IV`).
+> Sizes (`body` / `title` / etc.) are in px, matching SVG units. `body` is the **required baseline anchor** for the role ramp in `design_spec.md §IV`; fixed chrome and explicitly declared compact chart/footnote slots are exceptions.
 >
-> **Size slots are anchors, not a closed menu.** Common slots (`title` / `subtitle` / `annotation`) cover frequent cases. Add role-specific slots (e.g. `cover_title: 72`, `hero_number: 48`, `chart_annotation: 13`) when needed — common for cover-heavy decks, consulting-style hero numbers, dense pages. Executor may use intermediate sizes as long as the ratio to `body` sits in the role's ramp band.
+> **Size slots are anchors, not a closed menu.** Common slots (`title` / `subtitle` / `annotation`) cover frequent cases. Add role-specific slots (e.g. `cover_title: 60`, `hero_number: 48`, `chart_annotation: 15`, `footnote: 12`) when needed. Executor may use intermediate sizes as long as the ratio to `body` sits in the role's ramp band, with separately declared exceptions above.
 >
 > **⚠️ PPT-safe stack discipline (HARD rule).** PPTX stores one `typeface` per run with no runtime fallback. For explicit non-Viettel overrides, every stack MUST end with a cross-platform pre-installed font: `"Microsoft YaHei", sans-serif` / `SimSun, serif` / `Arial, sans-serif` / `"Times New Roman", serif` / `Consolas, "Courier New", monospace`. The locked Viettel stack is this skill's bundled-brand exception and is validated by font preflight instead.
 >

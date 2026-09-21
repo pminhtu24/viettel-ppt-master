@@ -206,7 +206,9 @@ See [`../templates/icons/README.md`](../templates/icons/README.md) for the curre
 
 > **Ramp, not a fixed menu.** All sizes derive from the `body` baseline as a ratio. `spec_lock.md typography` declares `body` plus the slots this deck uses (`title` / `subtitle` / `annotation` by default; add `cover_title` / `hero_number` / `chart_annotation` as needed). Executor may pick any intermediate px within a role's ratio band.
 
-Baseline choice follows **content density**, not style. Common: `18px` (dense) / `24px` (relaxed). Other integers are fine — `16px` for chart-heavy, `20-22px` for medium, `28-32px` for poster/cover.
+For **new Viettel decks**, use the role ranges and starting slots in [`viettel_default/design_spec.md §IV`](../templates/layouts/viettel_default/design_spec.md#iv-typography-system): **20px body for dense content / 22px for standard content**. Copy that Viettel ramp into the project's Design Spec and derive its `spec_lock.md` slots consistently. Keep page numbers unchanged and budget chart labels/footnotes separately. Existing project locks, mirror-template fidelity, and explicit user sizes take precedence; do not add another increase to an existing 22px body. Recalculate text-fit budgets at the chosen sizes without changing wrap/overflow rules.
+
+The following baseline examples and wider role bands apply to **explicit custom-brand overrides**. Baseline choice follows **content density**, not style. Common: `18px` (dense) / `24px` (relaxed). Other integers are fine — `16px` for chart-heavy, `20-22px` for medium, `28-32px` for poster/cover.
 
 | Common recommendation | Points per Page | Body Baseline | Suitable Scenarios |
 |----------------|----------------|---------------|-------------------|

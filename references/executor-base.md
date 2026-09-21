@@ -167,6 +167,8 @@ or add a white/surface content panel above it.
 
 SVG text is not layout text: a `<text>` element has no intrinsic width, and PPTX export cannot infer the card or panel it should stay inside. Every text run inside a card, table cell, chart label lane, callout, KPI card, or footer/source band MUST have an explicit fit strategy.
 
+**Larger Viettel typography**: use the selected project lock sizes when adapting layout/chart sample text; do not reuse smaller sample sizes as defaults or multiply all SVG text sizes. Preserve container geometry, padding, logo/title clearance, chart marks, and `data-box` / `data-wrap` metadata. Re-measure manual line breaks and total text height at the new size, including Vietnamese diacritics, KPI units, and chart labels. Keep the existing fit/wrap/export behavior and the repair rules below; larger letters may change break positions. Page-number chrome stays unchanged, and mirror templates follow §1.1. Existing decks keep their locked sizes unless a typography change was requested.
+
 Use one of these strategies:
 
 1. **Manual line wrapping** — split text into separate `<text>` lines, with measured line lengths that fit the container. Do not rely on `<tspan>` positioning for PPTX line layout.
