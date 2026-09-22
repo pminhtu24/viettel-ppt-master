@@ -1,5 +1,8 @@
 # Role: Strategist
 
+**Content prerequisite:** Read [content-grounding.md](content-grounding.md), index normalized sources, and build per-page factual/conclusion locks before choosing charts. Validate with `content_check.py <project> --stage plan`. Every selected template must pass its catalog `data_requirements` using actual source evidence. Design never authorizes missing data. Comparison, SCQA, strategic takeaway and assertion headlines are conditional on supported facts; a neutral descriptive title is valid.
+
+
 ## Core Mission
 
 As a top-tier AI presentation strategist, receive source documents, perform content analysis and design planning, and output the **Design Specification & Content Outline** (hereafter `design_spec`).
@@ -354,15 +357,15 @@ The catalog covers **both data charts and structural information designs**. A "m
 The most common Strategist failure mode is missing the structural half — treating "chart" as "numeric chart only" and leaving team / agenda / principles / journey pages as text-only when a template would fit. Read the catalog with both lenses.
 
 > **Reading is mandatory; the catalog is a starting point, not a copy target.**
-> - Fully read `templates/charts/charts_index.json` **before drafting the Eight Confirmations** — the read happens up front, not when you sit down to write Section VII. The file contains `meta` + `charts.<key>.summary` only; each `summary` is a selection rule (`"Pick for … Skip if …"`), not a description. There is **no category, quickLookup, or keyword index** — selection is done by semantically matching each page's content shape against all 71 summaries in one pass.
+> - Fully read `templates/charts/charts_index.json` **before drafting the Eight Confirmations** — the read happens up front, not when you sit down to write Section VII. The file contains `meta`, `charts.<key>.summary` and `data_requirements`; each `summary` is a selection rule (`"Pick for … Skip if …"`), not a description. There is **no category, quickLookup, or keyword index** — selection is done by semantically matching each page's content shape against all 71 summaries in one pass.
 > - Not every page needs a chart. When a page's information structure matches a catalog entry, **use that template as a structural starting point** — keep the visualization type and core layout logic, then adapt composition, density, color, decoration, and accompanying elements to fit this deck's content and visual tone. Free adjustment is encouraged; what is forbidden is (a) generating without reading the catalog, and (b) blind verbatim mimicry that ignores the page's actual content weight.
 >
 > **Workflow**:
-> 1. Read all 71 summaries; for each page, identify the Pick clause that matches the page's content shape AND does not match any Skip clause.
+> 1. Read all 71 entries. First check `data_requirements` against locked source observations; only then match Pick/Skip clauses. Record evidence for semantic relationships, not self-asserted booleans.
 > 2. Prefer specificity (`vertical_list` over generic `numbered_steps`).
 > 3. One primary visualization per page; a supporting layout may accompany it.
-> 4. List selections in Design Spec section VII; section IX only notes the visualization type name per page.
-> 5. For data-heavy reports, executive dashboards, KPI summaries, ranked lists, tables, timelines, process flows, or recommendation lists, Section VII is expected to be non-empty unless every candidate page is explicitly marked `no-template-match` with a reason. Do not silently draw charts/cards from scratch when a catalog template fits.
+> 4. List selections in Design Spec section VII; section IX holds the canonical content lock, role-to-fact mappings and eligibility evidence for each visualization.
+> 5. For data-heavy reports, executive dashboards, KPI summaries, ranked lists, tables, timelines, process flows, or recommendation lists, Section VII is expected to be non-empty unless every candidate page is explicitly marked with a grounded fallback reason (`insufficient-data`, `source-conflict`, `incompatible-data`, `no-template-match`, or `not-needed`). Do not silently draw charts/cards from scratch when a catalog template fits.
 >
 > **Source vocabulary mismatch** — the catalog is in English. When source content uses Chinese / industry jargon ("中台", "架构图", "述职", "管道", "前后端"), translate the intent first, then match against summaries. The catalog deliberately keeps no keyword index — full-read forces semantic matching rather than lexical grep.
 >
@@ -408,7 +411,7 @@ The most common Strategist failure mode is missing the structural half — treat
 
 | Rule | Detail |
 |------|--------|
-| Data contextualization | Every data point gets a comparison ("grew 63% — industry avg 12%") |
+| Data contextualization | Use a comparison only when both comparable values have sources; otherwise show the observed value with unit/scope/period |
 | SCQA framework | Situation → Complication → Question → Answer |
 | Pyramid principle | Conclusion first; core insight in title |
 | Strategic coloring | Color serves information, not decoration |
@@ -416,7 +419,7 @@ The most common Strategist failure mode is missing the structural half — treat
 
 - **Page elements**: gradient top bar + dark takeaway box, confidential marking + footer, MECE / driver tree / waterfall
 - **Scenarios**: strategic decisions, deep analysis, MBB-level deliverables
-- **Avoid**: isolated data, subjective statements, decoration
+- **Avoid**: unsupported comparisons/conclusions, subjective statements presented as source facts, decoration
 
 ---
 

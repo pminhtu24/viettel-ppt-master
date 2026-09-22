@@ -66,7 +66,7 @@ Triggered by the user signals listed in "When to Run".
    python3 ${SKILL_DIR}/scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel --file svg_output/<file> --slide-number <N>
    python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>/svg_output/<file>
    ```
-   Fix every error before continuing. After all edited files pass, re-export directly:
+   Fix every error before continuing. For grounded projects follow [content-grounding §5](../references/content-grounding.md): semantic changes require source-backed lock updates first; re-review edited pages and refresh the complete hash-bound receipt after layout/chrome changes. This also applies to precise chat edits. Then re-export:
    ```bash
    python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>
    ```

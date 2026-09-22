@@ -36,8 +36,8 @@ KPI cards are the most common element in consulting reports. Standard layout (12
 > Px values assume the typical dense consulting baseline (`body` ≈ 18px). For a deck with a different `body` in `spec_lock.md`, apply the ratios in parentheses rather than copying the px figures.
 
 **Trend arrow conventions**:
-- Up: `arrow-trend-up` icon + green text
-- Down: `arrow-trend-down` icon + red text
+- Only with sourced comparable periods — Up: `arrow-trend-up` icon + green text
+- Only with sourced comparable periods — Down: `arrow-trend-down` icon + red text
 - Flat: horizontal line icon + gray text
 
 ### 2. Chart Color Conventions
@@ -54,7 +54,7 @@ Highlight:        Accent color (only for key data points)
 ### 3. Data Annotation Principles
 
 - **Direct data labels**: Place values at the top of bar charts — no legend needed
-- **Annotated trend lines**: Add text notes at key inflection points ("Policy change", "Product launch")
+- **Annotated trend lines**: Only for observed series and source-supported event relationships, add text notes at key inflection points ("Policy change", "Product launch")
 - **Comparison baselines**: Mark industry average / target values with gray dashed lines
 - **Consistent units**: Maintain the same numeric units and precision within a chart
 
@@ -155,5 +155,5 @@ Text: 14-16px, one-sentence summary of the page's core takeaway
 - [ ] Data matches source data — no fabrication
 - [ ] Every data page has a source attribution at the bottom
 - [ ] Page titles are assertion-based, not descriptive
-- [ ] KPI cards have trend arrows and comparison annotations
+- [ ] Trend arrows/comparison annotations appear only when supported by locked source data; otherwise omit them
 - [ ] Chart colors are unified, using monochromatic scheme rather than rainbow

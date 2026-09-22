@@ -389,6 +389,10 @@ def create_pptx_with_native_svg(
         print("Error: No SVG files found")
         return False
 
+    from content_check import export_gate
+    if not export_gate(svg_files):
+        return False
+
     # Auto-detect canvas format or get dimensions from viewBox
     custom_pixels: tuple[int, int] | None = None
     if canvas_format is None:

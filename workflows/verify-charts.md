@@ -62,7 +62,7 @@ For each page in the Step 1 list:
 2. Locate the plot-area definition:
    - Preferred: `<!-- chart-plot-area: ... -->` marker placed by Executor (see [executor-base.md §3.1](../references/executor-base.md)). Read coordinates directly.
    - If missing: derive the plot area from the SVG's axis lines (rectangular charts) or center/radius elements (radial charts). Then **add the marker back to the SVG** so future runs are not paying this cost again.
-3. Read the data series from the SVG's `<text>` label/value elements.
+3. Read values from the page's `content-lock` role mappings in `design_spec.md`, resolving source facts/derived calculations and source excerpts. Compare the SVG labels with those inputs. **Never use SVG labels as the factual source.** For legacy projects without locks, request/locate original sources and build a lock before claiming factual verification; geometry-only review must be explicitly labeled as such.
 4. **Read axis tick labels for every axis-based chart.** Locate the `<text>` elements along the value axis — X-axis labels for horizontal bars, Y-axis labels for vertical bars, and Y-axis labels for line-like charts. Extract the first and last tick values to determine the axis range (e.g. `0%` to `120%` → range `0,120`). Pass this range as `--value-range`, `--y-range`, or `--x-range` as appropriate. Radar uses `--max-value` instead of a range: read the outermost ring's tick value and pass it as `--max-value`. If the SVG has no explicit tick labels (data labels only, no grid), omit the range and let the calculator auto-normalize — but flag the receipt as `scale=auto (no ticks)`.
 
    **Local vs absolute coordinates.** Many chart templates wrap chart content in `<g transform="translate(cx, cy)">` or similar, so child `<circle>`/`<polygon>`/`<rect>` coords are relative to that origin (e.g. radar polygon at `0,-198`, donut paths starting from `0,0` inside a translated `<g>`, dumbbell circles at `cy="0"` inside a per-row translated `<g>`). The calculator outputs **absolute** SVG coordinates. Before comparing, either add the wrapping translate's offset to the SVG coords or subtract it from the calculator's output — pick one direction and apply it consistently.
@@ -116,19 +116,7 @@ python3 skills/viettel-ppt-master/scripts/svg_quality_checker.py <project_path>/
 
 `stacked_bar_chart` and `stacked_area_chart` are not single-call but reduce cleanly to repeated calls on existing primitives. The operator already had to compute cumulative values to draw the SVG — verify-charts reuses them.
 
-**Stacked bar** — for N stacked series on the same x categories, run `calc bar` N times. Pass each segment's **height** as the data value, and shift `--area`'s `y_max` down by the sum of all lower segments for that category. Compare each segment's `(x, y, width, height)` against the SVG.
-
-```bash
-# Example: two-series stack at category "Q1" with bottom=30, top=20, plot area y from 100 to 500
-# Run 1 — bottom segment (origin = baseline)
-python3 skills/viettel-ppt-master/scripts/svg_position_calculator.py calc bar \
-  --data "Q1:30,Q2:..." --area "x_min,100,x_max,500" \
-  --bar-width 80 --value-range "0,axis_max"
-# Run 2 — top segment (origin shifted up by bottom segment's height in pixels)
-python3 skills/viettel-ppt-master/scripts/svg_position_calculator.py calc bar \
-  --data "Q1:20,Q2:..." --area "x_min,100,x_max,<500 - bottom_height_px>" \
-  --bar-width 80 --value-range "0,axis_max"
-```
+**Stacked bar** — keep one fixed plot scale. For each category compute cumulative endpoints from locked parts. With vertical scale `y(v) = y_bottom - (v-axis_min)/(axis_max-axis_min) × plot_height`, segment `i` has `y = y(cumulative_after)` and `height = y(cumulative_before)-y(cumulative_after)`. Do not change the plot-area height to shift a segment: that changes pixels per unit. Verify totals before calculating endpoints. Negative or percent stacks need explicit baselines/denominators and the same fixed-scale treatment; record manual verification when necessary.
 
 **Stacked area** — for N stacked series, run `calc line` N times on **cumulative** y-values (series 1 raw; series 2 = series1+series2; …). Each call yields the top boundary of one band. Each band's SVG path closes to the **previous** band's top boundary (not to `y_max`).
 
@@ -218,7 +206,7 @@ python3 skills/viettel-ppt-master/scripts/svg_position_calculator.py calc line \
 
 **Progress bar / gauge / funnel — formula-verify** (no calc call needed):
 
-- Progress bar: `fill_width = value / max × track_width`. Read `value`, `max`, and `track_width` from the SVG; compute and compare against the fill rect's `width`.
+- Progress bar: `fill_width = value / max × track_width`. Read `value` and `max` from the locked data and `track_width` from the SVG; compute and compare against the fill rect's `width`.
 - Gauge: `needle_angle = start_angle + value / max × sweep_angle`. Read `start_angle` and `sweep_angle` from the SVG's arc path (e.g. half-circle `start_angle=-180`, `sweep_angle=180`). Compare against the needle's `transform="rotate(α ...)"` value (the most common form), or against endpoint `(cx + L·cos α, cy + L·sin α)` when the needle is drawn as an explicit line/path.
 - Funnel: each trapezoid's `top_width = prev.bottom_width`, `bottom_width = top_width × next_value / curr_value`. Verify by walking the segments: for segment `i`, `(top_left_x, top_right_x) → bottom_x_inset = (top_width - bottom_width) / 2`. The first segment's top width comes from the design's outer frame.
 - Receipt should quote the formula and resulting value (e.g. `formula=value/max×track_width=0.92×700=644px`, or `formula=600×850/1000=510 bottom width`).
@@ -232,6 +220,8 @@ python3 skills/viettel-ppt-master/scripts/svg_position_calculator.py calc line \
 ---
 
 ## Step 3: Per-page receipt
+
+Also include the actual formulas/inputs/results in the hash-bound `content_review.json` findings described in [content-grounding §5](../references/content-grounding.md). The textual lines below alone do not close the new export content gate. Final chrome changes require a fresh receipt.
 
 Output one line per page from the Step 1 list. Receipt count MUST equal Step 1 list length — that is the gate-closing artifact.
 

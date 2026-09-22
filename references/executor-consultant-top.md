@@ -12,7 +12,7 @@ An MBB-level (McKinsey / Bain / BCG) top-tier consulting style SVG design execut
 
 ## SCQA Framework (Narrative Structure)
 
-Every MBB-level presentation follows the SCQA narrative structure:
+Use SCQA when the source supports its complication and answer; do not invent either to complete the narrative:
 
 | Element | Purpose | Typical Pages |
 |---------|---------|---------------|
@@ -36,7 +36,7 @@ Every MBB-level presentation follows the SCQA narrative structure:
 
 ## Data Contextualization (Never Present Data in Isolation)
 
-> **Golden Rule**: Never display a single data point in isolation. Every number needs context.
+> **Golden Rule**: Every number needs its source unit, period and scope. Comparison is optional and requires observed comparable data; a standalone KPI is valid. Follow content-grounding.md before any consulting convention.
 
 | Method | Pattern | Visual Implementation |
 |--------|---------|----------------------|
@@ -46,7 +46,7 @@ Every MBB-level presentation follows the SCQA narrative structure:
 | **Target gap** | "Actual X / Target Y" | Progress bar + gap annotation |
 | **Ranking** | "Ranked #N of M" | Horizontal bar chart + highlight marker |
 
-**Data annotation three essentials**: Every data visualization must include (1) The value itself (large bold font) (2) Comparison reference (baseline / prior period / competitor) (3) Meaning interpretation ("So what?")
+**Data annotation**: Show the observed value and source context. Add a comparison reference only if sourced and compatible; add interpretation only if supported by the locked evidence. Otherwise use a neutral descriptive title, with no invented baseline or takeaway.
 
 ```xml
 <text x="160" y="280" text-anchor="middle" font-size="42" font-weight="bold" fill="#1E293B">97.3%</text>
@@ -156,8 +156,8 @@ MBB-level color usage is extremely restrained — color serves information:
 ### Content Level
 
 - [ ] **SCQA complete**: Overall follows Situation-Complication-Question-Answer structure
-- [ ] **Data contextualized**: Every data point has a comparison reference
-- [ ] **Conclusion first**: Every page's Takeaway Box has a one-sentence conclusion
+- [ ] **Data contextualized**: Every comparison has sourced, compatible inputs; absent comparisons are omitted
+- [ ] **Conclusion first**: Any takeaway is source-supported; use a neutral heading or omit the box when no conclusion is supported
 - [ ] **MECE principle**: Categorized analysis is mutually exclusive and collectively exhaustive
 
 ### Visual Level

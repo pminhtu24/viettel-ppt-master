@@ -9,7 +9,7 @@ Primary formats (pure Python, no external tools required):
     .ipynb  → nbconvert               (pyzmq stub for static conversion)
 
 Fallback formats (require pandoc installed):
-    .doc .odt .rtf .tex .latex .rst .org .typ
+    .odt .rtf .tex .latex .rst .org .typ
 
 All paths produce the same output convention:
     <input>.md                     Markdown file
@@ -28,6 +28,8 @@ import base64
 import hashlib
 import json
 import mimetypes
+import os
+import tempfile
 import posixpath
 import re
 import shutil
@@ -99,11 +101,10 @@ def _ensure_vendored_deps():
 # ─────────────────────────────────────────────────────────────
 
 # Formats handled by pure-Python paths
-NATIVE_FORMATS = {".docx", ".html", ".htm", ".epub", ".ipynb"}
+NATIVE_FORMATS = {".doc", ".docx", ".html", ".htm", ".epub", ".ipynb"}
 
 # Formats handled by pandoc fallback: suffix → (pandoc input format, description)
 PANDOC_FORMATS = {
-    ".doc":   ("doc",    "Microsoft Word 97-2003"),
     ".odt":   ("odt",    "OpenDocument Text"),
     ".rtf":   ("rtf",    "Rich Text Format"),
     ".tex":   ("latex",  "LaTeX"),
@@ -498,12 +499,32 @@ def _convert_docx(input_file: Path, out_file: Path) -> str:
         return {"src": f"{rel_media_dir}/{filename}"}
 
     with input_file.open("rb") as f:
-        result = mammoth.convert_to_markdown(
+        result = mammoth.convert_to_html(
             f,
             convert_image=mammoth.images.img_element(_save_image),
         )
 
-    markdown = _html_img_to_md(result.value)
+    from bs4 import BeautifulSoup
+    from markdownify import markdownify
+    soup = BeautifulSoup(result.value, "html.parser")
+    with zipfile.ZipFile(input_file) as archive:
+        document = ET.fromstring(archive.read("word/document.xml"))
+    expected_tables = len(document.findall(".//w:tbl", DOCX_NS))
+    if len(soup.find_all("table")) != expected_tables:
+        raise ValueError("DOCX table loss during extraction; source is not ready")
+    # Preserve merged/nested table geometry instead of flattening cell relationships.
+    preserved = {}
+    for table in list(soup.find_all("table")):
+        if table.find_parent("table") is None and (table.find(attrs={"colspan": True}) or
+                table.find(attrs={"rowspan": True}) or table.find("table")):
+            token = f"PRESERVEDTABLE{len(preserved):06d}TOKEN"
+            preserved[token] = str(table)
+            table.replace_with(token)
+    markdown = markdownify(str(soup), heading_style="ATX")
+    for token, table_html in preserved.items():
+        markdown = markdown.replace(token, table_html)
+    if not soup.get_text(strip=True) and not soup.find("img"):
+        raise ValueError("Word extraction is empty; source is not ready")
     out_file.write_text(markdown, encoding="utf-8")
 
     if manifest:
@@ -522,6 +543,24 @@ def _convert_docx(input_file: Path, out_file: Path) -> str:
 
     _report_result(out_file, media_dir)
     return markdown
+
+
+def _convert_legacy_doc(input_file: Path, out_file: Path) -> str:
+    """Use an isolated configured LibreOffice process, then the shared DOCX reader."""
+    executable = os.environ.get("LIBREOFFICE_BIN") or shutil.which("soffice") or shutil.which("libreoffice")
+    if not executable:
+        raise ValueError(".doc requires LibreOffice; set LIBREOFFICE_BIN to its executable")
+    with tempfile.TemporaryDirectory(prefix="word_import_") as temp:
+        folder = Path(temp)
+        result = subprocess.run([
+            executable, f"-env:UserInstallation={(folder / 'profile').as_uri()}",
+            "--headless", "--convert-to", "docx", "--outdir", temp,
+            str(input_file.resolve()),
+        ], capture_output=True, text=True, timeout=120)
+        converted = folder / (input_file.stem + ".docx")
+        if result.returncode or not converted.is_file() or not zipfile.is_zipfile(converted):
+            raise ValueError(f"Legacy Word conversion failed: {result.stderr or result.stdout}")
+        return _convert_docx(converted, out_file)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -956,6 +995,7 @@ def _convert_with_pandoc(input_file: Path, out_file: Path, suffix: str) -> str:
 # ─────────────────────────────────────────────────────────────
 
 _FORMAT_DESC = {
+    ".doc": "Microsoft Word 97-2003 (LibreOffice → mammoth)",
     ".docx":  "Microsoft Word (mammoth)",
     ".html":  "HTML (markdownify)",
     ".htm":   "HTML (markdownify)",
@@ -984,6 +1024,8 @@ def convert_to_markdown(input_path: str, output_path: str | None = None) -> str:
         _ensure_vendored_deps()
         desc = _FORMAT_DESC[suffix]
         print(f"[INFO] Converting {desc}: {input_file.name}")
+        if suffix == ".doc":
+            return _convert_legacy_doc(input_file, out_file)
         if suffix == ".docx":
             return _convert_docx(input_file, out_file)
         if suffix in (".html", ".htm"):
@@ -1015,7 +1057,7 @@ Native formats (no pandoc required):
   .docx  .html/.htm  .epub  .ipynb
 
 Pandoc fallback formats (require system pandoc):
-  .doc  .odt  .rtf  .tex/.latex  .rst  .org  .typ
+  .odt  .rtf  .tex/.latex  .rst  .org  .typ
         """,
     )
     parser.add_argument("input", help="Input document file")

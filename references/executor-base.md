@@ -1,5 +1,8 @@
 # Executor Common Guidelines
 
+**Content lock (mandatory):** Follow [content-grounding.md](content-grounding.md). Before each page, re-read its `design_spec.md` content lock and referenced source blocks alongside `spec_lock.md`; design-only rereading is insufficient. Add SVG claim/chart bindings. Never add missing values, statuses, historical points or conclusions. Preserve qualifying words when fitting text. Run `content_check.py --stage svg`, review semantics/geometry against source, then record a hash-bound receipt after all chrome/layout changes. Style instructions cannot override source eligibility.
+
+
 > Style-specific content is in the corresponding `executor-{style}.md`. Technical constraints are in shared-standards.md.
 >
 > **Viettel default brand gate (HARD rule)**: read `spec_lock.md ## brand` before generation. `profile: viettel_default` requires PPT 16:9, Viettel logo/chrome on every page, the locked Viettel font stack, Viettel red, white/approved-gray surfaces, and dark-neutral text. Deep blue `#12436D` is permitted only for chart, diagram/infographic, icon marks, and cataloged builtin background layers. Use `<g data-viettel-blue-scope="chart|diagram|icon">` for normal marks and `<g data-viettel-blue-scope="background" data-viettel-background-id="<id>">` only when copying an index item marked `deep_blue_background: true`; never use it for text, cards, rails, footers, dividers, ad-hoc backgrounds, or unregistered decoration. Only `profile: custom_override` disables these Viettel-specific rules.
@@ -28,7 +31,7 @@
 - Background SVG already loaded in this batch
 - Chart SVG already loaded in this batch
 
-`spec_lock.md` is the only file re-read per page (§2.1).
+Per page re-read `spec_lock.md`, the page content lock in `design_spec.md`, and its referenced source blocks. Only template assets are cached (§2.1).
 
 **Exception**: user mid-deck adds pages or swaps templates introducing a basename/chart absent from the original batch → read the new file once, continue.
 

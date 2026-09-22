@@ -323,6 +323,9 @@ Catalog read: 71 templates
 
 ## IX. Content Outline
 
+**Required for new projects:** add `content_contract: 1` on its own line in the generated design spec. Each slide below needs one complete `content-lock` JSON block following [content-grounding](../references/content-grounding.md#2-canonical-page-content-in-design_specmd-ix): source index checksum, facts with exact evidence, derived operations, supported conclusions, unresolved conflicts, visualization role mappings/eligibility and required content IDs. Cover and closing headings use editorial entries. Keep facts only here; §VII and `spec_lock.page_charts` reference the locked visualization selection. Pass `content_check.py --stage plan` before handing off.
+
+
 ### Part 1: [Chapter Name]
 
 #### Slide 01 - Cover

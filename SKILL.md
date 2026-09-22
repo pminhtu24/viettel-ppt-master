@@ -9,6 +9,8 @@ description: >
 
 > Multi-role SVG presentation workflow. Converts source documents into high-quality SVG pages and exports them to PPTX.
 
+**Content integrity (mandatory for new decks):** Read [content-grounding](references/content-grounding.md) before Strategist chart selection. Preserve sources/table relationships, index source blocks, and write version-1 per-page content locks in `design_spec.md`. Lock facts and conclusions, not wording. Before every SVG read the page lock + referenced sources + design lock. Source eligibility overrides all style/template requirements. Run the plan gate before Executor and the content/semantic review gate after final chrome repair, before native export. Unsupported facts, comparisons, trends and causal claims must not be added to fill a layout.
+
 **Core Pipeline**: `Source Document → Create Project → [Template] → Strategist → [Web Image Acquisition] → Executor Live Preview → Quality Check → [Chart Verification] → Native PPTX Export`
 
 > [!CAUTION]
@@ -399,7 +401,7 @@ Chrome normalization also removes marked background groups and near-full-height 
 
 ### Step 7: Native PPTX Export
 
-🚧 **GATE**: Step 6 complete; the project quality check passed, and chart verification passed when applicable.
+🚧 **GATE**: Step 6 complete; the project quality check passed, chart verification passed when applicable, and `content_check.py <project_path> --stage export` passes with a current semantic review receipt. Follow [content-grounding §5](references/content-grounding.md) to review and record it after final chrome normalization. Legacy export explicitly warns that content is unverified.
 
 ```bash
 python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>

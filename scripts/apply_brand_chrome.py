@@ -233,7 +233,7 @@ def viettel_chrome_svg(
 ) -> str:
     page = "" if slide_number is None else f"{slide_number:02d}"
     page_text = (
-        f'<text x="1216" y="704" text-anchor="end" '
+        f'<text data-chrome="page-number" x="1216" y="704" text-anchor="end" '
         f'font-family="{VIETTEL_FONT_STACK}" '
         f'font-size="11" font-weight="400" fill="#44494D">{page}</text>'
         if page and include_page_number
