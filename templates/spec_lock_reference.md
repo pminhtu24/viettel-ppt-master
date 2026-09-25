@@ -48,7 +48,7 @@
 - subtitle: 30
 - annotation: 18
 
-> These are starting slots for a **new standard Viettel deck**. For dense content, use `body: 20`, `title: 32`, `subtitle: 26`, `annotation: 15`. Select other roles from [`viettel_default/design_spec.md §IV`](layouts/viettel_default/design_spec.md#iv-typography-system), keeping the Design Spec consistent. Preserve page-number sizes; declare compact chart annotations and footnotes separately when used. Existing project locks and explicit user sizes take precedence; do not increment an existing body size again.
+> These are starting slots for a **new standard Viettel deck**. For dense content, use `body: 20`, `title: 32`, `subtitle: 26`, `annotation: 16`. For dense multi-block pages (card grids, KPI-plus-notes cards, summary banners) also declare the compact-profile slots from `design_spec.md §IV` — `subtitle_strip: 17`, `card_header: 18`, `card_subhead: 16`, `card_body: 16`, `badge: 14`, `hero_number: 40` — as minimums, since they sit below the ratio bands. Select other roles from [`viettel_default/design_spec.md §IV`](layouts/viettel_default/design_spec.md#iv-typography-system), keeping the Design Spec consistent. Preserve page-number sizes; declare compact chart annotations and footnotes separately when used. Existing project locks and explicit user sizes take precedence; do not increment an existing body size again.
 
 > `font_family` is the only family declaration for `viettel_default`; every role inherits it. Do not emit `title_family`, `body_family`, `emphasis_family`, or `code_family` for normal Viettel runs.
 >

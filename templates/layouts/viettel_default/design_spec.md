@@ -144,7 +144,23 @@ Use body **20px for dense content** and **24px for standard content** in new Vie
 | Caption / annotation | 0.7-0.85x | 14-17px        | 17-20px               | 400     |
 | Page number   | Fixed chrome; do not scale | 11-14px | 12-15px            | 400     |
 
-Recommended starting slots: dense `body: 20`, `title: 32`, `subtitle: 26`, `annotation: 15`; standard `body: 24`, `title: 36`, `subtitle: 30`, `annotation: 18`. Keep the existing shell page badge and its font face/size unchanged.
+Recommended starting slots: dense `body: 20`, `title: 32`, `subtitle: 26`, `annotation: 16`; standard `body: 24`, `title: 36`, `subtitle: 30`, `annotation: 18`. Keep the existing shell page badge and its font face/size unchanged.
+
+**Compact profile for dense multi-block pages** (card grids with a status pill per card, KPI-plus-notes cards, a summary banner). These pages cannot hold the full role bands above, so treat the sizes below as **minimums** and declare each as a role-specific slot in `spec_lock.md` — several sit below the ratio bands. Font faces follow the role table above. Never shrink below a minimum to force a fit: trim lower-priority text, widen the block, or split the page (see `executor-base.md §2.2`).
+
+| Role                                   | Minimum size | Slot             |
+| -------------------------------------- | ------------ | ---------------- |
+| Page title                             | 32px         | `title`          |
+| Subtitle strip (one line under title)  | 17px         | `subtitle_strip` |
+| Card / block header                    | 18px         | `card_header`    |
+| Card sub-header, banner header         | 16-17px      | `card_subhead`   |
+| Card body, banner body                 | 16px         | `card_body`      |
+| Status pill label                      | 14px         | `badge`          |
+| KPI / hero number inside a card        | 40px         | `hero_number`    |
+| Footer source, page number             | unchanged    | `footnote`       |
+
+- A KPI value with a fraction or unit (for example `2.381/2.381`) must be budgeted to the card's inner width; keep it at 40px rather than wrapping the number, and raise it toward 42px only when the width allows.
+- After enlarging, re-measure every wrapped block. Avoid a lone trailing token such as `(100%)` or a single word on the last line, and keep a label and its value together (`KV3: 8/15`) with a non-breaking space or a shorter label.
 
 - **Chart labels** use Book and the body/caption role appropriate to their lane. When adapting an older chart, target a 1-2px increase only where it fits; use `chart_annotation: 14` or `15` for compact annotations and declare that slot explicitly when outside the selected role band.
 - **Source / footnote** uses Book. Preserve a readable existing size; 11-12px text may increase to 12-13px if the footer budget allows. Declare `footnote` separately instead of scaling it with body.
