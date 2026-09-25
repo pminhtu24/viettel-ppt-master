@@ -130,21 +130,21 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 
 ### Font Size Hierarchy
 
-Use body **20px for dense content** and **22px for standard content** in new Viettel decks. These replace the former 18px / 20px recommendations. Sizes below are SVG px, not PowerPoint pt; ranges are choices by role, not a requirement to use their upper limits. Explicit user sizes and existing project `spec_lock.md` values take precedence; a deck already at 22px does not receive another automatic increase.
+Use body **20px for dense content** and **24px for standard content** in new Viettel decks. The dense baseline is unchanged from the previous ramp; the standard baseline was raised from 22px. Sizes below are SVG px, not PowerPoint pt; ranges are choices by role, not a requirement to use their upper limits. Explicit user sizes and existing project `spec_lock.md` values take precedence; a deck already locked at 22px or 24px does not receive another automatic increase.
 
-| Purpose       | Ratio to body | @body=20px (dense) | @body=22px (standard) | SVG face selector |
+| Purpose       | Ratio to body | @body=20px (dense) | @body=24px (standard) | SVG face selector |
 | ------------- | ------------- | ------------------ | --------------------- | ------- |
-| Cover title   | 2.5-3x        | 50-60px            | 55-66px               | 700     |
-| Chapter title | 2-2.5x        | 40-50px            | 44-55px               | 700     |
-| Page title    | 1.5-2x        | 30-40px            | 33-44px               | 700     |
-| Section/card header | 1-1.3x  | 20-26px            | 22-28px               | 700     |
-| KPI/hero number | 1.5-2.5x    | 30-50px            | 33-55px               | 700     |
-| Subtitle      | 1.2-1.5x      | 24-30px            | 27-33px               | 500     |
-| **Body**      | **1x**        | **20px**           | **22px**              | 400     |
-| Caption / annotation | 0.7-0.85x | 14-17px        | 16-18px               | 400     |
+| Cover title   | 2.5-3x        | 50-60px            | 60-72px               | 700     |
+| Chapter title | 2-2.5x        | 40-50px            | 48-60px               | 700     |
+| Page title    | 1.5-2x        | 30-40px            | 36-48px               | 700     |
+| Section/card header | 1-1.3x  | 20-26px            | 24-31px               | 700     |
+| KPI/hero number | 1.5-2.5x    | 30-50px            | 36-60px               | 700     |
+| Subtitle      | 1.2-1.5x      | 24-30px            | 29-36px               | 500     |
+| **Body**      | **1x**        | **20px**           | **24px**              | 400     |
+| Caption / annotation | 0.7-0.85x | 14-17px        | 17-20px               | 400     |
 | Page number   | Fixed chrome; do not scale | 11-14px | 12-15px            | 400     |
 
-Recommended starting slots: dense `body: 20`, `title: 32`, `subtitle: 26`, `annotation: 15`; standard `body: 22`, `title: 34`, `subtitle: 28`, `annotation: 16`. Keep the existing shell page badge and its font face/size unchanged.
+Recommended starting slots: dense `body: 20`, `title: 32`, `subtitle: 26`, `annotation: 15`; standard `body: 24`, `title: 36`, `subtitle: 30`, `annotation: 18`. Keep the existing shell page badge and its font face/size unchanged.
 
 - **Chart labels** use Book and the body/caption role appropriate to their lane. When adapting an older chart, target a 1-2px increase only where it fits; use `chart_annotation: 14` or `15` for compact annotations and declare that slot explicitly when outside the selected role band.
 - **Source / footnote** uses Book. Preserve a readable existing size; 11-12px text may increase to 12-13px if the footer budget allows. Declare `footnote` separately instead of scaling it with body.

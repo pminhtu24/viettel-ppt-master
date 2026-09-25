@@ -112,7 +112,7 @@
 
 ### Font Size Hierarchy
 
-> **Viettel projects**: replace the illustrative table below with the role ranges from [`viettel_default/design_spec.md §IV`](layouts/viettel_default/design_spec.md#iv-typography-system). New decks use **20px body (dense) / 22px (standard)**, preserve page-number sizes, and budget chart annotations and footnotes separately. Existing locks, mirror-template fidelity, and explicit user sizes take precedence. The wider table below is for explicit custom-brand overrides.
+> **Viettel projects**: replace the illustrative table below with the role ranges from [`viettel_default/design_spec.md §IV`](layouts/viettel_default/design_spec.md#iv-typography-system). New decks use **20px body (dense) / 24px (standard)**, preserve page-number sizes, and budget chart annotations and footnotes separately. Existing locks, mirror-template fidelity, and explicit user sizes take precedence. The wider table below is for explicit custom-brand overrides.
 
 > **Ramp discipline, not a fixed menu.** `body` is the single anchor; every other size is a ratio of it. Each row below gives the role's allowed ratio band — Executor may pick any px value inside the band (e.g., 40px hero number, 13px chart annotation, 72px cover headline) without pre-declaring intermediates in `spec_lock.md`.
 > **Unit**: px uniformly (SVG native) to avoid pt/px conversion errors.

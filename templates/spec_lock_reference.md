@@ -43,10 +43,10 @@
 ## typography
 
 - font_family: "FS Magistral"
-- body: 22
-- title: 34
-- subtitle: 28
-- annotation: 16
+- body: 24
+- title: 36
+- subtitle: 30
+- annotation: 18
 
 > These are starting slots for a **new standard Viettel deck**. For dense content, use `body: 20`, `title: 32`, `subtitle: 26`, `annotation: 15`. Select other roles from [`viettel_default/design_spec.md §IV`](layouts/viettel_default/design_spec.md#iv-typography-system), keeping the Design Spec consistent. Preserve page-number sizes; declare compact chart annotations and footnotes separately when used. Existing project locks and explicit user sizes take precedence; do not increment an existing body size again.
 
