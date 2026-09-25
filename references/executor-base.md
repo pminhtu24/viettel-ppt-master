@@ -200,6 +200,8 @@ Example:
 
 `svg_quality_checker.py` treats text overflow and title-zone content intrusion as errors. Fix the SVG source before export.
 
+For FS Magistral text with a `data-box`, the checker measures the wrapped text with the real font files (`scripts/text_metrics.py`) and compares it with the declared box, so **size the box to the text, not the other way round**. Line pitch is Book 1.15 / Medium 1.30 / Bold 1.40 × font size. `[text-box-overflow]` and `[text-word-too-wide]` are errors (more than half a line spills, or a single word is wider than the box); `[text-box-tight]` (≥92% used or a small overrun) and `[text-orphan-line]` (a lone word on the last line — join it to its neighbour with a non-breaking space or rebalance) are warnings. Each message states the needed height; raise the box, shorten the text, or widen it. Never rely on PowerPoint auto-shrink (`normAutofit`) to make the text fit.
+
 **Per-page template lookup — `page_layouts` section**:
 
 Before drawing each page, look up its entry in `page_layouts` to decide which basename to inherit (the SVG itself was loaded in §1.0):

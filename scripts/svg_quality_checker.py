@@ -16,6 +16,7 @@ import sys
 import re
 import json
 import html
+import math
 from pathlib import Path
 from typing import List, Dict, Tuple
 from collections import defaultdict
@@ -33,6 +34,11 @@ try:
     from update_spec import parse_lock as _parse_spec_lock
 except ImportError:
     _parse_spec_lock = None  # spec_lock drift check will be skipped
+
+try:
+    import text_metrics as _text_metrics
+except ImportError:
+    _text_metrics = None  # real-font text-fit checks fall back to the heuristic
 
 try:
     from svg_to_pptx.animation_config import (
@@ -179,6 +185,29 @@ def _estimate_svg_text_width(text: str, font_size: float, font_weight: str = '40
     if font_weight in ('bold', '600', '700', '800', '900'):
         width *= 1.08
     return width
+
+
+def _measured_text_width(text: str, font_size: float, font_weight: str, font_family: str) -> float:
+    """Single-line width in px: measured with FS Magistral when available, else the heuristic."""
+    if _text_metrics is not None:
+        measured = _text_metrics.measure_line(text, font_size, font_weight, font_family)
+        if measured is not None:
+            return measured * 1.05
+    return _estimate_svg_text_width(text, font_size, font_weight) * 1.12
+
+
+def _collect_text_runs(elem: ET.Element, size: float, weight: str, out: list) -> None:
+    """Flatten a <text> like the PPTX exporter: one paragraph, tspans become runs."""
+    face = _text_metrics.face_for_weight(weight)
+    if elem.text:
+        out.append(_text_metrics.Run(elem.text, size, face))
+    for child in elem:
+        if _local_name(child.tag) == 'tspan':
+            child_size = _float_attr(child, 'font-size', size)
+            child_weight = _get_svg_attr(child, 'font-weight', weight)
+            _collect_text_runs(child, child_size, child_weight, out)
+        if child.tail:
+            out.append(_text_metrics.Run(child.tail, size, face))
 
 
 def _parse_translate(transform: str) -> tuple[float, float]:
@@ -828,10 +857,12 @@ class SVGQualityChecker:
             tx: float = 0.0,
             ty: float = 0.0,
             allow_title_zone: bool = False,
+            fam: str = '',
         ):
             dx, dy = _parse_translate(elem.get('transform', ''))
             tx += dx
             ty += dy
+            fam = _get_svg_attr(elem, 'font-family') or fam
             allow_title_zone = (
                 allow_title_zone or
                 elem.get('data-allow-title-zone') == 'true'
@@ -897,7 +928,7 @@ class SVGQualityChecker:
                     fs = _float_attr(elem, 'font-size', 16)
                     fw = _get_svg_attr(elem, 'font-weight', '400')
                     anchor = _get_svg_attr(elem, 'text-anchor', 'start')
-                    estimated_w = _estimate_svg_text_width(text, fs, fw) * 1.12
+                    estimated_w = _measured_text_width(text, fs, fw, fam)
                     tspan_count = sum(
                         1 for child in elem.iter()
                         if child is not elem and _local_name(child.tag) == 'tspan'
@@ -914,12 +945,25 @@ class SVGQualityChecker:
                     box_y = y - fs * 0.85
 
                     data_box = elem.get('data-box')
+                    box_fit = None
                     if data_box:
                         parts = [p.strip() for p in re.split(r'[\s,]+', data_box) if p.strip()]
                         if len(parts) == 4:
                             try:
                                 bx, by, bw, bh = [float(p) for p in parts]
                                 box_x, box_y, estimated_w, estimated_h = bx + tx, by + ty, bw, bh
+                                if (
+                                    bw > 0 and bh > 0 and _text_metrics is not None
+                                    and _text_metrics.uses_magistral(fam)
+                                    and _text_metrics.is_available()
+                                ):
+                                    runs: list = []
+                                    _collect_text_runs(elem, fs, fw, runs)
+                                    box_fit = {
+                                        'wrap': _text_metrics.wrap_runs(runs, bw),
+                                        'w': bw, 'h': bh, 'size': fs,
+                                        'face': _text_metrics.face_for_weight(fw),
+                                    }
                             except ValueError:
                                 pass
 
@@ -934,10 +978,11 @@ class SVGQualityChecker:
                         'has_wrap_contract': bool(
                             data_box or elem.get('data-wrap') == 'true'
                         ),
+                        'box_fit': box_fit,
                     })
 
             for child in list(elem):
-                visit(child, tx, ty, allow_title_zone)
+                visit(child, tx, ty, allow_title_zone, fam)
 
         visit(root)
 
@@ -991,6 +1036,8 @@ class SVGQualityChecker:
                     f"estimated={_fmt_bounds(text)}; "
                     + "; ".join(reasons)
                 )
+            if text.get('box_fit'):
+                self._report_text_box_fit(text, result)
         title_intrusions = self._count_title_zone_intrusions(shapes)
 
         if unbounded_long:
@@ -1004,6 +1051,44 @@ class SVGQualityChecker:
                 f"bounds={_fmt_bounds(shape)} enters reserved y=115.0-"
                 f"{shape['title_zone_bottom']:.1f}; move it below the divider or "
                 f"mark the intentional shape/group data-allow-title-zone=\"true\""
+            )
+
+    def _report_text_box_fit(self, text: Dict, result: Dict) -> None:
+        """Compare measured, wrapped text against its own data-box."""
+        fit = text['box_fit']
+        wrap, bw, bh = fit['wrap'], fit['w'], fit['h']
+        head = (
+            f"locator={text['locator']} text={_text_excerpt(text['text'])!r} "
+            f"font=FS Magistral {fit['face']} {fit['size']:g}px box={bw:g}x{bh:g}"
+        )
+        if wrap.widest_word > bw + 0.5:
+            result['errors'].append(
+                f"[text-word-too-wide] {head}; the word {wrap.widest_word_text!r} is "
+                f"{wrap.widest_word:.0f}px wide and cannot break inside a {bw:g}px box. "
+                f"Fix: widen the data-box, shorten the word, or split the text."
+            )
+        elif wrap.height - bh > 0.5 * wrap.last_line_height:
+            result['errors'].append(
+                f"[text-box-overflow] {head}; needs {wrap.lines} line(s) = "
+                f"{wrap.height:.1f}px > {bh:g}px (over by {wrap.height - bh:.1f}px). "
+                f"Fix: raise the data-box height to >= {math.ceil(wrap.height)}px, shorten "
+                f"the text, or widen the box; do not shrink below the role's minimum size."
+            )
+        elif wrap.height > bh or wrap.height > bh * 0.92:
+            over = wrap.height - bh
+            state = (
+                f"over by {over:.1f}px (less than half a line; PowerPoint may shrink it)"
+                if over > 0 else f"uses {wrap.height / bh:.0%} of the box"
+            )
+            result['warnings'].append(
+                f"[text-box-tight] {head}; needs {wrap.height:.1f}px of {bh:g}px, {state}. "
+                f"A slightly longer string will overflow; add headroom to the data-box."
+            )
+        if wrap.lines >= 2 and wrap.last_line_words == 1 and wrap.last_line_width < 0.3 * bw:
+            result['warnings'].append(
+                f"[text-orphan-line] {head}; the last line is only {wrap.last_line_text!r}. "
+                f"Fix: rebalance the wrap (shorter text, wider box, or a non-breaking "
+                f"space joining it to the previous word)."
             )
 
     def _find_text_container(self, text: Dict, containers: List[Dict]) -> Dict | None:
@@ -1272,10 +1357,11 @@ class SVGQualityChecker:
         texts: List[Dict] = []
         locators = _element_locators(root)
 
-        def visit(elem: ET.Element, tx: float = 0.0, ty: float = 0.0):
+        def visit(elem: ET.Element, tx: float = 0.0, ty: float = 0.0, fam: str = ''):
             dx, dy = _parse_translate(elem.get('transform', ''))
             tx += dx
             ty += dy
+            fam = _get_svg_attr(elem, 'font-family') or fam
 
             if _local_name(elem.tag) == 'text':
                 if elem.get('data-allow-overflow') == 'true':
@@ -1287,7 +1373,7 @@ class SVGQualityChecker:
                     fs = _float_attr(elem, 'font-size', 16)
                     fw = _get_svg_attr(elem, 'font-weight', '400')
                     anchor = _get_svg_attr(elem, 'text-anchor', 'start')
-                    estimated_w = _estimate_svg_text_width(text, fs, fw) * 1.12
+                    estimated_w = _measured_text_width(text, fs, fw, fam)
                     tspan_count = sum(
                         1 for child in elem.iter()
                         if child is not elem and _local_name(child.tag) == 'tspan'
@@ -1325,7 +1411,7 @@ class SVGQualityChecker:
                     })
 
             for child in list(elem):
-                visit(child, tx, ty)
+                visit(child, tx, ty, fam)
 
         visit(root)
         return texts
@@ -1675,7 +1761,7 @@ class SVGQualityChecker:
             return 'Brand/spec issues'
         elif 'font' in error_msg.lower():
             return 'Font issues'
-        elif '[text-overflow]' in error_msg or 'text layout overflow' in error_msg.lower() or 'wrap contract' in error_msg.lower():
+        elif any(tag in error_msg for tag in ('[text-overflow]', '[text-box-overflow]', '[text-word-too-wide]')) or 'text layout overflow' in error_msg.lower() or 'wrap contract' in error_msg.lower():
             return 'Text layout overflow'
         elif '[title-zone]' in error_msg or 'title/header zone' in error_msg.lower():
             return 'Title zone intrusion'
