@@ -23,7 +23,7 @@ The `layouts/` directory contains pre-built page layout templates organized by d
 
 ## Visualization Templates
 
-The `charts/` directory contains 71 standardized visualization templates. For backward compatibility, the directory name remains `charts/`, but its scope includes charts, infographics, process diagrams, relationship diagrams, strategic frameworks, and system architecture diagrams:
+The `charts/` directory contains 78 standardized visualization templates. For backward compatibility, the directory name remains `charts/`, but its scope includes charts, infographics, process diagrams, relationship diagrams, strategic frameworks, and system architecture diagrams:
 
 - KPI Cards
 - Bar Chart / Stacked Bar Chart

@@ -257,7 +257,7 @@ Rules:
 >
 > For data-heavy reports, executive dashboards, KPI summaries, ranked lists, tables, timelines, process flows, or recommendation lists, this section is expected to be non-empty unless every candidate page is explicitly marked `no-template-match` with a reason.
 
-Catalog read: 71 templates
+Catalog read: 78 templates
 
 | Page | Template | Path | Summary-quote (verbatim from `charts_index.json`) | Usage |
 | ---- | -------- | ---- | ------------------------------------------------- | ----- |
@@ -301,7 +301,7 @@ Catalog read: 71 templates
 | -------- | --------- | ----- | ------- | ---- | -------------- | ----------- | ------ | --------- |
 | team.jpg | 1280x720 | 1.78 | Team overview | Photography | #3 right-third image + #29 two-stop scrim | web | Pending | Diverse engineering team, professional editorial photography |
 
-> **Layout pattern column is MANDATORY** — value is one or more `#<id> <name>` joined by ` + ` drawn verbatim from [`references/image-layout-patterns.md`](../references/image-layout-patterns.md) (Primary + optional Modifiers). Empty cells, paraphrased names, or invented ids invalidate the row. See `strategist.md §h` GATE for the three-layer requirement (read → produce → image-as-canvas coverage).
+> **Layout pattern column is MANDATORY** — value is one or more `#<id> <name>` joined by ` + ` drawn verbatim from [`references/image-layout-patterns.md`](../references/image-layout-patterns.md) (Primary + optional Modifiers). Empty cells, paraphrased names, or invented ids invalidate the row. See `strategist-options.md §h` GATE for the three-layer requirement (read → produce → image-as-canvas coverage).
 
 **Status**:
 

@@ -180,6 +180,21 @@
 >
 > **Audit rule**: every §VII row with a `templates/charts/<name>.svg` path MUST have an exact `P<NN>: <name>` row here. A deck with numeric charts/KPIs/ranked lists but no `page_charts` section is invalid unless §VII documents `no-template-match` for each such page.
 
+## execution
+
+- generation_mode: parallel
+- max_subagents: 6
+- max_pages_per_subagent: 6
+- anchor: main
+
+> Records the generation mode chosen in the Eight Confirmations 💡 line (SKILL.md Step 4). Resume sessions read it from disk.
+>
+> - `generation_mode`: `parallel` (default when the host has a parallel sub-agent tool such as NetMind `delegate_task` and the deck has ≥ 6 pages) or `sequential` (user chose sequential, host has no sub-agent tool, or deck < 6 pages). A missing section means `sequential` (pre-1.0.7 projects).
+> - `max_subagents`: sub-agents per wave, ≤ the host limit (NetMind: `delegation.max_concurrent_children`). Default 6 to limit shared-provider load; lower it when the provider throttles.
+> - `max_pages_per_subagent`: page cap per sub-agent; keeps each sub-agent's context small. More pages than `max_subagents × max_pages_per_subagent` → several waves.
+> - `anchor: main`: the main agent draws one anchor content page before dispatch.
+> - Write plain values only (no inline comments). Edit these lines only before SVG generation starts: `spec_lock.md` is part of the content-review receipt hash.
+
 ## forbidden
 
 - Mixing icon libraries

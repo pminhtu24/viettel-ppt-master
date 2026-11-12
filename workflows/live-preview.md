@@ -6,7 +6,7 @@ description: Start the browser SVG editor when it is not running, and apply subm
 
 > **Purpose**: (1) start/reopen the browser SVG editor when no preview service is currently running, and (2) apply user-submitted annotations after Step 7 export completes.
 >
-> **Not in scope**: Executor's mandatory auto-startup — that lives in [`SKILL.md`](../SKILL.md) Step 6. Do not re-launch a preview that is already running.
+> **Not in scope**: Executor's mandatory auto-startup — that lives in [`execute.md`](execute.md) Step 6. Do not re-launch a preview that is already running.
 
 ## When to Run
 
@@ -20,6 +20,7 @@ description: Start the browser SVG editor when it is not running, and apply subm
 - The preview service is already running → just give the user the URL; do not restart.
 - The user gave a precise chat edit ("change page 3 title to X") → edit the SVG directly.
 - The user wants a full regeneration → use the main workflow.
+- The user wants one page redrawn from scratch or its content changed → [`resume-execute`](resume-execute.md) "Redraw one page".
 - Step 7 has never run for this project → annotations cannot be applied yet; finish the main pipeline first.
 
 ---
@@ -66,7 +67,7 @@ Triggered by the user signals listed in "When to Run".
    python3 ${SKILL_DIR}/scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel --file svg_output/<file> --slide-number <N>
    python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>/svg_output/<file>
    ```
-   Fix every error before continuing. For grounded projects follow [content-grounding §5](../references/content-grounding.md): semantic changes require source-backed lock updates first; re-review edited pages and refresh the complete hash-bound receipt after layout/chrome changes. This also applies to precise chat edits. Then re-export:
+   Fix every error before continuing, then `python3 ${SKILL_DIR}/scripts/page_plan.py record <project_path> --pages <N>` so a later resume keeps this page (add `--accept-lock` only when the edit came with a source-backed update of that page's content lock). For grounded projects follow [content-grounding §5](../references/content-grounding.md): semantic changes require source-backed lock updates first; re-review edited pages and refresh the complete hash-bound receipt after layout/chrome changes. This also applies to precise chat edits. Then re-export:
    ```bash
    python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>
    ```
@@ -75,7 +76,7 @@ Triggered by the user signals listed in "When to Run".
 
 ---
 
-## Notes (editor invariants — referenced from SKILL.md Step 6)
+## Notes (editor invariants — referenced from execute.md Step 6)
 
 - **UI**: English-first preview editor. Slide navigation: first/prev/next/last buttons at the top of the center panel, plus `←` / `→` / `Home` / `End` (suppressed while typing in the annotation textarea).
 - **Buttons**: `Add annotation` stages locally; `Submit annotations` writes to disk and keeps the service running; `Exit preview` is the only UI action that stops Flask.

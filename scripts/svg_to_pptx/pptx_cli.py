@@ -146,7 +146,7 @@ Per-element entrance animation:
     )
     args = parser.parse_args()
 
-    project_path = Path(args.project_path)
+    project_path = Path(args.project_path).resolve()  # '.' would give an empty export name
     if not project_path.exists():
         parser.error(f"path does not exist: {project_path}")
 

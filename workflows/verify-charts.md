@@ -13,6 +13,7 @@ This workflow is **independent**: it reads `design_spec.md` and the generated SV
 - The deck contains one or more data visualization charts where source values determine SVG geometry: bar lengths/heights, point positions, arc angles, polygon vertices, connector endpoints, bubble centers/radii, or flow widths/paths.
 - SVGs are generated to `<project_path>/svg_output/` and the project quality check has passed.
 - Native PPTX export (`svg_to_pptx.py`) has **not yet** run.
+- **Page subset** (parallel sub-agents, single-page redraw): run Steps 1–3 for the assigned pages only — restrict the Step 1 list to those page IDs. The calculator writes no files, so concurrent runs are safe. The main agent still owns the deck-level "After verification" step and re-verifies only chart pages it drew or changed afterwards (execute.md Step 6), not pages a sub-agent already verified.
 
 The calculator has direct CLI models for simple bars, lines/scatter, pie/donut, radar, and grid layouts. Composite/derived charts are **not automatically out of scope**: if their geometry reduces to repeated direct calculations, include them as `decomposable-calc`; if the calculator has no layout model but the SVG geometry is still data-driven, include them as `manual-verify` so they are not silently skipped.
 
@@ -252,4 +253,4 @@ For every donut/pie page, the receipt must include all five fields exactly as sh
 
 ## After verification
 
-After all chart pages have been checked and every changed SVG has passed its per-file checker, return to the main workflow and run [SKILL.md Step 7](../SKILL.md). Do not export from `verify-charts`.
+After all chart pages have been checked and every changed SVG has passed its per-file checker, return to the main workflow and run [execute.md Step 7](execute.md). Do not export from `verify-charts`.

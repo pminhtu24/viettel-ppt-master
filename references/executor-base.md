@@ -231,10 +231,10 @@ Before drawing each page, look up its entry in `page_charts` to decide which cha
 - **Viettel logo clearance**: the fixed logo reserves `x=1060-1224, y=20-82`. Header/title text, subtitles, chart labels, and callouts MUST NOT enter this slot. Content-page titles should use `data-box="88,36,960,58" data-wrap="true"` or manual line breaks so long titles wrap before the logo.
 - **Viettel page number ownership**: each slide has exactly one page-number treatment. If a page inherits a Viettel shell, do not draw another bottom-right number; chrome normalization adds one only when the shell does not already own it.
 - **Brand font runtime honesty**: if automatic installation still leaves a required face missing, keep the declared stack and tell the user `brand fidelity degraded`. SVG generation may continue; export is blocked by default. Never rewrite the deck to Arial/Calibri.
-- **Main-agent ownership**: SVG generation must run in the main agent (not sub-agents) — pages share upstream context for cross-page visual continuity
-- **Generation rhythm**: lock global design context first, then generate pages sequentially in one continuous context. No batched groups (e.g., 5 at a time).
-- **Phased continuous generation** (mandatory):
-  1. **Visual Construction Phase**: generate all SVG pages sequentially in one continuous pass. Chart pages MUST embed plot-area markers per §3.1 below.
+- **Ownership**: follows `spec_lock.md ## execution generation_mode`. `sequential` (or missing): the main agent draws every page. `parallel`: [`workflows/execute.md`](../workflows/execute.md) Parallel Generation Protocol — the main agent draws the anchor page; sub-agents draw their groups from `page_plan.py` briefs and may write only their own SVG files; the main agent owns every whole-deck gate, cross-page consistency against the anchor, chrome and export.
+- **Generation rhythm**: lock global design context first. Every agent writes its pages one at a time in page order, re-reading the brief or `spec_lock.md` before each page. Never write several pages in one tool call.
+- **Phased generation** (mandatory):
+  1. **Visual Construction Phase**: generate all SVG pages (sequentially, or in sub-agent waves). Chart pages MUST embed plot-area markers per §3.1 below.
   2. **Project Quality Gate**: after all pages are generated, run `python3 scripts/svg_quality_checker.py <project_path>` for every profile. The checker reports stable `(rule, file, locator)` fingerprints and every offending element in the initial scan. Before normalization, defer only missing top bar/logo/page-number findings that `apply_brand_chrome.py` can add; every other error must be repaired.
      - Run at most three full-project scans: initial → batch verification → final. Between the second and third scans, re-check only affected SVGs.
      - Batch-fix native/XML/icon issues first, brand/font/palette/spec-lock second, and overflow/title-zone last.
@@ -379,7 +379,7 @@ Chart SVGs referenced in **VII. Visualization Reference List** are loaded once v
 - **Freely adjust**: composition, axis ranges, grid, legend, spacing, decoration — as long as the chart stays accurate and readable
 - **Forbidden**: changing visualization type without spec justification; omitting data points or structural elements from the outline
 
-> Templates: `templates/charts/` (71 types). Index: `templates/charts/charts_index.json`
+> Templates: `templates/charts/` (78 types). Index: `templates/charts/charts_index.json`
 
 ### 5.1 Chart Coordinate Calibration
 
@@ -431,7 +431,7 @@ Use `attribution_text` from the manifest entry as the **starting point**, then c
 
 Source of truth: `spec_lock.md typography`. Under `viettel_default`, use only `font_family: "FS Magistral"` for every role. Per-role family overrides apply only to explicit `custom_override` runs.
 
-If `spec_lock.md` is absent, consult [`strategist.md`](strategist.md) §g — do not invent a stack.
+If `spec_lock.md` is absent, consult [`strategist-options.md`](strategist-options.md) §g — do not invent a stack.
 
 **Hard rule**: under `viettel_default`, every SVG text element uses the exact locked stack `"FS Magistral"`; missing-font handling is reported by preflight and does not change the design stack. Under `custom_override`, every SVG `font-family` stack MUST end with a pre-installed family (Microsoft YaHei / SimHei / SimSun / Arial / Calibri / Segoe UI / Times New Roman / Georgia / Consolas / Courier New / Impact / Arial Black). PPTX has no runtime fallback.
 

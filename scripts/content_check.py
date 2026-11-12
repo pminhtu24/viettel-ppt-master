@@ -68,11 +68,18 @@ def calculate(item, values):
     return result
 
 
+def quote_text(text):
+    """Invisible differences only: Markdown escapes (BCCS\\_SALE) and whitespace runs, including NBSP."""
+    return ' '.join(re.sub(r'\\([\\`*_{}\[\]()#+\-.!|~<>])', r'\1', text).split())
+
+
 def evidence(item, blocks):
     require(isinstance(item.get('sources'), list) and item['sources'], 'Fact needs source excerpts')
     for ref in item['sources']:
         require(ref['ref'] in blocks, f"Unknown source ref: {ref['ref']}")
-        require(bool(ref['quote'].strip()) and ref['quote'] in blocks[ref['ref']], 'Quote not found in referenced block')
+        quote = quote_text(ref['quote'])
+        require(bool(quote) and quote in quote_text(blocks[ref['ref']]),
+                f"{item.get('id')}: quote not found in block {ref['ref']}: {ref['quote'][:60]!r}")
 
 
 def chart_check(viz, values, catalog):

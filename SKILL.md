@@ -9,7 +9,7 @@ description: >
 
 > Multi-role SVG presentation workflow. Converts source documents into high-quality SVG pages and exports them to PPTX.
 
-**Content integrity (mandatory for new decks):** Read [content-grounding](references/content-grounding.md) before Strategist chart selection. Preserve sources/table relationships, index source blocks, and write version-1 per-page content locks in `design_spec.md`. Lock facts and conclusions, not wording. Before every SVG read the page lock + referenced sources + design lock. Source eligibility overrides all style/template requirements. Run the plan gate before Executor and the content/semantic review gate after final chrome repair, before native export. Unsupported facts, comparisons, trends and causal claims must not be added to fill a layout.
+**Content integrity (mandatory for new decks):** every fact on a slide comes from a source block named in `plan.md`; `spec_build.py build` turns the plan into per-page content locks and runs the plan gate, `page_plan.py check` and `fact_check.py` trace each drawn page's numbers, period labels, section names and statuses back to those blocks, and the export gate needs a recorded semantic review. Wording is free; facts, comparisons, trends and causal claims the source does not state must not be added to fill a layout.
 
 **Core Pipeline**: `Source Document → Create Project → [Template] → Strategist → [Web Image Acquisition] → Executor Live Preview → Quality Check → [Chart Verification] → Native PPTX Export`
 
@@ -17,91 +17,43 @@ description: >
 >
 > ## 🚨 Global Execution Discipline (MANDATORY)
 >
-> **This workflow is a strict serial pipeline. The following rules have the highest priority — violating any one of them constitutes execution failure:**
->
-> 1. **SERIAL EXECUTION** — Steps MUST be executed in order; the output of each step is the input for the next. Non-BLOCKING adjacent steps may proceed continuously once prerequisites are met, without waiting for the user to say "continue"
-> 2. **BLOCKING = HARD STOP** — Steps marked ⛔ BLOCKING require a full stop; the AI MUST wait for an explicit user response before proceeding and MUST NOT make any decisions on behalf of the user
-> 3. **NO CROSS-PHASE BUNDLING** — Cross-phase bundling is FORBIDDEN. (Note: the Eight Confirmations in Step 4 are ⛔ BLOCKING — the AI MUST present recommendations and wait for explicit user confirmation before proceeding. Once the user confirms, all subsequent non-BLOCKING steps — design spec output, SVG generation, quality gates, and export — may proceed automatically without further user confirmation)
-> 4. **GATE BEFORE ENTRY** — Each Step has prerequisites (🚧 GATE) listed at the top; these MUST be verified before starting that Step
-> 5. **NO SPECULATIVE EXECUTION** — "Pre-preparing" content for subsequent Steps is FORBIDDEN (e.g., writing SVG code during the Strategist phase)
-> 6. **NO SUB-AGENT SVG GENERATION** — Executor Step 6 SVG generation is context-dependent and MUST be completed by the current main agent end-to-end. Delegating page SVG generation to sub-agents is FORBIDDEN
-> 7. **SEQUENTIAL PAGE GENERATION ONLY** — In Executor Step 6, after the global design context is confirmed, SVG pages MUST be generated sequentially page by page in one continuous pass. Grouped page batches (for example, 5 pages at a time) are FORBIDDEN
-> 8. **SPEC_LOCK RE-READ PER PAGE** — Before generating each SVG page, Executor MUST `read_file <project_path>/spec_lock.md`. All colors / fonts / icons / images MUST come from this file — no values from memory or invented on the fly. Executor MUST also look up the current page's `page_rhythm` (`anchor` / `dense` / `breathing`), optional `page_backgrounds` (cover/chapter/ending-only Viettel background layer, if any), `page_layouts` (which template SVG to inherit, if any), and `page_charts` (which chart template to adapt, if any). Empty / absent entries are intentional Strategist signals; missing `page_backgrounds` means no decorative background for that page — see executor-base.md §2.1. This rule exists to resist context-compression drift on long decks and to break the uniform "every page is a card grid" default
-> 9. **SVG MUST BE HAND-WRITTEN, NOT SCRIPT-GENERATED** — Every SVG page is written by the main agent directly, one page at a time (see rules 6 and 7). Writing or running a Python / Node / shell script that produces the SVG files in batch — looping over pages, templating from data, or emitting them via a generator — is FORBIDDEN, including under "save tokens", "quick draft", or "user is in a hurry" pretexts. The script-generation path was tried on a feature branch and abandoned: cross-page visual consistency depends on per-page authoring with full upstream context, which a generator script cannot reproduce
-> 10. **CHECK AFTER FULL-DECK GENERATION** — Generate every SVG page sequentially in one continuous pass, then run the initial project checker and repair pass. After chart verification, normalize deterministic Viettel chrome and run the final full-project checker; export requires `0 errors`
+> 1. **SERIAL EXECUTION** — Steps run in order; each step's output is the next step's input. Non-blocking steps follow each other without waiting for "continue".
+> 2. **BLOCKING = HARD STOP** — At a ⛔ BLOCKING step, stop and wait for the user's explicit reply; never decide for the user.
+> 3. **ONE CONFIRMATION** — The Eight Confirmations (Step 4) are the only ⛔ gate of a normal run. After the reply, planning, SVG generation, quality gates and export proceed without asking again; the generation mode (💡 line, parallel by default) is settled in that same reply.
+> 4. **GATE BEFORE ENTRY** — Verify each step's 🚧 GATE before starting it.
+> 5. **NO SPECULATIVE EXECUTION** — Never prepare a later step's artifacts early (e.g. SVG during the Strategist phase).
+> 6. **GENERATION MODE FOLLOWS `spec_lock.execution.generation_mode`** — `parallel`: the main agent draws one anchor page, sub-agents draw grouped pages from script-written briefs through the host's parallel sub-agent tool (NetMind: `delegate_task`), the main agent owns every whole-deck gate. `sequential` (or no `execution` section): the main agent draws every page. No sub-agent tool, or a refused delegation → `sequential`, said in one line.
+> 7. **ONE PAGE AT A TIME PER AGENT** — Every agent writes its pages one by one, in page order; never several pages in one tool call or one templated pass.
+> 8. **LOCK RE-READ PER PAGE** — Before each page re-read its brief (parallel) or `spec_lock.md` and the page's `page_rhythm` / `page_backgrounds` / `page_layouts` / `page_charts` (sequential). Colors, fonts, icons and images come only from the lock; an absent entry is an intentional signal (executor-base.md §2.1).
+> 9. **SVG IS HAND-WRITTEN** — Every SVG page is written directly by an agent. Scripts may prepare text inputs and bookkeeping (`spec_build.py`, `page_plan.py`, `fact_check.py`) but never emit SVG; generating pages with a script — loops, data templating, generators — is forbidden under any pretext ("save tokens", "quick draft", "user is in a hurry").
+> 10. **CHECK AFTER FULL-DECK GENERATION** — After every page exists, the main agent runs the project checker and repair pass, chart verification, Viettel chrome normalization and the final scan; export requires `0 errors`.
+> 11. **SCRIPTS ARE TOOLS, NOT DOCUMENTATION** — Never open, `cat`, `sed`, `grep` or import the source of the skill's `scripts/*.py` to learn a format or decode an error. The references define every format and every check prints what to fix. If an error stays unclear, write it to `<project_path>/skill_feedback.md` and apply the closest documented rule.
+> 12. **NO IDLE TURN END** — From the Eight Confirmations reply until export, never end a turn to report progress or to ask whether to continue. End it only while waiting for sub-agents (Step 6), at a ⛔ gate, on a recorded blocker, or when the quota is exhausted.
 
 > [!IMPORTANT]
 >
-> ## 🌐 Language & Communication Rule
+> ## 🔒 Viettel brand, language, scope
 >
-> - **Response language**: match the user's input and source materials. Explicit user override takes precedence.
-> - **Template format**: `design_spec.md` MUST follow its original English template structure (section headings, field names) regardless of conversation language. Content values may be in the user's language.
-> - **Viettel section rhythm**: when a Viettel deck has clear source headings or 8+ slides with multiple narrative blocks, Strategist should create meaningful chapter pages from the source structure. Decorative backgrounds and full-height red rails are restricted to cover, chapter, and ending pages; every other page keeps the clean Viettel shell.
+> - Every normal run is a Viettel-branded PPT 16:9 deck: initialize with `--brand-profile viettel_default` without waiting for a Viettel keyword. `--brand-profile custom_override` only when the user explicitly refuses Viettel, names another brand or supplies a non-Viettel template path; a color or font request alone is not an override. Never propose other brand colors, typefaces or competing templates in a normal run.
+> - Typography is locked to three bundled static faces, stated in the confirmations but never offered as a choice: FS Magistral Bold (`FS Magistral-Bold.ttf`, SVG weight `700`: titles, KPIs, emphasis), Book (`FS Magistral-Book.ttf`, `400`/omitted: body, captions, sources), Medium (`FS Magistral-Medium.ttf`, `500`: subtitles, secondary labels). No synthetic bold, no Arial/Calibri substitution; PPTX writes the exact face name and embeds every face used. `check_fonts.py` finds or installs the faces (Windows: current user's Fonts directory and HKCU only); a face still missing → keep `"FS Magistral"`, report `brand fidelity degraded`; export hard-fails on a missing or invalid embedded payload.
+> - Viettel red `#EE0033` is the accent. Deep blue `#12436D` only for chart, diagram/infographic and icon marks and cataloged backgrounds with `deep_blue_background: true` — never for text, cards, rails, footers, dividers or ad-hoc backgrounds.
+> - Reply in the user's language (an explicit request wins); `design_spec.md` keeps its English headings and field names (the script writes them).
+> - This is a repository workflow, not an application scaffold: never create `.worktrees/`, `tests/` or branch workflows by default. On a conflict with a generic coding or PPTX skill, follow this skill; the Viettel typography contract always wins.
 
-> [!IMPORTANT]
->
-> ## 🔌 Compatibility With Generic Coding Skills
->
-> - `viettel-ppt-master` is a repository-specific workflow, not a general application scaffold
-> - Do NOT create `.worktrees/`, `tests/`, branch workflows, or generic engineering structure by default
-> - On conflict with a generic coding or PPTX skill, follow this skill unless the user explicitly says otherwise; the Viettel typography contract always overrides generic font-pairing/fallback guidance
+## Scripts and templates
 
-> [!IMPORTANT]
->
-> ## 🔒 Viettel Brand Default
->
-> - Every normal run of this skill is a Viettel-branded PPT 16:9 run. Initialize with `--brand-profile viettel_default`; do not wait for a Viettel keyword.
-> - Use `--brand-profile custom_override` only when the user explicitly says not to use Viettel, names another brand, or supplies an explicit non-Viettel template path. A color/font request alone is not an override.
-> - This skill's typography is locked to three bundled static TTF faces for every normal run; never synthesize one face from another:
->   - Title / KPI / emphasis: FS Magistral Bold — `FS Magistral-Bold.ttf`
->   - Body / caption / source: FS Magistral Book — `FS Magistral-Book.ttf`
->   - Subtitle / secondary label: FS Magistral Medium — `FS Magistral-Medium.ttf`
-> - During Eight Confirmations, state the typography lock for visibility; do not ask the user to choose or approve a typeface.
-> - For new Viettel decks, use the larger typography ramp in `templates/layouts/viettel_default/design_spec.md §IV`: body 20px for dense content or 24px for standard content. Keep page-number sizes unchanged. Existing project locks and explicit user sizes take precedence; do not apply a cumulative font-size increase. Preserve the Text Fit Contract in `references/executor-base.md §2.2`.
-> - SVG `700`, `400`/omitted, and `500` are selectors for Bold, Book, and Medium respectively. PPTX must write the exact Windows typeface (`FS Magistral Bold`, `FS Magistral Book`, or `FS Magistral Medium`) and embed every face used. Arial/Calibri substitution and synthetic bold are forbidden.
-> - Viettel red `#EE0033` is the brand accent. Deep blue `#12436D` is restricted to chart, diagram/infographic, icon marks, and cataloged builtin backgrounds whose `backgrounds_index.json` item explicitly sets `deep_blue_background: true`. Never use it for text, cards, rails, footer, dividers, ad-hoc backgrounds, or unregistered decoration.
-> - Do NOT propose alternative brand colors, font combinations, typefaces, or competing templates unless the run is an explicit `custom_override`.
-> - Before generation, search the full host font catalog for FS Magistral Book, Medium, and Bold. On Windows, inspect HKLM/HKCU plus the system and per-user Fonts directories, but install missing faces only into the current user's Fonts directory and HKCU; never require system/admin access. Never install with shell `copy`, never expand `%LOCALAPPDATA%` manually, and never hard-code a username. If installation still fails, keep `"FS Magistral"` in SVG and report `brand fidelity degraded`; `--allow-font-fallback` permits degraded host preview only. Viettel export must still embed every used face and hard-fail if its bundled payload is missing or invalid.
-
-## Main Pipeline Scripts
-
-| Script                                             | Purpose                                                                                                                                 |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `${SKILL_DIR}/scripts/source_to_md/pdf_to_md.py`   | PDF to Markdown                                                                                                                         |
-| `${SKILL_DIR}/scripts/source_to_md/doc_to_md.py`   | Documents to Markdown — native Python for DOCX/HTML/EPUB/IPYNB, pandoc fallback for legacy formats (.doc/.odt/.rtf/.tex/.rst/.org/.typ) |
-| `${SKILL_DIR}/scripts/source_to_md/excel_to_md.py` | Excel workbooks to Markdown — supports .xlsx/.xlsm; legacy .xls should be resaved as .xlsx                                              |
-| `${SKILL_DIR}/scripts/source_to_md/ppt_to_md.py`   | PowerPoint to Markdown                                                                                                                  |
-| `${SKILL_DIR}/scripts/source_to_md/web_to_md.py`   | Web page to Markdown (supports WeChat via `curl_cffi`)                                                                                  |
-| `${SKILL_DIR}/scripts/project_manager.py`          | Project init / validate / manage                                                                                                        |
-| `${SKILL_DIR}/scripts/analyze_images.py`           | Image analysis                                                                                                                          |
-| `${SKILL_DIR}/scripts/image_search.py`             | Openly licensed web-image search with attribution metadata                                                                              |
-| `${SKILL_DIR}/scripts/svg_quality_checker.py`      | SVG quality check                                                                                                                       |
-| `${SKILL_DIR}/scripts/svg_to_pptx.py`              | Export to PPTX                                                                                                                          |
-| `${SKILL_DIR}/scripts/update_spec.py`              | Propagate a `spec_lock.md` color / font_family change across all generated SVGs                                                         |
-| `${SKILL_DIR}/scripts/check_fonts.py`              | Search for and, when needed, auto-install the three bundled FS Magistral faces                                                          |
-
-For complete tool documentation, see `${SKILL_DIR}/scripts/README.md`.
-
-## Template Index
-
-| Index                   | Path                                                | Purpose                                                                                                                     |
-| ----------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Layout templates        | `${SKILL_DIR}/templates/layouts/layouts_index.json` | Query available page layout templates                                                                                       |
-| Visualization templates | `${SKILL_DIR}/templates/charts/charts_index.json`   | Query available visualization SVG templates (charts, infographics, diagrams, frameworks)                                    |
-| Icon library            | `${SKILL_DIR}/templates/icons/`                     | See `${SKILL_DIR}/templates/icons/README.md`; search icons on demand with `ls templates/icons/<library>/ \| grep <keyword>` |
-
-Normal runs automatically install `${SKILL_DIR}/templates/layouts/viettel_default/`. This is a native SVG shell, not an HTML renderer, and keeps the Viettel logo fixed at the top-right of shell pages.
+Pipeline scripts live in `${SKILL_DIR}/scripts/` (full list: `scripts/README.md`); the ones each step needs are named in that step. Chart and structure templates: `templates/charts/catalog.md` (index `charts_index.json`); icons: `templates/icons/<library>/`, chosen by name in `plan.md` and checked by `spec_build.py build`. Normal runs install `templates/layouts/viettel_default/`, a native SVG shell with the Viettel logo fixed top-right.
 
 ## Standalone Workflows
 
-| Workflow               | Path                                | Purpose                                                                                                                                                                     |
-| ---------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `topic-research`       | `workflows/topic-research.md`       | Pre-pipeline — gather web sources when the user supplies only a topic with no source files                                                                                  |
-| `create-template`      | `workflows/create-template.md`      | Standalone template creation workflow                                                                                                                                       |
-| `resume-execute`       | `workflows/resume-execute.md`       | Phase B entry — resume execution in a fresh chat after Phase A (Step 1–5) completed in another session (split mode)                                                         |
-| `verify-charts`        | `workflows/verify-charts.md`        | Chart coordinate calibration — run after SVG generation if the deck contains data charts                                                                                    |
-| `customize-animations` | `workflows/customize-animations.md` | Object-level PPTX animation customization — run only when the user explicitly asks to tune animation order/effects/timing                                                   |
-| `live-preview`         | `workflows/live-preview.md`         | Browser-based live preview — auto-started during generation and re-enterable any time the user mentions "live preview", "preview", or wants to click/select a slide element |
+| Workflow | Path | Purpose |
+|---|---|---|
+| `topic-research` | `workflows/topic-research.md` | Pre-pipeline — gather web sources when the user supplies only a topic with no source files |
+| `create-template` | `workflows/create-template.md` | Standalone template creation workflow |
+| `resume-execute` | `workflows/resume-execute.md` | Phase B entry — resume execution in a fresh chat after Phase A (Step 1–5) completed in another session (split mode) |
+| `verify-charts` | `workflows/verify-charts.md` | Chart coordinate calibration — run after SVG generation if the deck contains data charts |
+| `customize-animations` | `workflows/customize-animations.md` | Object-level PPTX animation customization — run only when the user explicitly asks to tune animation order/effects/timing |
+| `live-preview` | `workflows/live-preview.md` | Browser-based live preview — auto-started during generation and re-enterable any time the user mentions "live preview", "preview", or wants to click/select a slide element |
 
 ---
 
@@ -115,40 +67,19 @@ Normal runs automatically install `${SKILL_DIR}/templates/layouts/viettel_defaul
 
 When the user provides non-Markdown content, convert immediately:
 
-| User Provides                     | Command                                                                                                               |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| PDF file                          | `python3 ${SKILL_DIR}/scripts/source_to_md/pdf_to_md.py <file>`                                                       |
-| DOCX / Word / Office document     | `python3 ${SKILL_DIR}/scripts/source_to_md/doc_to_md.py <file>`                                                       |
-| XLSX / XLSM / Excel workbook      | `python3 ${SKILL_DIR}/scripts/source_to_md/excel_to_md.py <file>`                                                     |
-| CSV / TSV                         | Read directly as plain-text table source                                                                              |
-| PPTX / PowerPoint deck            | `python3 ${SKILL_DIR}/scripts/source_to_md/ppt_to_md.py <file>`                                                       |
-| EPUB / HTML / LaTeX / RST / other | `python3 ${SKILL_DIR}/scripts/source_to_md/doc_to_md.py <file>`                                                       |
-| Web link                          | `python3 ${SKILL_DIR}/scripts/source_to_md/web_to_md.py <URL>`                                                        |
-| WeChat / high-security site       | `python3 ${SKILL_DIR}/scripts/source_to_md/web_to_md.py <URL>` (requires `curl_cffi`, included in `requirements.txt`) |
-| Markdown                          | Read directly                                                                                                         |
+| User Provides | Command |
+|---|---|
+| PDF file | `python3 ${SKILL_DIR}/scripts/source_to_md/pdf_to_md.py <file>` |
+| DOCX / Word / Office document | `python3 ${SKILL_DIR}/scripts/source_to_md/doc_to_md.py <file>` |
+| XLSX / XLSM / Excel workbook | `python3 ${SKILL_DIR}/scripts/source_to_md/excel_to_md.py <file>` |
+| CSV / TSV | Read directly as plain-text table source |
+| PPTX / PowerPoint deck | `python3 ${SKILL_DIR}/scripts/source_to_md/ppt_to_md.py <file>` |
+| EPUB / HTML / LaTeX / RST / other | `python3 ${SKILL_DIR}/scripts/source_to_md/doc_to_md.py <file>` |
+| Web link | `python3 ${SKILL_DIR}/scripts/source_to_md/web_to_md.py <URL>` |
+| WeChat / high-security site | `python3 ${SKILL_DIR}/scripts/source_to_md/web_to_md.py <URL>` (requires `curl_cffi`, included in `requirements.txt`) |
+| Markdown | Read directly |
 
-> **Extracted source images are first-class slide assets**:
-> converters save embedded/downloaded images beside the generated Markdown in
-> `<source>_files/`. During `import-sources`, `project_manager.py` propagates those
-> assets into `<project_path>/images/`, namespaces filenames by source, and merges
-> metadata into `images/image_manifest.json`. A missing converter manifest MUST NOT
-> prevent propagation; `project_manager.py` creates fallback metadata for discovered
-> image files. Strategist treats propagated assets as `Acquire Via: user`,
-> `Status: Existing`, analyzes them, and selects only report-relevant images.
->
-> **Office vector assets (EMF/WMF) from DOCX/PPTX sources**:
-> `doc_to_md.py` / `ppt_to_md.py` extract embedded Office vector images (.emf/.wmf)
-> alongside bitmap images. After `import-sources`, these land in `images/`
-> together with `image_manifest.json` and are first-class assets in §VIII Image Resource List.
->
-> **Do NOT convert EMF/WMF to PNG.** The PPT Master pipeline preserves them as external
-> references and `svg_to_pptx.py` embeds them as
-> PPTX-native media via `image/x-emf` / `image/x-wmf` MIME — PowerPoint renders them at full vector fidelity.
-> Converting via LibreOffice/Inkscape introduces CJK font substitution drift and
-> rasterization loss; the original EMF/WMF is always higher fidelity than the converted PNG.
->
-> Browser-based live preview cannot render EMF (will show blank) — this is expected;
-> the PPTX output is the source of truth.
+> **Extracted source images** (`<source>_files/`, including Office vector EMF/WMF) are first-class slide assets: `import-sources` copies them into `<project_path>/images/` with `images/image_manifest.json`. Keep EMF/WMF as they are — `svg_to_pptx.py` embeds them natively; never convert them to PNG (the browser preview shows them blank, the PPTX is the truth). Treat them as `Acquire Via: user`, `Status: Existing`.
 
 **✅ Checkpoint — Confirm source content is ready, proceed to Step 2.**
 
@@ -166,9 +97,9 @@ This skill is locked to `ppt169`. Use `--brand-profile custom_override` only for
 
 Import source content (choose based on the situation):
 
-| Situation                                   | Action                                                                                                    |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Has source files (PDF/MD/etc.)              | `python3 ${SKILL_DIR}/scripts/project_manager.py import-sources <project_path> <source_files...>`         |
+| Situation | Action |
+|---|---|
+| Has source files (PDF/MD/etc.) | `python3 ${SKILL_DIR}/scripts/project_manager.py import-sources <project_path> <source_files...>` |
 | User provided text directly in conversation | No import needed — content is already in conversation context; subsequent steps can reference it directly |
 
 > ℹ️ `import-sources` automatically selects the safe transfer mode — **no flag needed**:
@@ -201,50 +132,45 @@ Import source content (choose based on the situation):
 
 🚧 **GATE**: Step 3 complete; Viettel template assets are installed, or an explicit `custom_override` is recorded.
 
-First, read the role definition:
+Read the role definition and the plan format — for a Viettel deck without slide images nothing else is needed:
 
 ```
-Read references/strategist.md
+Read ${SKILL_DIR}/references/strategist.md
+Read ${SKILL_DIR}/references/page-plan.md
 ```
 
-> ⚠️ **Mandatory gate**: before writing `design_spec.md`, Strategist MUST `read_file templates/design_spec_reference.md` and follow its full I–XI section structure. See `strategist.md` Section 1.
+| Only when | Also read |
+|---|---|
+| Explicit non-Viettel override | `references/strategist-options.md` §e §g, `templates/design_spec_reference.md`, `templates/spec_lock_reference.md` |
+| Images go on slides (approach B/C/D) | `references/strategist-options.md` §h, `references/image-layout-patterns.md` |
+| A content lock must be written by hand (composition chart, unusual data) | `references/content-grounding.md` §2–3 |
+| No source file, only a topic | `workflows/topic-research.md` first |
 
-**Eight Confirmations** (full template: `templates/design_spec_reference.md`):
+**Read the source once** — `python3 ${SKILL_DIR}/scripts/source_index.py <project_path>` (only if `sources/source_index.json` is missing), then `python3 ${SKILL_DIR}/scripts/spec_build.py source <project_path>`: every block as `ID · text` under its section. Never read the Markdown source or dump blocks another way; every later step uses these IDs.
 
-⛔ **BLOCKING**: present the Eight Confirmations as a single bundled recommendation set and **wait for explicit user confirmation or modification** before outputting Design Specification & Content Outline. This is the single core confirmation point — once confirmed, all subsequent steps proceed automatically.
+**Eight Confirmations** ⛔ **BLOCKING** — one bundled message, then wait for the user's confirmation or changes ([strategist.md](references/strategist.md) §1 gives the compact form):
 
-1. Canvas format
-2. Page count range
-3. Target audience
-4. Style objective
-5. Color scheme
-6. Icon usage approach
-7. Typography plan (the three locked FS Magistral static faces and TTF filenames; informational, not a font choice)
-8. Image usage approach
-
-**Viettel brand lock**: for every normal run, present PPT 16:9, Viettel red `#EE0033`, white/approved-gray reporting surfaces, dark-neutral text, the three locked static faces FS Magistral Book/Medium/Bold, top-right logo slot, footer/page-number treatment, and content safe area as fixed decisions. Typography is informational in the confirmation set, not a user choice. Deep blue `#12436D` is chart/diagram/icon-only except for cataloged builtin backgrounds explicitly marked `deep_blue_background: true`. `spec_lock.md` MUST keep `font_family: "FS Magistral"` for compatibility and record `brand.profile: viettel_default`; do not add fixed per-face configuration fields. Only an explicit hard non-Viettel request may record `brand.profile: custom_override`.
-
-**Font preflight (required for bundled brand fonts)**: after `spec_lock.md` is written, run:
-
-```bash
-python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>
-```
-
-In native Windows PowerShell, use `py -3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>` when `python3` is not registered.
-
-- `installed` → proceed normally
-- all three faces found → proceed without changing the host
-- any face missing → automatically install only the missing trusted faces; Windows always uses the current user's Fonts directory and HKCU, then re-checks
-- still missing after installation → continue SVG generation with the locked family and report `brand fidelity degraded`; `--allow-font-fallback` affects host preview only, while export still requires valid embedded payloads for every used face
+- **Fixed by the Viettel brand (one line, not a choice)**: PPT 16:9; Viettel red `#EE0033` with white/approved-gray surfaces and dark-neutral text, deep blue `#12436D` only for chart/diagram/icon marks; FS Magistral Book/Medium/Bold; logo top-right, footer and page number. Only an explicit hard non-Viettel request may record `brand.profile: custom_override`.
+- **To confirm**: page count, audience and purpose, style mode, icon library, image approach.
 
 **Mandatory — split-mode note** (not a ninth confirmation): after listing the eight confirmation details, you MUST append exactly one short line (rendered in the user's language, prefixed with 💡) about generation mode. Pick the variant by qualitative read of Phase A signals — recommended page count, source-material bulk, whether `topic-research` ran with substantial web-fetch accumulation:
 
-| Signal read                                                            | Line content                                                                                                                                                                                                                                                                                                                   |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Signal read | Line content |
+|---|---|
 | Heavy (long page count / bulky sources / heavy web-fetch accumulation) | State estimated page count and large source size; recommend switching to [split mode](workflows/resume-execute.md) after Step 5 — stop this chat, open a fresh window and input `continue generation projects/<project_name>` to enter Phase B (SVG generation + export); no response or "continue" = default continuous mode. |
-| Normal (default)                                                       | State scale is moderate, default continuous mode generates in one go; if mid-way window switch is desired, input `continue generation projects/<project_name>` after Step 5 to switch to [split mode](workflows/resume-execute.md).                                                                                            |
+| Normal (default) | State scale is moderate, default continuous mode generates in one go; if mid-way window switch is desired, input `continue generation projects/<project_name>` after Step 5 to switch to [split mode](workflows/resume-execute.md). |
 
 This line is required output every run — the user must always see the mode choice exists. Whether to act on it is the user's call.
+
+**Mandatory — generation-mode note** (not a ninth confirmation): directly after the split-mode line, append exactly one more 💡 line (user's language):
+
+| Condition | Line content | `plan.md` value |
+|---|---|---|
+| Host exposes a parallel sub-agent tool (NetMind: `delegate_task`) and the deck has ≥ 6 pages | **Parallel (default)**: the main agent plans the slides and a script writes the content locks; after the main agent draws the anchor page, up to `max_subagents` (6) sub-agents draw and self-check their pages at the same time; reply "sequential" / "tuần tự" to draw pages one by one instead | `mode: parallel` |
+| No parallel sub-agent tool on this host | Host has no sub-agent support → pages are drawn sequentially | `mode: sequential` |
+| Deck < 6 pages | Small deck → pages are drawn sequentially | `mode: sequential` |
+
+A reply of "sequential" / "tuần tự" / "làm lần lượt" (or equivalent) records `sequential`; any other confirmation keeps the line's default.
 
 If `<project_path>/images` contains any existing images, including assets extracted
 from source documents, run analysis **before outputting the design spec**, unless the
@@ -259,20 +185,24 @@ python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
 > references, or the Design Spec's Image Resource List. When a manifest exists, read it
 > alongside the analysis to map extracted assets back to source pages / slides / URLs.
 
-**Output**:
+**After the confirmation — in the same turn (Global rule 12)**:
 
-- `<project_path>/design_spec.md` — human-readable design narrative
-- `<project_path>/spec_lock.md` — machine-readable execution contract (skeleton: `templates/spec_lock_reference.md`); Executor re-reads before every page
+1. `Read ${SKILL_DIR}/templates/charts/catalog.md` — every chart and structure template, by the data it needs.
+2. Write `<project_path>/plan.md` in one write ([page-plan.md](references/page-plan.md)); for more than 40 slides, one write per Part.
+3. `python3 ${SKILL_DIR}/scripts/spec_build.py build <project_path> --check` lists every mistake at once (unknown block, a number not in its block, a missing role or `why`, an icon the library lacks); fix each in `plan.md` with a small edit and re-run until it prints `"ok": true`. Look at `uncovered_sections_with_numbers` and decide.
+4. `python3 ${SKILL_DIR}/scripts/spec_build.py build <project_path>` writes `design_spec.md` and `spec_lock.md` (every content lock, the fixed Viettel sections, `page_*` maps, icons, `## execution`) and runs the plan gate; it must print `"plan_gate": "pass"`.
+5. Font preflight: `python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>` (native Windows PowerShell: `py -3 …`). It finds or installs the three FS Magistral faces; a face still missing → report `brand fidelity degraded` and continue with the locked family.
+6. One status line, then Step 5 (if a web image is needed) or Step 6.
+
+**Output**: `plan.md` (written by Strategist); `design_spec.md` and `spec_lock.md` (written by `spec_build.py build`; never hand-edit a lock — change `plan.md` and build again).
 
 **✅ Checkpoint — Phase deliverables complete, auto-proceed to next step**:
 
 ```markdown
 ## ✅ Strategist Phase Complete
 
-- [x] Eight Confirmations completed (user confirmed)
-- [x] Split-mode note appended below the eight items (heavy or normal variant)
-- [x] Design Specification & Content Outline generated
-- [x] Execution lock (spec_lock.md) generated
+- [x] Eight Confirmations completed (user confirmed), split-mode and generation-mode 💡 lines shown
+- [x] plan.md written; `spec_build.py build` passed the plan gate
 - [ ] **Next**: Auto-proceed to [Web Image Acquisition / Executor] phase
 ```
 
@@ -316,118 +246,19 @@ Checkpoint: `image_sources.json` exists and every web row is `Sourced` or `Needs
 
 🚧 **GATE**: Step 4 (and Step 5 if triggered) complete; all prerequisite deliverables are ready.
 
-Read the role definition based on the selected style:
-
 ```
-Read references/executor-base.md          # REQUIRED: common guidelines
-Read references/shared-standards.md       # REQUIRED: SVG/PPT technical constraints
-Read references/executor-general.md       # General flexible style
-Read references/executor-consultant.md    # Consulting style
-Read references/executor-consultant-top.md # Top consulting style (MBB level)
+Read ${SKILL_DIR}/workflows/execute.md
 ```
 
-> Only read executor-base + shared-standards + one style file.
-
-**Design Parameter Confirmation (Mandatory)**: before the first SVG, output key design parameters from the spec (canvas dimensions, color scheme, font plan, body font size). See executor-base.md §2.
-
-**Live Preview Auto-Startup (Best-effort, Mandatory attempt)**: before the first SVG, attempt to start the browser editor in live mode and keep it running through Executor + Step 7 export:
-
-```bash
-python3 ${SKILL_DIR}/scripts/svg_editor/server.py <project_path> --live
-```
-
-- Start it immediately when Executor begins; `svg_output/` may be empty. Editor opens at `http://localhost:5050`; port conflict → `--port <other>` and report the actual URL.
-- Run it as a long-running background process; do not wait for it to exit before generating SVG pages.
-- **Startup verification (do not block the pipeline)**: the server only prints `SVG Editor running at http://...` *after* the port is successfully bound, so that line is a reliable listening signal. Wait at most ~5 seconds for one of these outcomes:
-  - `running at` line appears → preview is up; proceed to generate SVGs.
-  - `flask not installed` line appears, or process exits with code `2` → flask is missing on this host. **Skip preview entirely** — no retry, no install attempt. Tell the user in one short line: `Live preview skipped — flask not installed (pip install flask to enable it next time)`. Continue generation.
-  - `Error: cannot bind` line appears, or process exits with code `1` → port unavailable. Skip preview (or let the user pick another port manually); do not auto-retry in a loop. Continue generation.
-  - No signal within ~5s → skip preview, continue generation.
-- **Service must keep running** until one of: (a) the user clicks **Exit preview** in the browser, (b) the user explicitly asks in chat to stop it, or (c) it failed to start (handled above). Generation continues even if the user closes the editor or it never came up.
-- **Do NOT read or apply submitted annotations during generation.** Users may annotate at any time, but Executor proceeds without touching them. The window to apply annotations opens only after Step 7 completes — see [`workflows/live-preview.md`](workflows/live-preview.md).
-- UI button semantics and editor details: see [`workflows/live-preview.md`](workflows/live-preview.md) Notes.
-
-**Pre-generation Batch Read (Mandatory)**: before the first SVG, batch-read every distinct background SVG referenced in optional `spec_lock.page_backgrounds`, every distinct layout SVG referenced in `spec_lock.page_layouts`, and every distinct chart SVG referenced in `spec_lock.page_charts` (plus any §VII backup charts). One read per file, up front — do not re-read these during page generation. See executor-base.md §1.0.
-
-**Per-page spec_lock re-read (Mandatory)**: before **each** SVG page, `read_file <project_path>/spec_lock.md` and use only its colors / fonts / icons / images, plus the per-page `page_rhythm` / optional `page_backgrounds` / `page_layouts` / `page_charts` lookups (resolves to background/template/chart SVGs already loaded in the batch read above). Missing `page_backgrounds` means no decorative background for that page. Resists context-compression drift on long decks. See executor-base.md §2.1.
-
-**Font-preflight gate (Mandatory for bundled brand fonts)**: before the first SVG page, run `python3 ${SKILL_DIR}/scripts/check_fonts.py <project_path>`. It searches the full host catalog for FS Magistral Book, Medium, and Bold and installs only missing trusted faces. On Windows it always uses the current user's Fonts directory and HKCU, registers the face with Windows, and verifies it again without requiring system/admin access. Never issue manual `copy`, `reg`, or `%LOCALAPPDATA%` commands. If the re-check still reports missing faces, surface `brand fidelity degraded` but continue generating SVG with the exact locked family. The exporter repeats installation and validation, blocks missing host faces by default, and always rejects Arial/Calibri/Aptos drift. Explicit `--allow-font-fallback` bypasses only the missing-host preview check; missing or invalid embedded payloads always hard-fail Viettel export.
-
-> ⚠️ **Main-agent only**: SVG generation MUST stay in the current main agent — page design depends on full upstream context. Do NOT delegate to sub-agents.
-> ⚠️ **Generation rhythm**: generate pages sequentially, one at a time, in the same continuous context. Do NOT batch (e.g., 5 per group).
-
-**Visual Construction Phase**: generate SVG pages sequentially, one at a time, in one continuous pass → `<project_path>/svg_output/`
-
-```bash
-python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
-```
-
-- Run the initial project scan only after every SVG page has been generated.
-- Treat `(rule code, SVG file, element locator)` as the stable finding fingerprint. Bounds/value changes do not create a new finding.
-- Run the checker on the full project at most three times: **initial scan** → batch-fix all reported findings → **batch verification** → targeted per-file repair → post-chrome **final scan**. Between batch verification and the final scan, check only the SVG being repaired. Chart-verification re-checks do not count against these three generation scans.
-- Fix in batches: native/XML/icon compatibility first, brand/font/palette/spec-lock second, then text overflow/title-zone. Do not reproduce `_estimate_svg_text_width()` or write inline scripts to expand/remap icons.
-- Before chrome normalization, defer only missing top bar/logo/page-number findings that `apply_brand_chrome.py` can add deterministically. Duplicate chrome, logo-clearance, background, rail, palette, and font errors are never deferred.
-- A fingerprint gets at most two direct repair attempts. If it persists, stop guessing and use its fallback once:
-  - text overflow/title-zone: render the affected SVG/slide; fix confirmed visual breakage, or mark intentional layout with `data-allow-overflow="true"` on the text / `data-allow-title-zone="true"` on the shape or ancestor group;
-  - brand/font/palette/spec-lock: inspect inherited attributes and brand chrome; annotations are forbidden;
-  - unresolved icon/native element: choose an existing icon under `templates/icons/` or replace that one icon with SVG primitives; do not rewrite the deck in bulk;
-  - XML/missing image: repair the exact structure/reference reported by the checker.
-- If the same fingerprint remains after its fallback, record the file, locator, rule, and attempted fixes as a blocker; do not export and do not continue the loop.
-- All non-deferred errors MUST be fixed before chart verification.
-- `warning` entries (low-res image, non-PPT-safe font tail, long text without a wrap contract, etc.): fix when straightforward, otherwise acknowledge and release.
-- After the project repair pass, chart decks run [`verify-charts`](workflows/verify-charts.md). If chart verification changes an SVG, re-run the checker for that SVG.
-- After chart verification (or immediately for non-chart decks), normalize `viettel_default` chrome once, then run the final full-project scan:
-
-```bash
-python3 ${SKILL_DIR}/scripts/apply_brand_chrome.py <project_path> --brand-chrome viettel
-python3 ${SKILL_DIR}/scripts/svg_quality_checker.py <project_path>
-```
-
-Chrome normalization also removes marked background groups and near-full-height Viettel-red left rails from every page except cover, chapter, and ending before the final scan.
-
-- `custom_override` omits chrome normalization but still runs the final scan. The final project scan must report `0 errors` before native export.
-
-**✅ Checkpoint — Confirm all SVGs are fully generated and quality-checked. Proceed directly to export**:
-
-```markdown
-## ✅ Executor Phase Complete
-
-- [x] Live preview startup attempted (running at the reported URL, or skipped if flask missing / bind failed)
-- [x] All SVGs generated to svg_output/
-- [x] svg_quality_checker.py passed (0 errors)
-```
-
----
+Read it now and follow it for Step 6 (Executor role files, live preview, Icon inventory check, SVG generation — `sequential` or the Parallel Generation Protocol —, project quality gate, chart verification, chrome normalization, semantic review) and Step 7. It is part of this workflow, loaded only when Executor starts so the Strategist phase keeps a smaller context.
 
 ### Step 7: Native PPTX Export
 
-🚧 **GATE**: Step 6 complete; the project quality check passed, chart verification passed when applicable, and `content_check.py <project_path> --stage export` passes with a current semantic review receipt. Follow [content-grounding §5](references/content-grounding.md) to review and record it after final chrome normalization. Legacy export explicitly warns that content is unverified.
+🚧 **GATE**: Step 6 complete (see [`workflows/execute.md`](workflows/execute.md) Step 7). `python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>` → `exports/<project_name>_<timestamp>.pptx`.
 
-```bash
-python3 ${SKILL_DIR}/scripts/svg_to_pptx.py <project_path>
-# Output:
-#   exports/<project_name>_<timestamp>.pptx
-```
+> **Post-export annotation window**: if the user submitted annotations in the browser and now asks to apply them (they may quote `Annotations saved. ... apply my annotations`), run [`live-preview`](workflows/live-preview.md) Step 2 to apply and re-export.
 
-The exporter reads `svg_output/` directly and produces editable native DrawingML.
-
-**Optional animation flags** (the defaults already enable rich entrance animations — adjust only when the user asks for something different):
-
-- `-t <effect>` — page transition. Default `fade`. Options: `fade` / `push` / `wipe` / `split` / `strips` / `cover` / `random` / `none`.
-- `-a <effect>` — per-element entrance animation. Default `mixed` (auto-vary across the deck). Pass `none` to disable, or pick a specific effect like `fade`. Requires top-level `<g id="...">` groups (already required by Executor).
-- `--animation-trigger {on-click,with-previous,after-previous}` — Start mode (matches PowerPoint's animation-pane Start dropdown). Default `after-previous` (click-free cascade; pace via `--animation-stagger`). Use `on-click` for presenter-paced reveals, or `with-previous` for all-at-once.
-- `--animation-config <path>` — optional object-level sidecar. Default: `<project_path>/animations.json` when present.
-- `--auto-advance <seconds>` — kiosk-style auto-play.
-
-**Optional custom animations** (only when the user asks to tune animation order/effects/timing for specific objects):
-
-Run the standalone [`customize-animations`](workflows/customize-animations.md) workflow. Default export already has global entrance animation; do not create `animations.json` unless object-level customization was requested.
-
-Full effect list, anchor logic, and limits: [`references/animations.md`](references/animations.md).
-
-> **Post-export annotation window**: the preview service from Step 6 typically remains running after export. If the user submitted annotations in the browser (during Executor or after export) and now asks to apply them — they may quote the browser prompt (`Annotations saved. ... apply my annotations`), say "apply my annotations" / "apply annotations" / equivalent — run [`live-preview`](workflows/live-preview.md) Step 2 to apply and re-export. Annotations submitted during generation are also handled here, not earlier.
-
-> **Preview not running?** Any time the user mentions "live preview", "preview", "view preview", or wants to select/click a slide element and the service is not running, run [`live-preview`](workflows/live-preview.md) Step 1 to start it. If the service is already running, just point them at the URL — do not restart.
+> **Preview not running?** When the user mentions "live preview" / "preview" or wants to click a slide element and the service is not running, run [`live-preview`](workflows/live-preview.md) Step 1; if it is running, give the URL — do not restart.
 
 ---
 
@@ -444,20 +275,8 @@ Before switching roles, **MUST first read** the corresponding reference file. Ou
 
 ---
 
-## Reference Resources
-
-| Resource                                                                           | Path                                  |
-| ---------------------------------------------------------------------------------- | ------------------------------------- |
-| Shared technical constraints                                                       | `references/shared-standards.md`      |
-| Canvas format specification                                                        | `references/canvas-formats.md`        |
-| Image-text layout patterns (Primary structures + Modifier layers — combine freely) | `references/image-layout-patterns.md` |
-| Image layout sizing (math for side-by-side container dimensions)                   | `references/image-layout-spec.md`     |
-| SVG image embedding                                                                | `references/svg-image-embedding.md`   |
-| Icon library                                                                       | `templates/icons/README.md`           |
-
----
-
 ## Notes
 
 - Local preview: `python3 -m http.server -d <project_path> 8000` then open `/svg_output/`
+- **Never edit the installed skill during a run** (`${SKILL_DIR}`: SKILL.md, references, scripts, templates) — not to record lessons, not to patch a rule. Write lessons and suspected skill defects to `<project_path>/skill_feedback.md` (one line each: what happened, page, suggested fix); the maintainers merge them into the skill.
 - **Troubleshooting**: on generation issues (layout overflow, export errors, blank images, etc.), check `docs/faq.md` for known solutions

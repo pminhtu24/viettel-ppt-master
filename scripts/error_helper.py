@@ -291,7 +291,7 @@ class ErrorHelper:
                 'CJK: "Microsoft YaHei", sans-serif  |  SimSun, serif',
                 'Latin: Arial, sans-serif  |  "Times New Roman", serif',
                 'Mono: Consolas, "Courier New", monospace',
-                'See strategist.md §g for the full PPT-safe discipline'
+                'See strategist-options.md §g for the full PPT-safe discipline'
             ],
             'severity': 'warning'
         }

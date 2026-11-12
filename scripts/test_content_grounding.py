@@ -46,7 +46,7 @@ class GroundingTests(unittest.TestCase):
         self.assertGreater(calculate(item, values), 100)
 
     def test_every_catalog_entry_requires_real_inputs_and_evidence(self):
-        # Every one of the 71 templates rejects an empty observation set.
+        # Every one of the 78 templates rejects an empty observation set.
         for key in CATALOG:
             with self.subTest(key=key):
                 viz = visualization(key, ['a'])
@@ -58,6 +58,26 @@ class GroundingTests(unittest.TestCase):
             chart_check(viz, {'a':fact('a')}, CATALOG)
             viz['observations'][0]['value'] = 'fabricated'
             with self.assertRaises(ValueError): chart_check(viz, {'a':fact('a')}, CATALOG)
+
+    def test_templates_added_from_upstream_validate_their_data(self):
+        # stock_chart: OHLC per date, at least two dates per series
+        vals = {k: fact(k, v) for k, v in (('o1', 10), ('h1', 12), ('l1', 9), ('c1', 11),
+                                           ('o2', 11), ('h2', 13), ('l2', 10), ('c2', 12))}
+        for k in ('o2', 'h2', 'l2', 'c2'):
+            vals[k]['period'] = '2026-01-02'
+        viz = visualization('stock_chart', ['o1', 'h1', 'l1', 'c1'])
+        viz['observations'].append(dict(open='o2', high='h2', low='l2', close='c2'))
+        chart_check(viz, vals, CATALOG)
+        viz['observations'].pop()
+        with self.assertRaises(ValueError): chart_check(viz, vals, CATALOG)
+        # sunburst_chart: two levels, every ring reconciles to its parent
+        vals = {'all': fact('all', 10), 'a': fact('a', 6), 'b': fact('b', 4), 'a1': fact('a1', 2), 'a2': fact('a2', 4)}
+        viz = visualization('sunburst_chart', ['a'])
+        viz['observations'] += [dict(value=k) for k in ('b', 'a1', 'a2')]
+        viz['totals'] = [dict(whole='all', parts=['a', 'b']), dict(whole='a', parts=['a1', 'a2'])]
+        chart_check(viz, vals, CATALOG)
+        vals['a2']['value'] = 5; vals['a2']['raw'] = '5'
+        with self.assertRaises(ValueError): chart_check(viz, vals, CATALOG)
 
     def test_time_no_synthetic_history(self):
         for key in ('line_chart','area_chart','stacked_area_chart','dual_axis_line_chart'):
@@ -187,6 +207,12 @@ class GroundingTests(unittest.TestCase):
         with self.assertRaises(ValueError): check_page(page,{'s':'There are 101 orders'},CATALOG)
         f.update(value=101,raw='101',text='101 orders')
         check_page(page,{'s':'There are 101 orders'},CATALOG)
+        f.update(value=12,raw='12',text='12 BCCS_SALE', sources=[dict(ref='s',quote='có 12  BCCS_SALE')])
+        check_page(page,{'s':'Trạm có\xa012 BCCS\\_SALE mới'},CATALOG)
+        f['sources']=[dict(ref='s',quote='có 13 BCCS_SALE')]
+        with self.assertRaisesRegex(ValueError,'a: quote not found in block s'):
+            check_page(page,{'s':'Trạm có\xa012 BCCS\\_SALE mới'},CATALOG)
+        f.update(value=101,raw='101',text='101 orders',sources=[dict(ref='s',quote='There are 101 orders')])
         page['unresolved']=[dict(description='Conflicting main denominator',material=True,resolution='flagged')]
         with self.assertRaises(ValueError): check_page(page,{'s':'There are 101 orders'},CATALOG)
         f['status']='unverified'

@@ -639,7 +639,7 @@ class SVGQualityChecker:
 
         PPTX stores a single `typeface` per run with no runtime fallback, so every
         stack must END with a cross-platform pre-installed family. See
-        strategist.md §g "PPT-safe font discipline".
+        strategist-options.md §g "PPT-safe font discipline".
         """
         font_matches = re.findall(
             r'font-family[:\s]*["\']([^"\']+)["\']', content, re.IGNORECASE)

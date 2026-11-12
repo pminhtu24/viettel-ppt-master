@@ -1,6 +1,6 @@
 {
   "meta": {
-    "total": 71,
+    "total": 78,
     "defaultViewBox": "0 0 1280 720",
     "formats": [
       "ppt169"
@@ -23,6 +23,10 @@
     "box_plot_chart": {
       "summary": "Pick for distribution shape per group (median, quartiles, outliers). Skip if only the average per group matters (use bar_chart).",
       "data_requirements": {"family": "distribution", "roles": ["min", "q1", "median", "q3", "max"], "dimensions": ["category"], "semantic_checks": ["distribution-statistics"]}
+    },
+    "histogram_chart": {
+      "summary": "Pick for a numeric distribution across many observations grouped into contiguous bins. Skip if comparing named categories (use bar_chart) or comparing distributions per group (use box_plot_chart).",
+      "data_requirements": {"family": "comparison", "roles": ["value"], "dimensions": ["category"], "semantic_checks": ["comparable", "contiguous-bins"]}
     },
     "bubble_chart": {
       "summary": "Pick for 3-axis data (x position, y position, size). Skip for plain x-y correlation (use scatter_chart).",
@@ -57,7 +61,7 @@
       "data_requirements": {"family": "schedule", "roles": ["start", "end"], "dimensions": ["category"], "semantic_checks": ["schedule-dates"]}
     },
     "gauge_chart": {
-      "summary": "Pick for one hero metric's goal achievement rate. Skip for multiple metrics (use bullet_chart for target+actual or progress_bar_chart for completion %).",
+      "summary": "Pick for one bounded metric against an explicit target or threshold on a known domain. Skip for an unbounded hero number (use kpi_cards) or multiple metrics (use bullet_chart for target+actual or progress_bar_chart for completion %).",
       "data_requirements": {"family": "progress", "roles": ["value"], "dimensions": ["category"], "semantic_checks": ["actual-target-compatible"]}
     },
     "grouped_bar_chart": {
@@ -80,6 +84,10 @@
       "summary": "Pick for 1-3 time-series on a continuous axis showing direction. Skip if cumulative volume matters (use area_chart) or different units (use dual_axis_line_chart).",
       "data_requirements": {"family": "time", "roles": ["value"], "dimensions": ["period", "series"], "semantic_checks": ["time-comparable", "exclusive-parts", "defined-whole"]}
     },
+    "stock_chart": {
+      "summary": "Pick for open-high-low-close price movement over dates. Skip if showing only close-price direction (use line_chart) or category volume comparison (use bar_chart).",
+      "data_requirements": {"family": "time", "roles": ["open", "high", "low", "close"], "dimensions": ["period", "series"], "semantic_checks": ["time-comparable", "ohlc-order"]}
+    },
     "matrix_2x2": {
       "summary": "Pick for items plotted on Impact x Effort or similar generic 2-axis prioritization. Skip for named-quadrant text frameworks (use quadrant_text_bullets) or bubble-sized portfolios (use quadrant_bubble_scatter).",
       "data_requirements": {"family": "structure", "roles": ["value"], "dimensions": [], "semantic_checks": ["source-supported-relationships", "explicit-classification"]}
@@ -98,6 +106,14 @@
     },
     "pie_chart": {
       "summary": "Pick for a MECE 3-6-part composition of one whole when no center KPI is needed. Use horizontal_bar_chart for multi-select data or >=7 flat groups; use treemap_chart for hierarchical composition.",
+      "data_requirements": {"family": "composition", "roles": ["value"], "dimensions": ["category"], "semantic_checks": ["exclusive-parts", "defined-whole", "source-hierarchy"]}
+    },
+    "bar_of_pie_chart": {
+      "summary": "Pick for a MECE pie composition whose small long-tail slices should be expanded into a stacked bar detail. Skip if the detail should stay circular (use pie_of_pie_chart) or flat shares suffice (use pie_chart).",
+      "data_requirements": {"family": "composition", "roles": ["value"], "dimensions": ["category"], "semantic_checks": ["exclusive-parts", "defined-whole", "source-hierarchy"]}
+    },
+    "pie_of_pie_chart": {
+      "summary": "Pick for a MECE pie composition whose small slices need a secondary pie detail. Skip if the detail is easier to compare as bars (use bar_of_pie_chart) or the hierarchy matters (use sunburst_chart).",
       "data_requirements": {"family": "composition", "roles": ["value"], "dimensions": ["category"], "semantic_checks": ["exclusive-parts", "defined-whole", "source-hierarchy"]}
     },
     "hub_inward_arrows": {
@@ -138,6 +154,10 @@
     },
     "treemap_chart": {
       "summary": "Pick for hierarchical/grouped area proportion with many parts of varying size. Skip for flat 3-6 parts (use pie_chart or donut_chart).",
+      "data_requirements": {"family": "composition", "roles": ["value"], "dimensions": ["category"], "semantic_checks": ["exclusive-parts", "defined-whole", "source-hierarchy"]}
+    },
+    "sunburst_chart": {
+      "summary": "Pick for hierarchical part-to-whole composition across 2-3 levels where each ring should stay visible. Skip if rectangular area comparison is clearer (use treemap_chart) or shares are flat (use donut_chart).",
       "data_requirements": {"family": "composition", "roles": ["value"], "dimensions": ["category"], "semantic_checks": ["exclusive-parts", "defined-whole", "source-hierarchy"]}
     },
     "waterfall_chart": {
@@ -254,6 +274,14 @@
     },
     "basic_table": {
       "summary": "Pick for plain tabular text/number grid, 3-8 columns. Skip if cells need visual bars (use consulting_table) or qualitative scores (use harvey_balls_table).",
+      "data_requirements": {"family": "structure", "roles": ["value"], "dimensions": [], "semantic_checks": ["source-supported-relationships"]}
+    },
+    "hierarchical_table": {
+      "summary": "Pick for grouped or indented row hierarchies across stable measure columns, including subtotals and totals. Skip for flat records (use basic_table) or geometry driven by numeric magnitude (use a chart).",
+      "data_requirements": {"family": "structure", "roles": ["value"], "dimensions": [], "semantic_checks": ["source-supported-relationships", "source-hierarchy"]}
+    },
+    "metric_table": {
+      "summary": "Pick for operating metrics by entity with current values, changes, statuses, or target progress inside cells (KPI scorecards, plan-vs-actual grids). Skip if marks leave the grid and encode values (use a chart) or cells hold qualitative scores (use harvey_balls_table).",
       "data_requirements": {"family": "structure", "roles": ["value"], "dimensions": [], "semantic_checks": ["source-supported-relationships"]}
     },
     "consulting_table": {

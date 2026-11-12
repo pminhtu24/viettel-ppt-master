@@ -69,8 +69,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('project', type=Path)
     parser.add_argument('--show', help='Print one exact indexed block')
+    parser.add_argument('--list', action='store_true',
+                        help='Print every indexed block as "<block-id> | <exact text>" (read-only; never rebuilds)')
     args = parser.parse_args()
-    if args.show:
+    if args.list:
+        for key, text in read_blocks(args.project).items():
+            print(f'{key} | {text}')
+    elif args.show:
         print(read_blocks(args.project)[args.show])
     else:
         index = build_index(args.project)
