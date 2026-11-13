@@ -49,8 +49,8 @@ Use SCQA when the source supports its complication and answer; do not invent eit
 **Data annotation**: Show the observed value and source context. Add a comparison reference only if sourced and compatible; add interpretation only if supported by the locked evidence. Otherwise use a neutral descriptive title, with no invented baseline or takeaway.
 
 ```xml
-<text x="160" y="280" text-anchor="middle" font-size="42" font-weight="bold" fill="#1E293B">97.3%</text>
-<text x="160" y="310" text-anchor="middle" font-size="13" fill="#64748B">Industry avg 82% | Competitor A 89%</text>
+<text x="160" y="280" text-anchor="middle" font-size="42" font-weight="bold" fill="#000000">97.3%</text>
+<text x="160" y="310" text-anchor="middle" font-size="13" fill="#44494D">Industry avg 82% | Competitor A 89%</text>
 <text x="160" y="335" text-anchor="middle" font-size="12" fill="#059669">Leading industry by 15.3 percentage points</text>
 ```
 

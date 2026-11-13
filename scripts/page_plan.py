@@ -641,7 +641,7 @@ def chrome_drift(project: Project, pid: str) -> str | None:
     return None
 
 
-ACCENT_COLORS = {"#EE0033", "#28A197", "#F46A25"}
+ACCENT_COLORS = {"#EE0033", "#28A197", "#F46A25", "#10B981", "#059669"}   # emerald may replace teal in charts
 FRAME_GROUP_IDS = ("header", "footer", "bg", "background", "decor", "viettel-brand-chrome")
 CONTENT_BOTTOM_MIN = 470  # a dense page whose content ends above this leaves its lower third empty
 

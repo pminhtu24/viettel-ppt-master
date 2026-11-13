@@ -29,7 +29,7 @@ KPI cards are the most common element in consulting reports. Standard layout (12
 | Area | Content | Font Size (example @ body=18px) | Style |
 |------|---------|-----------|-------|
 | Icon row | data-icon icon | 32x32 | Theme color |
-| Metric name | "Monthly Active Users" | 14px (~0.8x body) | Gray #64748B |
+| Metric name | "Monthly Active Users" | 14px (~0.8x body) | Gray #44494D |
 | Core number | "1.2M" | 36-42px (~2x body, hero number band) | Bold, dark color |
 | Trend annotation | "+12.3% vs last month" | 12px (~0.65x body, annotation band) | Green=up / Red=down |
 
@@ -47,7 +47,7 @@ Consulting-style charts use **monochromatic depth gradients** rather than rainbo
 ```
 Primary series:   Theme color 100% opacity
 Comparison series: Theme color 60% opacity
-Baseline:         #94A3B8 (gray dashed line)
+Baseline:         #999999 (gray dashed line)
 Highlight:        Accent color (only for key data points)
 ```
 
@@ -133,7 +133,7 @@ Consulting-style page titles should be **assertion headlines**, not descriptive 
 Every data-containing page must include a source note at the bottom:
 
 ```xml
-<text x="40" y="700" font-size="10" fill="#94A3B8">
+<text x="40" y="700" font-size="10" fill="#999999">
   Source: National Bureau of Statistics 2025 Annual Report; Internal team analysis
 </text>
 ```

@@ -302,23 +302,23 @@ Strategist chooses the library and inventory; Executor only implements. Library 
 
 ```xml
 <!-- chunk-filled (straight-line geometry, sharp corners, structured) -->
-<use data-icon="chunk-filled/home" x="100" y="200" width="48" height="48" fill="#005587"/>
+<use data-icon="chunk-filled/home" x="100" y="200" width="48" height="48" fill="#EE0033"/>
 
 <!-- tabler-filled (bezier-curve forms, smooth & rounded contours) -->
-<use data-icon="tabler-filled/home" x="100" y="200" width="48" height="48" fill="#005587"/>
+<use data-icon="tabler-filled/home" x="100" y="200" width="48" height="48" fill="#EE0033"/>
 
 <!-- tabler-outline (light, line-art style — screen-only decks) -->
-<use data-icon="tabler-outline/home" x="100" y="200" width="48" height="48" fill="#005587"/>
+<use data-icon="tabler-outline/home" x="100" y="200" width="48" height="48" fill="#EE0033"/>
 
 <!-- phosphor-duotone (single color + 20% backplate — soft depth without solid weight) -->
-<use data-icon="phosphor-duotone/house" x="100" y="200" width="48" height="48" fill="#005587"/>
+<use data-icon="phosphor-duotone/house" x="100" y="200" width="48" height="48" fill="#EE0033"/>
 
 <!-- simple-icons (brand logos — used alongside the deck's primary library, only for real company/product marks) -->
-<use data-icon="simple-icons/github" x="100" y="200" width="48" height="48" fill="#181717"/>
+<use data-icon="simple-icons/github" x="100" y="200" width="48" height="48" fill="#000000"/>
 
 <!-- tabler-outline with thin / bold stroke (stroke-style libraries only) -->
-<use data-icon="tabler-outline/home" x="100" y="200" width="48" height="48" fill="#005587" stroke-width="1.5"/>
-<use data-icon="tabler-outline/home" x="100" y="200" width="48" height="48" fill="#005587" stroke-width="3"/>
+<use data-icon="tabler-outline/home" x="100" y="200" width="48" height="48" fill="#EE0033" stroke-width="1.5"/>
+<use data-icon="tabler-outline/home" x="100" y="200" width="48" height="48" fill="#EE0033" stroke-width="3"/>
 ```
 
 > ⚠️ **Color**: ALWAYS use `fill="#HEX"` on `<use data-icon="...">`. NEVER use `stroke` or `fill="none"`, even for stroke-style libraries.

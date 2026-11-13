@@ -81,10 +81,10 @@ One offending character invalidates the file and aborts export. Numeric refs (`&
 <defs>
   <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="9" refY="5"
           orient="auto" markerUnits="strokeWidth">
-    <path d="M0,0 L10,5 L0,10 Z" fill="#1976D2"/>
+    <path d="M0,0 L10,5 L0,10 Z" fill="#44494D"/>
   </marker>
 </defs>
-<line x1="100" y1="200" x2="400" y2="200" stroke="#1976D2" stroke-width="3"
+<line x1="100" y1="200" x2="400" y2="200" stroke="#44494D" stroke-width="3"
       marker-end="url(#arrowHead)"/>
 ```
 
@@ -183,17 +183,17 @@ One logical line — even with mixed colors/weights/sizes — MUST be one `<text
 ✅ **DO** — one `<text>` → one text frame with three runs:
 
 ```xml
-<text x="100" y="200" font-size="24" fill="#333333">
-  实现<tspan fill="#1A73E8" font-weight="bold">10倍</tspan>效率提升
+<text x="100" y="200" font-size="24" fill="#000000">
+  实现<tspan fill="#EE0033" font-weight="bold">10倍</tspan>效率提升
 </text>
 ```
 
 ❌ **DON'T** — three side-by-side `<text>` elements become three separate text frames in PPT (breaks edit-as-one-line, risks alignment drift, makes spacing fragile):
 
 ```xml
-<text x="100" y="200" font-size="24" fill="#333333">实现</text>
-<text x="160" y="200" font-size="24" fill="#1A73E8" font-weight="bold">10倍</text>
-<text x="240" y="200" font-size="24" fill="#333333">效率提升</text>
+<text x="100" y="200" font-size="24" fill="#000000">实现</text>
+<text x="160" y="200" font-size="24" fill="#EE0033" font-weight="bold">10倍</text>
+<text x="240" y="200" font-size="24" fill="#000000">效率提升</text>
 ```
 
 **⚠️ Inline tspans must NOT carry `x`/`y`/`dy`** — those mark a new line, and `flatten_tspan` will split into a separate text frame. `dx` is safe (kerning, stays inline). Only set `x`/`y`/`dy` on tspans that genuinely start a new line.
@@ -201,16 +201,16 @@ One logical line — even with mixed colors/weights/sizes — MUST be one `<text
 **Multi-line `<text>` with per-line emphasis works**: an outer line-break tspan (with `x` + `dy` or `y`) MAY contain nested inline tspans for color/weight/size — converter walks nested tspans and emits one run per styled segment:
 
 ```xml
-<text x="80" y="190" font-size="18" fill="#333333">
-  <tspan x="80" dy="0">完成率<tspan fill="#4CAF50" font-weight="bold">98%</tspan>超预期</tspan>
-  <tspan x="80" dy="35">成本降低<tspan fill="#F44336" font-weight="bold">¥120万</tspan></tspan>
+<text x="80" y="190" font-size="18" fill="#000000">
+  <tspan x="80" dy="0">完成率<tspan fill="#28A197" font-weight="bold">98%</tspan>超预期</tspan>
+  <tspan x="80" dy="35">成本降低<tspan fill="#EE0033" font-weight="bold">¥120万</tspan></tspan>
 </text>
 ```
 
 ❌ **DON'T** — same-line column jump via `<tspan x="...">`:
 
 ```xml
-<text x="100" y="200" font-size="18" fill="#333333">
+<text x="100" y="200" font-size="18" fill="#000000">
   <tspan x="100">左列</tspan><tspan x="600" font-weight="bold">右列</tspan>
 </text>
 ```
@@ -230,7 +230,7 @@ Color: use the deck's primary brand color for emphasis. Reserve green/red for ac
 ❌ **DON'T** — uniform-styled paragraph buries the insight:
 
 ```xml
-<text x="80" y="200" font-size="20" fill="#333333">
+<text x="80" y="200" font-size="20" fill="#000000">
   2024年公司营收同比增长35%达到12亿元创历史新高
 </text>
 ```
@@ -238,8 +238,8 @@ Color: use the deck's primary brand color for emphasis. Reserve green/red for ac
 ✅ **DO** — same line, key data lifted:
 
 ```xml
-<text x="80" y="200" font-size="20" fill="#333333">
-  2024年公司营收同比<tspan fill="#1A73E8" font-weight="bold">增长35%</tspan>达到<tspan fill="#1A73E8" font-weight="bold">12亿元</tspan>创历史新高
+<text x="80" y="200" font-size="20" fill="#000000">
+  2024年公司营收同比<tspan fill="#EE0033" font-weight="bold">增长35%</tspan>达到<tspan fill="#EE0033" font-weight="bold">12亿元</tspan>创历史新高
 </text>
 ```
 
@@ -278,10 +278,10 @@ Wrap logically related elements in top-level `<g id="...">` groups. Produces Pow
 <g id="card-benefits-1">
   <!-- This card floats over a colored panel — shadow is appropriate. On a flat white canvas, omit the filter. -->
   <rect x="60" y="115" width="565" height="260" rx="20" fill="#FFFFFF" filter="url(#shadow)"/>
-  <use data-icon="chunk-filled/bolt" x="108" y="163" width="44" height="44" fill="#0071E3"/>
-  <text x="105" y="270" font-size="56" font-weight="bold" fill="#0071E3">10×</text>
-  <text x="250" y="270" font-size="30" font-weight="bold" fill="#1D1D1F">Faster</text>
-  <text x="105" y="310" font-size="18" fill="#6E6E73">Reduce production time from days to hours.</text>
+  <use data-icon="chunk-filled/bolt" x="108" y="163" width="44" height="44" fill="#EE0033"/>
+  <text x="105" y="270" font-size="56" font-weight="bold" fill="#EE0033">10×</text>
+  <text x="250" y="270" font-size="30" font-weight="bold" fill="#000000">Faster</text>
+  <text x="105" y="310" font-size="18" fill="#44494D">Reduce production time from days to hours.</text>
 </g>
 ```
 
@@ -406,7 +406,7 @@ Best for: accent buttons, brand-colored cards. Use the element's own color famil
 <filter id="colorShadow" x="-15%" y="-15%" width="140%" height="140%">
   <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
   <feOffset dx="0" dy="6" result="offsetBlur"/>
-  <feFlood flood-color="#1A73E8" flood-opacity="0.20" result="shadowColor"/>
+  <feFlood flood-color="#EE0033" flood-opacity="0.20" result="shadowColor"/>
   <feComposite in="shadowColor" in2="offsetBlur" operator="in" result="shadow"/>
   <feMerge>
     <feMergeNode in="shadow"/>
@@ -425,7 +425,7 @@ Best for: title highlights, key metrics, hero text. The converter automatically 
 <defs>
   <filter id="titleGlow" x="-30%" y="-30%" width="160%" height="160%">
     <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur"/>
-    <feFlood flood-color="#1A73E8" flood-opacity="0.45" result="glowColor"/>
+    <feFlood flood-color="#EE0033" flood-opacity="0.45" result="glowColor"/>
     <feComposite in="glowColor" in2="blur" operator="in" result="glow"/>
     <feMerge>
       <feMergeNode in="glow"/>
@@ -433,7 +433,7 @@ Best for: title highlights, key metrics, hero text. The converter automatically 
     </feMerge>
   </filter>
 </defs>
-<text x="640" y="360" text-anchor="middle" font-size="48" fill="#1A73E8" filter="url(#titleGlow)">Key Insight</text>
+<text x="640" y="360" text-anchor="middle" font-size="48" fill="#EE0033" filter="url(#titleGlow)">Key Insight</text>
 ```
 
 Recommended parameters:
@@ -453,7 +453,7 @@ Best for: maximum compatibility with older PowerPoint versions. Stack 2–3 semi
 <!-- Shadow layers (back to front, largest offset first) -->
 <rect x="68" y="72" width="400" height="240" rx="16" fill="#000000" fill-opacity="0.03"/>
 <rect x="65" y="69" width="400" height="240" rx="14" fill="#000000" fill-opacity="0.05"/>
-<rect x="62" y="66" width="400" height="240" rx="12" fill="#1A73E8" fill-opacity="0.04"/>
+<rect x="62" y="66" width="400" height="240" rx="12" fill="#EE0033" fill-opacity="0.04"/>
 <!-- Main card -->
 <rect x="60" y="60" width="400" height="240" rx="12" fill="#FFFFFF"/>
 ```
@@ -468,9 +468,9 @@ Best for: image+text pages. Gradient direction should match text position (text 
 <image href="..." x="0" y="0" width="1280" height="720" preserveAspectRatio="xMidYMid slice"/>
 <defs>
   <linearGradient id="imgOverlay" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%"   stop-color="#1A1A2E" stop-opacity="0.85"/>
-    <stop offset="55%"  stop-color="#1A1A2E" stop-opacity="0.30"/>
-    <stop offset="100%" stop-color="#1A1A2E" stop-opacity="0"/>
+    <stop offset="0%"   stop-color="#000000" stop-opacity="0.85"/>
+    <stop offset="55%"  stop-color="#000000" stop-opacity="0.30"/>
+    <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
   </linearGradient>
 </defs>
 <rect x="0" y="0" width="1280" height="720" fill="url(#imgOverlay)"/>
@@ -511,8 +511,8 @@ Best for: slides needing strong visual brand identity.
 ```xml
 <defs>
   <linearGradient id="brandOverlay" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%"   stop-color="#005587" stop-opacity="0.80"/>
-    <stop offset="100%" stop-color="#005587" stop-opacity="0.10"/>
+    <stop offset="0%"   stop-color="#EE0033" stop-opacity="0.80"/>
+    <stop offset="100%" stop-color="#EE0033" stop-opacity="0.10"/>
   </linearGradient>
 </defs>
 <rect x="0" y="0" width="1280" height="720" fill="url(#brandOverlay)"/>
@@ -552,7 +552,7 @@ Converts to native PPTX `<a:prstDash>`. Use preset patterns for best results:
   fill="none" stroke="#999999" stroke-width="2" stroke-dasharray="4,4"/>
 
 <line x1="100" y1="360" x2="1180" y2="360"
-  stroke="#CCCCCC" stroke-width="1" stroke-dasharray="2,2"/>
+  stroke="#E6E6E6" stroke-width="1" stroke-dasharray="2,2"/>
 ```
 
 ### stroke-linejoin
@@ -567,7 +567,7 @@ Controls how line segments join at corners. Supported values convert to native P
 
 ```xml
 <polyline points="100,200 200,100 300,200" fill="none"
-  stroke="#1A73E8" stroke-width="3" stroke-linejoin="round"/>
+  stroke="#EE0033" stroke-width="3" stroke-linejoin="round"/>
 ```
 
 ### text-decoration
@@ -580,10 +580,10 @@ Supported text decorations convert to native PPTX text formatting:
 | `line-through` | Strikethrough | Removed items, before/after comparisons |
 
 ```xml
-<text x="100" y="200" font-size="20" fill="#333333" text-decoration="underline">Important Term</text>
+<text x="100" y="200" font-size="20" fill="#000000" text-decoration="underline">Important Term</text>
 
 <!-- Per-tspan decoration -->
-<text x="100" y="240" font-size="18" fill="#333333">
+<text x="100" y="240" font-size="18" fill="#000000">
   Regular text <tspan text-decoration="line-through" fill="#999999">old value</tspan> new value
 </text>
 ```
@@ -597,8 +597,8 @@ Gradients defined in `<defs>` and referenced via `fill="url(#id)"` convert to na
 ```xml
 <defs>
   <linearGradient id="btnGrad" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%" stop-color="#1A73E8"/>
-    <stop offset="100%" stop-color="#0D47A1"/>
+    <stop offset="0%" stop-color="#EE0033"/>
+    <stop offset="100%" stop-color="#C00028"/>
   </linearGradient>
 </defs>
 <rect x="540" y="600" width="200" height="48" rx="24" fill="url(#btnGrad)"/>
@@ -609,8 +609,8 @@ Gradients defined in `<defs>` and referenced via `fill="url(#id)"` convert to na
 ```xml
 <defs>
   <radialGradient id="spotBg" cx="50%" cy="50%" r="70%">
-    <stop offset="0%" stop-color="#1A73E8" stop-opacity="0.15"/>
-    <stop offset="100%" stop-color="#1A73E8" stop-opacity="0"/>
+    <stop offset="0%" stop-color="#EE0033" stop-opacity="0.15"/>
+    <stop offset="100%" stop-color="#EE0033" stop-opacity="0"/>
   </radialGradient>
 </defs>
 <circle cx="640" cy="360" r="300" fill="url(#spotBg)"/>
@@ -622,7 +622,7 @@ Rotation converts to native PPTX `<a:xfrm rot="...">`. Supported on all element 
 
 ```xml
 <!-- Rotated decorative element -->
-<rect x="100" y="100" width="60" height="60" fill="#1A73E8" fill-opacity="0.1"
+<rect x="100" y="100" width="60" height="60" fill="#EE0033" fill-opacity="0.1"
   transform="rotate(45, 130, 130)"/>
 
 <!-- Rotated text label -->
@@ -693,7 +693,7 @@ Tip: (370, 430)
 Back1: (370-8.1-3.7, 430-8.8+3.4) = (358.2, 424.6)
 Back2: (370-8.1+3.7, 430-8.8-3.4) = (365.6, 417.8)
 
-<polygon points="370,430 365.6,417.8 358.2,424.6" fill="#C8A96E"/>
+<polygon points="370,430 365.6,417.8 358.2,424.6" fill="#44494D"/>
 ```
 
 ⚠️ Never use a fixed downward/rightward triangle on a diagonal line — arrow will point wrong.
