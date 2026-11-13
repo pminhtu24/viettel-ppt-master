@@ -67,7 +67,7 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 | ----------------- | --------- | -------------------------------------------------------- |
 | **Primary Text**  | `#000000` | Main titles, body copy                                  |
 | **Secondary Text**| `#44494D` | Subtitles, captions, descriptions                       |
-| **Tertiary Text** | `#999999` | Footnotes, page numbers, source citations                |
+| **Tertiary Text** | `#999999` | Secondary notes, context bars (style C); the footer source line uses `#44494D` |
 | **White Text**    | `#FFFFFF` | Text on Viettel-red emphasis blocks                      |
 
 ### Chart Colors (Series Order)
@@ -78,8 +78,11 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 | 2     | `#12436D` | Secondary data series, comparisons         |
 | 3     | `#28A197` | Tertiary series, positive trends           |
 | 4     | `#F46A25` | Warning series, risk data                  |
-| 5     | `#7C3AED` | Sixth categorical option; chart-only       |
+| 5     | `#7C3AED` | Fifth series or a recurring entity; chart/diagram marks only, never text |
+| —     | `#10B981` / `#059669` | Emerald, the templates' green: may replace teal in chart/diagram marks (one green per chart); never text — green text stays `#28A197` |
 | 6     | `#6B7280` | Neutral series; always `Other` when present |
+
+> Tints are the same color with `fill-opacity`: 0.7 second series of a family, 0.45 plan / previous period, 0.25 target zone or plan track, 0.12 pill and card fill, 0.06 highlighted row. When red and orange share a chart, label each mark (they look alike to red–green color-blind viewers). White text on teal or orange only at ≥ 24px bold.
 
 > Use chart colors in rotation order for categorical data. Each donut/pie slice uses one unique color; `Other` is always last and `#6B7280`.
 
@@ -141,20 +144,22 @@ Use body **20px for dense content** and **24px for standard content** in new Vie
 | KPI/hero number | 1.5-2.5x    | 30-50px            | 36-60px               | 700     |
 | Subtitle      | 1.2-1.5x      | 24-30px            | 29-36px               | 500     |
 | **Body**      | **1x**        | **20px**           | **24px**              | 400     |
-| Caption / annotation | 0.7-0.85x | 14-17px        | 17-20px               | 400     |
+| Caption / annotation | 0.9x      | 18px           | 18-20px               | 400     |
 | Page number   | Fixed chrome; do not scale | 11-14px | 12-15px            | 400     |
 
-Recommended starting slots: dense `body: 20`, `title: 32`, `subtitle: 26`, `annotation: 16`; standard `body: 24`, `title: 36`, `subtitle: 30`, `annotation: 18`. Keep the existing shell page badge and its font face/size unchanged.
+**Readability floor (decks planned with `spec_build.py`, enforced by the checker as `[text-min-size]` / `[text-density]`)**: every content text is at least **18px**; a short single-line label (≤ 24 characters, no `data-box`: chart axis/tick labels, legends, table column heads, status pills) at least **14px**; a slide shows at most **900 visible characters** (aim for ≤ 700). The source footer and the page number are chrome and keep their sizes. When text does not fit, summarise, drop optional blocks or split the slide — never shrink.
+
+Recommended starting slots: dense `body: 20`, `title: 32`, `subtitle: 26`, `annotation: 18`; standard `body: 24`, `title: 36`, `subtitle: 30`, `annotation: 18`. Keep the existing shell page badge and its font face/size unchanged.
 
 **Compact profile for dense multi-block pages** (card grids with a status pill per card, KPI-plus-notes cards, a summary banner). These pages cannot hold the full role bands above, so treat the sizes below as **minimums** and declare each as a role-specific slot in `spec_lock.md` — several sit below the ratio bands. Font faces follow the role table above. Never shrink below a minimum to force a fit: trim lower-priority text, widen the block, or split the page (see `executor-base.md §2.2`).
 
 | Role                                   | Minimum size | Slot             |
 | -------------------------------------- | ------------ | ---------------- |
 | Page title                             | 32px         | `title`          |
-| Subtitle strip (one line under title)  | 17px         | `subtitle_strip` |
-| Card / block header                    | 18px         | `card_header`    |
-| Card sub-header, banner header         | 16-17px      | `card_subhead`   |
-| Card body, banner body                 | 16px         | `card_body`      |
+| Subtitle strip (one line under title)  | 18px         | `subtitle_strip` |
+| Card / block header                    | 20px         | `card_header`    |
+| Card sub-header, banner header         | 18px         | `card_subhead`   |
+| Card body, banner body                 | 18px         | `card_body`      |
 | Status pill label                      | 14px         | `badge`          |
 | KPI / hero number inside a card        | 40px         | `hero_number`    |
 | Footer source, page number             | unchanged    | `footnote`       |
@@ -636,9 +641,9 @@ pages omit `page_backgrounds` and keep the clean Viettel shell.
 ### Chart Usage Rules
 
 1. Use `#EE0033` only for the primary series, key metric, or threshold signal.
-2. Use `#12436D`, `#28A197`, `#F46A25`, `#7C3AED`, and `#6B7280` in categorical order. Place every `#12436D` mark inside a `data-viettel-blue-scope="chart|diagram|icon"` group.
+2. Use `#12436D`, `#28A197`, `#F46A25`, `#7C3AED`, and `#6B7280` in categorical order. Place every `#12436D` mark inside a `data-viettel-blue-scope="chart|diagram|icon"` group and every `#7C3AED`, `#10B981` or `#059669` mark inside a `data-viettel-blue-scope="chart|diagram"` group.
 3. Donut is limited to a 2-slice KPI or a MECE 3-6-slice composition; pie is limited to a MECE 3-6-slice composition without a center KPI. Use horizontal bars for multi-select data or at least 7 flat groups, and treemap for hierarchical data.
-4. KPI donut uses `#EE0033` for the primary slice and `#E5E7EB` for the remainder. Composition donuts/pies use unique categorical colors, put `Other` last in `#6B7280`, directly label every slice, and keep legend/card colors identical to slice colors.
+4. KPI donut uses `#EE0033` for the primary slice and `#E6E6E6` for the remainder. Composition donuts/pies use unique categorical colors, put `Other` last in `#6B7280`, directly label every slice, and keep legend/card colors identical to slice colors.
 5. Long labels such as CVE IDs, malware names, agency names, and sector names stay outside bars; values sit at the bar end.
 6. KPI cards use a two-line structure: large number on line 1, unit/context on line 2.
 7. Tables and ranked lists with more than 8 rows should use `basic_table`, `consulting_table`, or split slides; do not shrink body text below 11px to fit.

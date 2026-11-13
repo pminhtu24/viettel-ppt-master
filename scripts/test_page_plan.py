@@ -13,7 +13,8 @@ from unittest.mock import patch
 import page_plan
 from page_plan import Project, classify, main, partition
 
-SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720"><text>{}</text></svg>'
+SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">'
+       '<rect x="88" y="132" width="400" height="500" fill="#EE0033"/><text>{}</text></svg>')
 CHARTS = {5: "bar_chart", 6: "basic_table", 9: "kpi_cards", 12: "bar_chart", 15: "timeline", 18: "bar_chart"}
 
 
@@ -111,6 +112,59 @@ class PagePlanTests(unittest.TestCase):
         self.assertEqual(self.plan()["anchor"]["page"], "P05")          # the first data chart, not P02/P04
         self.assertIn("separate sub-agent calls", out.getvalue())
 
+    def test_check_reports_chrome_that_differs_from_the_anchor(self, _):
+        project = make_project(self.root, 8)
+        run("briefs", self.root)
+        anchor = self.plan()["anchor"]["page"]
+        chrome = ('<g id="viettel-brand-chrome"><rect x="0" y="0" width="1280" height="5" fill="#EE0033"/>'
+                  '<image href="../images/viettel-logo.png" x="1088" y="{y}" width="128" height="42"/>'
+                  '<text x="1216" y="704" data-chrome="page-number">{n}</text></g>')
+        for n, y in ((int(anchor[1:]), 28), (6, 28), (7, 200)):
+            write_svg(project, n).write_text(SVG.format("ok").replace("</svg>", chrome.format(y=y, n=n) + "</svg>"),
+                                              encoding="utf-8")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            main(["check", str(self.root), "--pages", "P06,P07"])
+        report = json.loads(out.getvalue())
+        self.assertEqual(report["P06"], [])                                # same chrome, other page number
+        self.assertTrue(any(e.startswith("chrome:") for e in report["P07"]), report)
+
+    def test_check_reports_flat_or_half_empty_content_pages(self, _):
+        project = make_project(self.root, 8)
+        bare = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">{}</svg>'
+        pages = {
+            4: '<rect x="88" y="140" width="300" height="6" fill="#EE0033"/><text y="300">a</text>',  # thin stripe, ends 300
+            5: '<g transform="translate(0,300)" font-size="24"><text y="320" fill="#28A197">97%</text></g>',  # 620
+            6: '<g id="footer"><rect x="0" y="674" width="1280" height="46" fill="#EE0033"/></g>'
+               '<text x="88" y="600" fill="#000000">b</text>',  # accent only in footer
+            3: '<text y="200">chapter</text>',  # anchor rhythm: not checked
+        }
+        for n, body in pages.items():
+            (project.svg_dir / f"{n:02d}_page.svg").write_text(bare.format(body), encoding="utf-8")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            main(["check", str(self.root), "--pages", "P03,P04,P05,P06"])
+        report = json.loads(out.getvalue())
+        self.assertEqual(report["P03"], [])
+        self.assertEqual(len(report["P04"]), 2, report)                     # no focal accent + ends at 300
+        self.assertEqual(report["P05"], [])                                 # 24px teal, translated down to 620
+        self.assertEqual([e[:30] for e in report["P06"]], ["visual: no focal accent in the"])
+
+    def test_briefs_carry_section_style_and_pick_the_richest_chart_as_anchor(self, _):
+        project = make_project(self.root, 20)
+        spec = self.root / "design_spec.md"
+        text = spec.read_text(encoding="utf-8").replace("# Design Spec", "# Design Spec\n\n| Style | A) General Versatile |")
+        rich = json.dumps({"page": "P12", "svg": "12_page.svg", "facts": [{"id": f"f{i}"} for i in range(5)]})
+        text = text.replace(json.dumps({"page": "P12", "svg": "12_page.svg"}), rich)
+        spec.write_text(text, encoding="utf-8")
+        run("briefs", self.root)
+        self.assertEqual(self.plan()["anchor"]["page"], "P12")              # 5 facts beats P05's none
+        shared = (self.root / "briefs/_shared.md").read_text(encoding="utf-8")
+        self.assertIn("Deck style: A) General Versatile", shared)
+        self.assertNotIn("Deck style: B)", shared)
+        self.assertIn("section (footer band, binds c_label): Hạ tầng",
+                      (self.root / "briefs/P05.md").read_text(encoding="utf-8"))
+
     def test_briefs_share_one_rules_file_and_keep_verbatim_lock(self, _):
         project = make_project(self.root)
         run("briefs", self.root)
@@ -124,6 +178,7 @@ class PagePlanTests(unittest.TestCase):
             self.assertIn(str(self.root.resolve() / "briefs/_shared.md"), text)
         self.assertIn(project.by_id["P05"]["text"], texts["P05"])
         self.assertIn("bar_chart.svg", texts["P05"])
+        self.assertIn("- color recipe: one measure, one hue", texts["P05"])   # bar_chart is a comparison chart
         self.assertIn(str(project.svg_dir / "05_page.svg"), texts["P05"])
         context = self.plan()["waves"][0][0]["context"]
         self.assertIn("ONLY these files", context)
@@ -320,6 +375,50 @@ class PagePlanTests(unittest.TestCase):
         plan = self.plan()
         self.assertEqual((plan["anchor"]["page"], plan["anchor"]["needs_draw"]), (anchor, False))
         self.assertNotIn(anchor, plan["pages"])
+
+class TextBudgetTests(unittest.TestCase):
+    """svg_quality_checker: readable text on decks whose spec_lock declares typography.min_text."""
+
+    def check(self, body: str, min_text: bool = True) -> list[str]:
+        from svg_quality_checker import SVGQualityChecker
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "svg_output").mkdir()
+            typo = "- min_text: 18\n- min_label: 14\n" if min_text else ""
+            (root / "spec_lock.md").write_text(f"## brand\n\n- profile: viettel_default\n\n## typography\n\n"
+                                               f'- font_family: "FS Magistral"\n- body: 20\n{typo}', encoding="utf-8")
+            svg = root / "svg_output" / "02_page.svg"
+            svg.write_text('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">'
+                           f'{body}</svg>', encoding="utf-8")
+            return SVGQualityChecker().check_file(str(svg)).get("errors", [])
+
+    def text(self, size, words, box=False):
+        attrs = ' data-box="80,100,600,80" data-wrap="true"' if box else ""
+        return f'<text x="80" y="120" font-family="FS Magistral" font-size="{size}"{attrs}>{words}</text>'
+
+    def test_small_content_text_and_overfull_slides_are_errors(self):
+        ok = self.check(self.text(18, "Hàng vô tuyến về cảng 7.480/20.120 trạm", box=True) + self.text(14, "KH tháng"))
+        self.assertFalse([e for e in ok if "[text-" in e], ok)
+        small = self.check(self.text(13, "Hàng vô tuyến về cảng lũy kế 7.480/20.120 trạm") + self.text(12, "KH tháng"))
+        self.assertEqual(len([e for e in small if e.startswith("[text-min-size] 2 text(s)")]), 1, small)
+        dense = self.check("".join(self.text(18, "Một dòng nội dung khá dài của báo cáo tuần " * 2, box=True)
+                                   for _ in range(12)))
+        self.assertTrue(any(e.startswith("[text-density]") for e in dense), dense)
+        legacy = self.check(self.text(12, "Hàng vô tuyến về cảng lũy kế 7.480/20.120 trạm"), min_text=False)
+        self.assertFalse([e for e in legacy if "[text-" in e])            # older projects keep exporting
+        footer = self.check('<g id="footer">' + self.text(14, "Kết quả thực hiện nhiệm vụ trọng tâm tuần") + "</g>")
+        self.assertFalse([e for e in footer if "[text-" in e], footer)     # footer band: section + source line
+
+    def test_purple_is_for_chart_marks_only(self):
+        mark = '<rect x="80" y="300" width="200" height="40" fill="#7C3AED"/>'
+        label = '<text x="80" y="380" font-family="FS Magistral" font-size="20" fill="#7C3AED">KV3</text>'
+        brand = lambda errors: [e for e in errors if e.startswith(("[brand-color]", "[brand-chart-only-color]"))]
+        self.assertEqual(brand(self.check(f'<g data-viettel-blue-scope="chart">{mark}</g>')), [])
+        emerald = mark.replace("#7C3AED", "#10B981")
+        self.assertEqual(brand(self.check(f'<g data-viettel-blue-scope="diagram">{emerald}</g>')), [])
+        for body in (mark, emerald, f'<g data-viettel-blue-scope="chart">{label}</g>', f'<g data-viettel-blue-scope="icon">{mark}</g>'):
+            self.assertEqual([e.split(" ")[0] for e in brand(self.check(body))], ["[brand-chart-only-color]"], body)
+
 
 if __name__ == "__main__":
     unittest.main()

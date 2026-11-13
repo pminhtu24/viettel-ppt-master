@@ -66,6 +66,7 @@ VIETTEL_ALLOWED_FONT_WEIGHTS = {"", "400", "500", "700"}
 VIETTEL_DEEP_BLUE = "#12436D"
 VIETTEL_BLUE_SCOPES = {"chart", "diagram", "icon", "background"}
 VIETTEL_RAIL_PAGE_ROLES = {"cover", "chapter", "ending"}
+TEXT_BUDGET_WARN, TEXT_BUDGET_ERROR = 700, 900   # visible characters per slide (decks with typography.min_text)
 VIETTEL_ALLOWED_COLORS = {
     "#000000",
     "#12436D",
@@ -80,6 +81,9 @@ VIETTEL_ALLOWED_COLORS = {
     "#F46A25",
     "#FFFFFF",
 }
+# chart and diagram marks only, inside data-viettel-blue-scope="chart|diagram": purple (fifth series / recurring
+# entity) and the templates' emerald green (#10B981, dark #059669) as the chart's green
+VIETTEL_CHART_ONLY_COLORS = {"#7C3AED", "#10B981", "#059669"}
 
 
 def _normalize_font_stack(value: str) -> tuple[str, ...]:
@@ -1194,6 +1198,60 @@ class SVGQualityChecker:
 
         self._check_viettel_background_contract(root, svg_path, result)
         self._check_viettel_fonts_and_colors(root, result)
+        self._check_viettel_text_budget(root, svg_path, result)
+
+    def _check_viettel_text_budget(self, root: ET.Element, svg_path: Path, result: Dict) -> None:
+        """Readable slides: content text ≥ typography.min_text, short single-line labels ≥ min_label, and at
+        most TEXT_BUDGET_ERROR visible characters per page. Active only when spec_lock declares min_text
+        (decks planned with spec_build.py), so older projects keep exporting as before."""
+        typo = (self._get_spec_lock(svg_path) or {}).get('typography', {})
+        try:
+            floor = float(typo['min_text'])
+        except (KeyError, ValueError):
+            return
+        label_floor = float(typo.get('min_label', 14) or 14)
+        small: List[str] = []
+        chars = 0
+
+        def visit(elem: ET.Element, size: float, skip: bool) -> None:
+            nonlocal chars
+            skip = (skip or elem.get('id') == 'viettel-brand-chrome' or bool(elem.get('data-chrome'))
+                    or 'footer' in (elem.get('id') or '').lower())
+            size = _float_attr(elem, 'font-size', size)
+            if _local_name(elem.tag) != 'text':
+                for child in list(elem):
+                    visit(child, size, skip)
+                return
+            text = ' '.join(t.strip() for t in elem.itertext() if t.strip())
+            if skip or not text or re.match(r'^(nguồn|source)\b', text, re.I):
+                return
+            chars += len(text)
+            sizes = [size] + [_float_attr(t, 'font-size', size) for t in elem.iter()
+                              if t is not elem and _local_name(t.tag) == 'tspan' and (t.text or '').strip()]
+            lines = sum(1 for t in elem.iter() if t is not elem and _local_name(t.tag) == 'tspan')
+            is_label = not elem.get('data-box') and lines <= 1 and len(text) <= 24
+            need = label_floor if is_label else floor
+            if min(sizes) < need:
+                small.append(f"{min(sizes):g}px '{_text_excerpt(text, 28)}'")
+
+        visit(root, 16.0, False)
+        if small:
+            result['errors'].append(
+                f"[text-min-size] {len(small)} text(s) too small: {'; '.join(small[:6])}{' …' if len(small) > 6 else ''}. "
+                f"Content text is at least {floor:g}px; short single-line labels (≤24 chars, no data-box) at least "
+                f"{label_floor:g}px. Shorten the wording (keep numbers, periods, names and statuses), drop optional "
+                "blocks or split the slide — never shrink the text."
+            )
+        if chars > TEXT_BUDGET_ERROR:
+            result['errors'].append(
+                f"[text-density] {chars} visible characters (limit {TEXT_BUDGET_ERROR}). Summarise each block "
+                "in a short phrase (keep its numbers, periods, names, statuses), show each figure once, drop "
+                "optional blocks — a slide is not a copy of the source."
+            )
+        elif chars > TEXT_BUDGET_WARN:
+            result['warnings'].append(
+                f"[text-density] {chars} visible characters (aim for ≤{TEXT_BUDGET_WARN}): summarise or drop optional blocks"
+            )
 
     def _check_viettel_background_contract(
         self, root: ET.Element, svg_path: Path, result: Dict
@@ -1268,6 +1326,7 @@ class SVGQualityChecker:
         missing_fonts: set[str] = set()
         invalid_weights: Dict[str, set[str]] = defaultdict(set)
         invalid_colors: Dict[str, set[str]] = defaultdict(set)
+        chart_only: Dict[str, set[str]] = defaultdict(set)
         blue_text: set[str] = set()
         unscoped_blue: set[str] = set()
 
@@ -1295,7 +1354,10 @@ class SVGQualityChecker:
                 value = _get_svg_attr(elem, attr).strip().upper()
                 if not HEX_VALUE_RE.fullmatch(value):
                     continue
-                if value not in VIETTEL_ALLOWED_COLORS:
+                if value in VIETTEL_CHART_ONLY_COLORS:
+                    if is_text or scope not in ('chart', 'diagram'):
+                        chart_only[value].add(locator)
+                elif value not in VIETTEL_ALLOWED_COLORS:
                     invalid_colors[value].add(locator)
                 if value == VIETTEL_DEEP_BLUE:
                     if is_text:
@@ -1330,6 +1392,12 @@ class SVGQualityChecker:
                 f"[brand-color] value={value} "
                 f"locators={', '.join(sorted(value_locators))}; "
                 "outside the approved Viettel palette"
+            )
+        for value, value_locators in sorted(chart_only.items()):
+            result['errors'].append(
+                f"[brand-chart-only-color] value={value} "
+                f"locators={', '.join(sorted(value_locators))}; "
+                'chart/diagram marks only: inside data-viettel-blue-scope="chart|diagram", never text (use #28A197 or black for text)'
             )
         if blue_text:
             result['errors'].append(

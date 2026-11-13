@@ -653,7 +653,7 @@ y = cy + r × sin(θ × π / 180)
 
 1. Sector count, value count, direct-label count, and legend/card count must match.
 2. Percentage data must total `100 ± 0.1`; verify it with `calc pie --expect-total 100`. Absolute values may use the calculator's normalizing behavior without the flag.
-3. A KPI donut has exactly two slices; its center value equals the primary slice and its colors are `#EE0033` + `#E5E7EB`.
+3. A KPI donut has exactly two slices; its center value equals the primary slice and its colors are `#EE0033` + `#E6E6E6`.
 4. A 3-6-slice composition donut may show only an absolute total or `100%` in the center. A pie has no center KPI.
 5. Composition colors follow `#EE0033`, `#12436D`, `#28A197`, `#F46A25`, `#7C3AED`, `#6B7280`; each slice has a unique color, and `Other` is last and gray. Direct labels and legend/cards must use the same color as their slice. Scope `#12436D` under `data-viettel-blue-scope="chart"`.
 6. Multi-select data and flat compositions with at least 7 groups use a horizontal bar; hierarchical data uses a treemap.

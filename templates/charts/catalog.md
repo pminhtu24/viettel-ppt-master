@@ -1,6 +1,6 @@
 # Chart and structure catalog
 
-All 78 templates in `templates/charts/`, grouped by the data they need. A `structure` template takes source blocks (no numbers); every other family takes `- data:` lines naming the source number behind each mark (references/page-plan.md). Generated from charts_index.json by `spec_build.py catalog --write`.
+All 78 templates in `templates/charts/`, grouped by the data they need. Every template needs a `- why:` line. Data charts take one `- data:` line per mark with the number as `spec_build.py source` prints it — `43,90%`, `7.480`, `271.7K` and ratios such as `45/50` (a ratio gives value 45 and, for progress/kpi templates, target 50). Timelines take blocks only. `structure` templates take blocks; tables among them are for data a chart cannot show (several columns per row, a source table). Prefer a chart whenever a slide's numbers share one unit or one kind of progress (references/page-plan.md). Generated from charts_index.json by `spec_build.py catalog --write`.
 
 ## structure
 
@@ -18,7 +18,7 @@ All 78 templates in `templates/charts/`, grouped by the data they need. A `struc
 - `icon_grid` — Pick for 4-9 parallel features/capabilities/services as icon cards — feature grid, service lineup, benefits matrix, brand values, product highlights. Skip for sequential ordering (use numbered_steps) or hierarchical layers (use pyramid_chart).
 - `isometric_stairs` — Pick for 4-7 ascending stages emphasizing growth/maturity progression visually. Skip for flat sequential steps (use numbered_steps) or formal hierarchy (use pyramid_chart).
 - `mind_map` — Pick for one core topic radiating into 3-6 brainstorm branches. Skip for capability hub-and-spoke (use hub_spoke) or strict hierarchy (use top_down_tree).
-- `comparison_table` — Pick for 2-4 plans/products compared across many feature rows (dense matrix). Skip for pricing-tier marketing layout (use comparison_columns).
+- `comparison_table` — Pick for 2-4 plans/products compared across many feature rows (dense matrix). Skip for pricing-tier marketing layout (use comparison_columns). *(table: needs a reason a chart cannot show it)*
 - `snake_flow` — Pick for 6-10 winding sequential steps fitting a long journey/lifecycle on one slide. Skip for <=5 steps (use numbered_steps).
 - `word_cloud` — Pick for 20-30 keywords sized by frequency/weight. Skip if individual keyword position carries meaning (use icon_grid).
 - `concentric_circles` — Pick for 3-5 priority rings from core to periphery — bullseye/onion model, sphere of influence, stakeholder rings, core-to-ecosystem priority layers, target-vs-extended audience. Skip for non-prioritized layers (use pyramid_chart).
@@ -35,14 +35,14 @@ All 78 templates in `templates/charts/`, grouped by the data they need. A `struc
 - `module_composition` — Pick for one parent container wrapping 3-N child module cards, each = title + 2-3 bullets — fits 'Feature X contains 3 parts, each with its own description'. Skip if source has only labels without descriptions (use numbered_steps or icon_grid).
 - `pipeline_with_stages` — Pick for 3-5 horizontal pipeline stages, each = title + 1-line description + output artifact, connected by arrows (data pipelines, ETL, build pipelines). Skip if any stage lacks an artifact (use process_flow or numbered_steps).
 - `client_server_flow` — Pick for left-side clients + right-side servers with labeled bidirectional arrows for key interactions (request/response/push). Each module = name + 1-line description; each arrow must have an action label. Skip for non-distributed flows (use process_flow).
-- `basic_table` — Pick for plain tabular text/number grid, 3-8 columns. Skip if cells need visual bars (use consulting_table) or qualitative scores (use harvey_balls_table).
-- `hierarchical_table` — Pick for grouped or indented row hierarchies across stable measure columns, including subtotals and totals. Skip for flat records (use basic_table) or geometry driven by numeric magnitude (use a chart).
-- `metric_table` — Pick for operating metrics by entity with current values, changes, statuses, or target progress inside cells (KPI scorecards, plan-vs-actual grids). Skip if marks leave the grid and encode values (use a chart) or cells hold qualitative scores (use harvey_balls_table).
-- `consulting_table` — Pick for high-density tables with embedded micro bar visuals (consulting/financial reports). Skip for plain text data (use basic_table).
-- `project_schedule_table` — Pick for table-style task tracker (task / owner / status / timeline). Skip for true Gantt with dependencies (use gantt_chart) or schedule without ownership (use roadmap_vertical).
-- `financial_statement_table` — Pick for income statement / balance sheet style with right-aligned numbers and strong total rows. Skip for non-financial tabular data (use basic_table).
-- `feature_matrix_table` — Pick for competitive feature checklist with checkmarks across products. Skip for qualitative scores (use harvey_balls_table) or pricing tier marketing (use comparison_columns).
-- `harvey_balls_table` — Pick for qualitative scoring grid using 0-100% Harvey balls (vendor/skill assessment). Skip for binary checkmarks (use feature_matrix_table) or numeric values (use basic_table).
+- `basic_table` — Pick for plain tabular text/number grid, 3-8 columns. Skip if cells need visual bars (use consulting_table) or qualitative scores (use harvey_balls_table). *(table: needs a reason a chart cannot show it)*
+- `hierarchical_table` — Pick for grouped or indented row hierarchies across stable measure columns, including subtotals and totals. Skip for flat records (use basic_table) or geometry driven by numeric magnitude (use a chart). *(table: needs a reason a chart cannot show it)*
+- `metric_table` — Pick for operating metrics by entity with current values, changes, statuses, or target progress inside cells (KPI scorecards, plan-vs-actual grids). Skip if marks leave the grid and encode values (use a chart) or cells hold qualitative scores (use harvey_balls_table). *(table: needs a reason a chart cannot show it)*
+- `consulting_table` — Pick for high-density tables with embedded micro bar visuals (consulting/financial reports). Skip for plain text data (use basic_table). *(table: needs a reason a chart cannot show it)*
+- `project_schedule_table` — Pick for table-style task tracker (task / owner / status / timeline). Skip for true Gantt with dependencies (use gantt_chart) or schedule without ownership (use roadmap_vertical). *(table: needs a reason a chart cannot show it)*
+- `financial_statement_table` — Pick for income statement / balance sheet style with right-aligned numbers and strong total rows. Skip for non-financial tabular data (use basic_table). *(table: needs a reason a chart cannot show it)*
+- `feature_matrix_table` — Pick for competitive feature checklist with checkmarks across products. Skip for qualitative scores (use harvey_balls_table) or pricing tier marketing (use comparison_columns). *(table: needs a reason a chart cannot show it)*
+- `harvey_balls_table` — Pick for qualitative scoring grid using 0-100% Harvey balls (vendor/skill assessment). Skip for binary checkmarks (use feature_matrix_table) or numeric values (use basic_table). *(table: needs a reason a chart cannot show it)*
 - `team_roster` — Pick for 3-12 leadership/team profile cards (photo + name + title + short bio). Skip for reporting hierarchy (use top_down_tree).
 - `top_down_tree` — Pick for hierarchical top-down tree 2-4 levels deep with parent→children reporting/decomposition lines — org charts (CEO → VPs → Directors), OKR cascades (Objective → Key Results → Initiatives), WBS decomposition. Skip for non-hierarchical brainstorm (use mind_map) or flat team showcase (use team_roster).
 - `journey_map` — Pick for multi-phase customer experience matrix with actions, emotion curve, and pain points per phase. Skip for simple linear funnel (use funnel_chart).
@@ -51,13 +51,13 @@ All 78 templates in `templates/charts/`, grouped by the data they need. A `struc
 
 ## kpi
 
-- `kpi_cards` — Pick for 4-8 standalone numeric metrics shown as overview cards (2x2 or 1x4) — exec summary opener, dashboard headline, quarterly recap, results-at-a-glance. Skip if metrics have target baselines (use bullet_chart) or single hero number (use gauge_chart). *(data: value; —)*
+- `kpi_cards` — Pick for 4-8 standalone numeric metrics shown as overview cards (2x2 or 1x4) — exec summary opener, dashboard headline, quarterly recap, results-at-a-glance. Skip if metrics have target baselines (use bullet_chart) or single hero number (use gauge_chart). *(data: value [target]; category)*
 
 ## progress
 
-- `bullet_chart` — Pick for 3-7 KPIs each with explicit target + actual. Skip for single metric (use gauge_chart) or items with only completion % and no target baseline (use progress_bar_chart). *(data: value; category)*
-- `gauge_chart` — Pick for one bounded metric against an explicit target or threshold on a known domain. Skip for an unbounded hero number (use kpi_cards) or multiple metrics (use bullet_chart for target+actual or progress_bar_chart for completion %). *(data: value; category)*
-- `progress_bar_chart` — Pick for 3-8 items each with a completion %. Skip if items have explicit target+actual values (use bullet_chart). *(data: value; category)*
+- `bullet_chart` — Pick for 3-7 KPIs each with explicit target + actual. Skip for single metric (use gauge_chart) or items with only completion % and no target baseline (use progress_bar_chart). *(data: value [target]; category)*
+- `gauge_chart` — Pick for one bounded metric against an explicit target or threshold on a known domain. Skip for an unbounded hero number (use kpi_cards) or multiple metrics (use bullet_chart for target+actual or progress_bar_chart for completion %). *(data: value [target]; category)*
+- `progress_bar_chart` — Pick for 3-8 items each with a completion %. Skip if items have explicit target+actual values (use bullet_chart). *(data: value [target]; category)*
 
 ## comparison
 
@@ -78,8 +78,8 @@ All 78 templates in `templates/charts/`, grouped by the data they need. A `struc
 
 ## milestones
 
-- `timeline` — Pick for 3-8 milestone events on a horizontal time axis (no duration). Skip for tasks with start/end ranges (use gantt_chart) or vertical layout (use roadmap_vertical). *(data: value; period)*
-- `roadmap_vertical` — Pick for 4-8 milestones on a vertical timeline with status indicators. Skip for horizontal time emphasis (use timeline) or tasks with durations (use gantt_chart). *(data: value; period)*
+- `timeline` — Pick for 3-8 milestone events on a horizontal time axis (no duration). Skip for tasks with start/end ranges (use gantt_chart) or vertical layout (use roadmap_vertical). *(blocks only: one block per milestone, its first date is the time point)*
+- `roadmap_vertical` — Pick for 4-8 milestones on a vertical timeline with status indicators. Skip for horizontal time emphasis (use timeline) or tasks with durations (use gantt_chart). *(blocks only: one block per milestone, its first date is the time point)*
 
 ## composition
 

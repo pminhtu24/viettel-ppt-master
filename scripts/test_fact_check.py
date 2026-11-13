@@ -29,6 +29,10 @@ SOURCE = """# Báo cáo định kỳ
 * **Đảm bảo hạ tầng cho APEC (31/12/2026):**
 * Kéo cáp 13/180km.
 
+## Thị trường
+* QHĐC: 6/9 thị trường đang hoàn thiện dữ liệu đầu vào.
+* Bồn dầu: lắp đặt đang chậm so với KH, 7/1.000 bình.
+
 # Nhiệm vụ tuần sau
 ## Hợp đồng OS
 ## Nền tảng Cloud
@@ -111,6 +115,14 @@ class FactCheckTests(unittest.TestCase):
         self.assertIn("period-invented", self.rules(found["P01"]))
         self.assertIn("period-dropped", self.rules(found["P01"], "warn"))
 
+    def test_names_and_codes_the_source_never_writes(self):
+        found = self.audit({"P01": ({"f1": "Hàng vô tuyến"}, "".join([
+            t("Trung tâm dữ liệu VTNT: hàng về cảng", "f1", y=60, bold=True),
+            t("TTKTKV3 · APEC · VIETTEL REPORT", "c", y=90),          # source codes; all-caps line left alone
+            t("Vô tuyến lũy kế 7.480/20.120 trạm", "f1", y=120)]))})
+        invented = [f for f in found["P01"] if f["rule"] == "name-invented"]
+        self.assertEqual([f["detail"].split("'")[1] for f in invented], ["VTNT"])
+
     def test_label_from_another_clause(self):
         found = self.audit({"P01": ({"f1": "DA Tòa"}, t("DA tòa nhà ~91% KH quý 3", "f1"))})
         self.assertIn("period-other-clause", self.rules(found["P01"]))
@@ -144,6 +156,14 @@ class FactCheckTests(unittest.TestCase):
             t("VTM tích hợp giám sát — chậm tiến độ", "f2", y=180)]))})
         self.assertEqual(self.rules(found["P01"]), ["status-unsourced"])   # a status the source never says
         self.assertEqual(self.rules(found["P02"]), ["hedge-dropped"])      # the source says "nguy cơ chậm"
+
+    def test_in_progress_must_not_read_as_done(self):
+        found = self.audit({"P01": ({"f1": "QHĐC"}, t("QHĐC: 6/9 thị trường hoàn thiện dữ liệu", "f1")),
+                            "P02": ({"f1": "QHĐC"}, t("QHĐC: 6/9 thị trường đang hoàn thiện dữ liệu", "f1")),
+                            "P03": ({"f1": "Bồn dầu"}, t("Bồn dầu chậm so với KH: 7/1.000 bình", "f1"))})
+        self.assertEqual(self.rules(found["P01"]), ["hedge-dropped"])      # "đang hoàn thiện" is not done
+        self.assertEqual(self.rules(found["P02"]), [])
+        self.assertEqual(self.rules(found["P03"]), [])                     # "đang chậm" is just "chậm"
 
     def test_numbers_outside_the_source_versus_binding_gaps(self):
         found = self.audit({"P01": ({"f1": "Phát sóng"}, "".join([

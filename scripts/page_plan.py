@@ -13,7 +13,9 @@ Never generates SVG. Subcommands (all take <project_path>):
 from __future__ import annotations
 
 import argparse
+import copy
 import difflib
+import functools
 import hashlib
 import json
 import math
@@ -29,6 +31,40 @@ from update_spec import parse_lock  # noqa: E402
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
 RULES_FILE = SKILL_DIR / "templates" / "page_brief_rules.md"
+STYLES_FILE = SKILL_DIR / "templates" / "page_brief_styles.md"
+_SERIES = "series red → deep blue → teal → orange → purple #7C3AED, then #6B7280 for 'Khác'; label marks directly"
+_TIMELINE = ("past milestones #999999, those the source calls done/hoàn thành teal, a red line at the report date, "
+             "upcoming ones white with a deep-blue outline")
+COLOR_RECIPES = {   # one line per chart family, in each page brief (rule 10 has the shared system)
+    "progress": "actual solid over its plan/target in the same color at fill-opacity 0.25; a dashed #6B7280 line at "
+                "100% or the target; the bar the title names red, the others deep blue; teal only where the source "
+                "says done/100%",
+    "kpi": "identical white cards (#E6E6E6 stroke); only the focal card gets a red top stripe and a red number, every "
+           "other number black",
+    "comparison": "one measure, one hue: bars deep blue (style C: #999999), the item the title names red; value "
+                  "labels at the bar ends, no legend",
+    "time": "current period red, 5–6px; earlier or comparison period #999999, 2–3px; label each line at its end "
+            "instead of a legend; gridlines #E6E6E6",
+    "milestones": _TIMELINE,
+    "schedule": _TIMELINE,
+    "composition": _SERIES + "; more than 6 parts → merge the smallest into 'Khác'",
+    "matrix": "one hue (teal) whose fill-opacity grows with the value (0.08 → 0.9), black text on every cell; orange "
+              "only on rows the source calls chậm/cảnh báo",
+    "waterfall": "increase teal, decrease orange, totals deep blue; red only for the figure the title names",
+    "pareto": "bars deep blue, the cumulative line red; label the cut-off item",
+    "funnel": "one hue stepping down in fill-opacity (1 → 0.25) stage by stage; the stage the title names red",
+    "structure": "tables: header #44494D with white bold text, zebra #F2F2F2, a percentage column may use the one-hue "
+                 "teal scale; cards and steps per rule 10",
+}
+
+
+@functools.lru_cache(maxsize=1)
+def _chart_index() -> dict:
+    return json.loads((SKILL_DIR / "templates/charts/charts_index.json").read_text(encoding="utf-8"))["charts"]
+
+
+def chart_family(template: str | None) -> str | None:
+    return _chart_index().get(template or "", {}).get("data_requirements", {}).get("family")
 SHARED_BRIEF = "_shared.md"
 ICONS_DIR = SKILL_DIR / "templates" / "icons"
 SLIDE_RE = re.compile(r"^#### Slide (\d+)\s*[-–—:]?\s*(.*?)\s*$")
@@ -61,7 +97,7 @@ def slugify(title: str) -> str:
 def parse_slides(design_spec: Path, svg_dir: Path | None = None) -> list[dict]:
     """One dict per `#### Slide NN - Title` section, in order, with its part index and verbatim text."""
     slides: list[dict] = []
-    part, current, in_fence = 0, None, False
+    part, section, current, in_fence = 0, "", None, False
     for line in design_spec.read_text(encoding="utf-8").splitlines():
         if line.startswith("```"):
             in_fence = not in_fence
@@ -71,9 +107,10 @@ def parse_slides(design_spec: Path, svg_dir: Path | None = None) -> list[dict]:
                 current = None
             if PART_RE.match(line):
                 part += 1
+                section = re.sub(r"^### Part\b\s*\d*\s*[:.\-–—]?\s*", "", line).strip()
             if match:
                 num = int(match.group(1))
-                current = {"num": num, "title": match.group(2), "part": part, "lines": []}
+                current = {"num": num, "title": match.group(2), "part": part, "section": section, "lines": []}
                 slides.append(current)
         if current is not None:
             current["lines"].append(line)
@@ -93,7 +130,7 @@ def parse_slides(design_spec: Path, svg_dir: Path | None = None) -> list[dict]:
             existing = sorted(svg_dir.glob(f"{slide['num']:02d}_*.svg")) if svg_dir and svg_dir.exists() else []
             svg = existing[0].name if len(existing) == 1 else f"{slide['num']:02d}_{slugify(slide['title'])}.svg"
         pages.append({"id": pid, "num": slide["num"], "title": slide["title"], "part": slide["part"],
-                      "text": text, "svg": svg})
+                      "section": slide["section"], "text": text, "svg": svg})
     if bad_json:
         raise SystemExit("Invalid content-lock JSON in design_spec.md:\n" + "\n".join(bad_json))
     return pages
@@ -374,20 +411,28 @@ AGENDA_TEMPLATES = {"agenda_list"}
 FRAME_LAYOUTS = {"01_cover", "02_chapter", "02_toc", "04_ending"}
 
 
+def fact_count(page: dict) -> int:
+    match = LOCK_RE.search(page["text"])
+    try:
+        return len(json.loads(match.group(1)).get("facts", [])) if match else 0
+    except json.JSONDecodeError:
+        return 0
+
+
 def choose_anchor(project: Project, status: dict) -> dict:
-    """A representative content page every sub-agent can match: a data chart first, then a structure
-    template, then any content page — never the agenda, a cover/chapter/ending shell or a frame page.
-    A page already drawn and recorded wins within its pool."""
-    families = {k: v["data_requirements"]["family"] for k, v in json.loads(
-        (SKILL_DIR / "templates/charts/charts_index.json").read_text(encoding="utf-8"))["charts"].items()}
+    """A representative content page every sub-agent can match: the richest data chart (most facts; timelines
+    count as structure), then a structure template, then any content page — never the agenda, a
+    cover/chapter/ending shell or a frame page. A page already drawn and recorded wins within its pool."""
     content = [p for p in project.pages if not project.is_frame(p)
                and (project.page_map("page_rhythm", p["id"]) or "dense") == "dense"
                and project.page_map("page_layouts", p["id"]) not in FRAME_LAYOUTS
                and project.page_map("page_charts", p["id"]) not in AGENDA_TEMPLATES]
     chart = lambda p: project.page_map("page_charts", p["id"])
-    data = [p for p in content if chart(p) and families.get(chart(p)) != "structure"]
-    structure = [p for p in content if chart(p) and families.get(chart(p)) == "structure"]
+    sparse = ("structure", "milestones")
+    data = [p for p in content if chart(p) and chart_family(chart(p)) not in sparse]
+    structure = [p for p in content if chart(p) and chart_family(chart(p)) in sparse]
     for pool in (data, structure, content, project.pages):
+        pool = sorted(pool, key=lambda p: -fact_count(p))  # stable: page order among equals
         done = [p for p in pool if status["pages"][p["id"]]["status"] in ("done", "edited")]
         if done or pool:
             return (done or pool)[0]
@@ -400,7 +445,18 @@ def shared_brief_text(project: Project) -> str:
     """Rules + spec_lock sections common to every page: written once, read once per agent."""
     rules = RULES_FILE.read_text(encoding="utf-8") if RULES_FILE.exists() else ""
     common = "".join(project.lock_raw.get(s, "") for s in COMMON_SECTIONS)
-    return f"{rules.rstrip()}\n\n# Spec lock (shared)\n\n{common.rstrip()}\n"
+    style = deck_style(project)
+    return f"{rules.rstrip()}\n\n{style + chr(10) * 2 if style else ''}# Spec lock (shared)\n\n{common.rstrip()}\n"
+
+
+def deck_style(project: Project) -> str:
+    """The `## A|B|C` block of page_brief_styles.md matching the Style row of design_spec.md, or ''."""
+    match = re.search(r"^\|\s*Style\s*\|\s*([ABC])\b", (project.root / "design_spec.md").read_text(encoding="utf-8"),
+                      re.M)
+    if not match or not STYLES_FILE.exists():
+        return ""
+    parts = re.split(r"^## ([ABC])\s*$", STYLES_FILE.read_text(encoding="utf-8"), flags=re.M)
+    return dict(zip(parts[1::2], parts[2::2])).get(match.group(1), "").strip()
 
 
 def brief_text(project: Project, page: dict, anchor: dict | None) -> str:
@@ -413,9 +469,11 @@ def brief_text(project: Project, page: dict, anchor: dict | None) -> str:
         f"{project.briefs_dir / SHARED_BRIEF}\n"
         f"- output: {project.svg_path(page)}\n"
         f"- rhythm: {project.page_map('page_rhythm', pid) or 'dense'}\n"
+        f"- section (footer band, binds c_label): {page.get('section') or 'none'}\n"
         f"- background: {project.resolve_template(project.page_map('page_backgrounds', pid), 'background') or 'none'}\n"
         f"- layout: {project.resolve_template(project.page_map('page_layouts', pid), 'layout') or 'none (adaptive Viettel composition)'}\n"
         f"- chart: {project.resolve_template(project.page_map('page_charts', pid), 'chart') or 'none'}\n"
+        f"- color recipe: {COLOR_RECIPES.get(chart_family(project.page_map('page_charts', pid)), _SERIES)}\n"
         f"- anchor_to_match: {anchor_line}\n"
         f"- spec_lock: {project.root / 'spec_lock.md'}\n\n"
         f"## Content lock and outline (verbatim from design_spec.md)\n\n{page['text']}"
@@ -431,7 +489,8 @@ def draw_context(project: Project, group: list[dict], anchor: dict | None, lang:
         f"Pages you own — you may write ONLY these files:\n{owned}\n"
         f"First read {project.briefs_dir / SHARED_BRIEF} once (rules, binding pattern, shared spec_lock sections). "
         f"Read only: that file, your briefs, {project.root / 'spec_lock.md'}, the anchor SVG {anchor_txt}, and the "
-        "template files listed in each brief. Do not read SKILL.md or references/ unless a brief lacks information "
+        "template files listed in each brief. Never open files of another project (other folders under projects/): "
+        "their pages carry other decks' content. Do not read SKILL.md or references/ unless a brief lacks information "
         "you need; if you do, list the files you read in your final answer. Never open the skill's scripts "
         "(page_plan.py, content_check.py, svg_quality_checker.py or any other .py): the shared rules and the check "
         "output tell you what to fix. Every other file in the project is read-only.\n"
@@ -547,6 +606,99 @@ def cmd_record(project: Project, args) -> int:
 FIXABLE_FACT_WARNINGS = ("period-dropped", "ratio-noun")   # the drawer can fix these on the page itself
 
 
+def chrome_key(svg: Path) -> str | None:
+    """The page's viettel-brand-chrome group with the page-number digits blanked, or None when absent."""
+    try:
+        root = ET.parse(svg).getroot()
+    except (ET.ParseError, OSError):
+        return None
+    group = next((el for el in root.iter() if el.get("id") == "viettel-brand-chrome"), None)
+    if group is None:
+        return None
+    group = copy.deepcopy(group)
+    for el in group.iter():
+        if el.get("data-chrome") == "page-number":
+            el.text = ""
+            for child in el:
+                child.text = ""
+        el.tail = None
+    return re.sub(r"\s+", " ", ET.tostring(group, encoding="unicode"))
+
+
+def chrome_drift(project: Project, pid: str) -> str | None:
+    """Every page carries the anchor's brand chrome unchanged (only the page number differs)."""
+    anchor = (project.load_plan().get("anchor") or {}).get("page")
+    if not anchor or anchor == pid or anchor not in project.by_id:
+        return None
+    mine, ref = project.svg_path(project.by_id[pid]), project.svg_path(project.by_id[anchor])
+    if not (mine.exists() and ref.exists()):
+        return None
+    want, have = chrome_key(ref), chrome_key(mine)
+    if want and have != want:
+        return (f"chrome: the <g id=\"viettel-brand-chrome\"> group differs from the anchor {anchor} ({ref.name}) — "
+                "copy the anchor's group unchanged on every page, chapter and ending pages included; only the "
+                "page-number digits change")
+    return None
+
+
+ACCENT_COLORS = {"#EE0033", "#28A197", "#F46A25"}
+FRAME_GROUP_IDS = ("header", "footer", "bg", "background", "decor", "viettel-brand-chrome")
+CONTENT_BOTTOM_MIN = 470  # a dense page whose content ends above this leaves its lower third empty
+
+
+def visual_findings(project: Project, page: dict, svg: Path) -> list[str]:
+    """Shared rule 10 on dense content pages: a focal accent in the content (accent text ≥ 22px, an accent bar,
+    card or icon ≥ 10px thick, a marker r ≥ 10 — thin stripes and dots do not count) and text down to the lower
+    third. ponytail: translate() is the only transform followed."""
+    if (project.page_map("page_rhythm", page["id"]) or "dense") != "dense":
+        return []
+    try:
+        root = ET.parse(svg).getroot()
+    except ET.ParseError:
+        return []
+    accent, bottom = False, 0.0
+
+    def num(el: ET.Element, name: str, default: float = 0.0) -> float:
+        try:
+            return float(re.sub(r"[^\d.\-]", "", el.get(name, "")) or default)
+        except ValueError:
+            return default
+
+    def walk(el: ET.Element, dy: float, size: float) -> None:
+        nonlocal accent, bottom
+        gid = (el.get("id") or "").lower()
+        if el.get("data-chrome") or any(k in gid for k in FRAME_GROUP_IDS):
+            return
+        if m := re.search(r"translate\(\s*[-\d.]+[\s,]*([-\d.]*)", el.get("transform", "")):
+            dy += float(m.group(1) or 0)
+        size = num(el, "font-size", size)
+        tag = el.tag.rsplit("}", 1)[-1]
+        if {(el.get(a) or "").strip().upper() for a in ("fill", "stroke")} & ACCENT_COLORS:
+            accent = accent or {
+                "text": size >= 22,
+                "rect": min(num(el, "width"), num(el, "height")) >= 10,
+                "use": num(el, "width") >= 24,
+                "circle": num(el, "r") >= 10,
+                "ellipse": min(num(el, "rx"), num(el, "ry")) >= 10,
+                "path": True, "polygon": True,
+            }.get(tag, False)
+        if tag == "text" and "".join(el.itertext()).strip() and num(el, "y") + dy < 660:
+            bottom = max(bottom, num(el, "y") + dy)
+        for child in el:
+            walk(child, dy, size)
+
+    walk(root, 0.0, 16.0)
+    found = []
+    if not accent:
+        found.append("visual: no focal accent in the content — give the page its key number or phrase in red "
+                     "#EE0033 at ≥ 22px bold, or a red bar, card stripe or icon ≥ 10px; color the statuses the source "
+                     "states (teal #28A197 done, orange #F46A25 cảnh báo/chậm/nguy cơ) (shared rule 10)")
+    if bottom and bottom < CONTENT_BOTTOM_MIN:
+        found.append(f"visual: the last text ends at y={bottom:.0f} — the content area runs to y≈650; enlarge rows, "
+                     "cards and numbers to fill it, never leave the lower third empty (shared rule 10)")
+    return found
+
+
 def cmd_check(project: Project, args) -> int:
     """Per-page self-check: checker + content lock + bindings; an SVG not written yet is reported, never an empty list.
     --lock-only: content locks only (plan gate while writing design_spec.md), every listed page in one run."""
@@ -557,7 +709,11 @@ def cmd_check(project: Project, args) -> int:
         svg = project.svg_path(project.by_id[pid])
         drawn = [] if args.lock_only else (checker_errors(svg) if svg.exists() else
                                            [f"svg missing: {svg.name} not written yet"])
-        report[pid] = drawn + [f"content: {e}" for e in content[pid].split("\n")] if pid in content else drawn
+        report[pid] = list(drawn) + ([f"content: {e}" for e in content[pid].split("\n")] if pid in content else [])
+        if not args.lock_only and (drift := chrome_drift(project, pid)):
+            report[pid].append(drift)
+        if not args.lock_only and svg.exists():
+            report[pid] += visual_findings(project, project.by_id[pid], svg)
     if not args.lock_only:
         import fact_check
         findings, _ = fact_check.audit(project.root, set(pids))

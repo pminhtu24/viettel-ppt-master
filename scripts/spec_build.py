@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import shlex
 import sys
@@ -31,13 +32,24 @@ CATALOG = json.loads((SKILL_DIR / "templates/charts/charts_index.json").read_tex
 LAYOUTS = SKILL_DIR / "templates/layouts/viettel_default"
 BACKGROUNDS = {i["id"] for i in json.loads((LAYOUTS / "backgrounds/backgrounds_index.json")
                                            .read_text(encoding="utf-8"))["items"]}
-TYPOGRAPHY = {   # viettel_default §IV starting slots
-    "dense": {"body": 20, "title": 32, "subtitle": 26, "annotation": 16, "subtitle_strip": 17, "card_header": 18,
-              "card_subhead": 16, "card_body": 16, "badge": 14, "hero_number": 40, "cover_title": 60},
-    "standard": {"body": 24, "title": 36, "subtitle": 30, "annotation": 18, "hero_number": 48, "cover_title": 60},
+TYPOGRAPHY = {   # viettel_default §IV starting slots; min_text/min_label are enforced by svg_quality_checker
+    "dense": {"body": 20, "title": 32, "subtitle": 26, "annotation": 18, "subtitle_strip": 18, "card_header": 20,
+              "card_subhead": 18, "card_body": 18, "badge": 14, "hero_number": 40, "cover_title": 60,
+              "min_text": 18, "min_label": 14},
+    "standard": {"body": 24, "title": 36, "subtitle": 30, "annotation": 18, "card_header": 22, "card_body": 20,
+                 "badge": 14, "hero_number": 48, "cover_title": 60, "min_text": 18, "min_label": 14},
 }
 DIMENSION_KEYS = ("category", "series", "period", "status", "entity")
 CALC_OPS = ("percent", "ratio", "sum", "difference", "remainder", "percentage_points")
+TABLE_TEMPLATES = {"metric_table", "consulting_table", "basic_table", "hierarchical_table", "comparison_table",
+                   "financial_statement_table", "feature_matrix_table", "harvey_balls_table", "project_schedule_table"}
+MAX_PROSE_TABLES = 2          # tables for numbers the source writes as prose (a source table may stay a table)
+TEMPLATE_REPEAT_WARN = 4
+TEXT_BUDGET_WARN, TEXT_BUDGET_ERROR = 1200, 1800   # characters of source text in a slide's `blocks`
+ENTITY_COLORS = {"#12436D", "#28A197", "#F46A25", "#7C3AED", "#6B7280"}
+TOC_RE = re.compile(r"(?i)^(mục lục|table of contents|contents)\W*$")
+RISK_RE = re.compile(r"\b(chậm|quá hạn|cảnh báo|nguy cơ|vướng mắc|khó khăn|không đạt)\b")   # what a report reader looks for
+CHART_SHARE = 3               # at least one data chart per this many numeric slides (decks with ≥ 6 of them)
 FAMILY_ORDER = ["structure", "kpi", "progress", "comparison", "time", "milestones", "composition", "pareto",
                 "funnel", "waterfall", "flow", "matrix", "radar", "distribution", "xy", "schedule"]
 
@@ -53,6 +65,10 @@ class Source:
         prefixes = {i.split("-B")[0] for i in self.ids}
         self.short = len(prefixes) == 1
         self.by_short = {self.label(i): i for i in self.ids}
+        self.corpus = fc.source_corpus(self.outline)
+        heads = [b.text for b in self.outline.values() if len(b.text) <= 120 and "|" not in b.text][:2]
+        heads = [t[:1] + t[1:].lower() if t.isupper() else t for t in heads]  # sentence case, not a shouted footer
+        self.doc_line = "Nguồn: " + " ".join(heads) if heads else "Nguồn tài liệu"
 
     def label(self, block_id: str) -> str:
         return block_id.split("-", 1)[1] if self.short else block_id
@@ -96,7 +112,72 @@ def cmd_source(project: Path) -> int:
             print(f"{pad}▸ {src.label(bid)} {b.title}")
         else:
             print(f"{pad}{src.label(bid)} · {b.text}")
+    print(page_estimate(src))
     return 0
+
+
+def page_estimate(src: Source) -> str:
+    """Slides this source needs at the density `build` accepts: sibling sections share slides up to a text budget,
+    top-level parts never do; in decks of ≥ 12 content slides with ≥ 2 such parts, a chapter slide per part spanning ≥ 2; cover, ending."""
+    leaves: list[list] = []                                   # [section path, characters] in source order
+    for bid in src.ids:
+        b = src.outline[bid]
+        if b.title and len(b.text) <= 120:
+            continue
+        path = tuple(b.path) or ("",)                         # text before any heading (all of it in a flat file)
+        if TOC_RE.match(path[0]):
+            continue
+        if leaves and leaves[-1][0] == path:
+            leaves[-1][1] += len(b.text)
+        else:
+            leaves.append([path, len(b.text)])
+    while leaves and all(len(p) > 1 and p[0] == leaves[0][0][0] for p, _ in leaves):
+        leaves = [[p[1:], c] for p, c in leaves]              # a heading over everything is the document title
+    if len(leaves) > 1 and leaves[0][0] == ("",) and leaves[0][1] <= 600:
+        leaves = leaves[1:]                                   # a short header before the first heading: the cover
+
+    def key(path: tuple) -> tuple:
+        return path[:max(1, min(2, len(path) - 1))]
+    size: dict = {}
+    for path, chars in leaves:
+        for k in {path[:1], key(path)}:
+            size[k] = size.get(k, 0) + chars
+
+    def count(width: int, merge_small: bool = False) -> dict:
+        per_part: dict = {}
+        group, room = None, 0
+        for path, chars in leaves:
+            g = key(path)
+            if merge_small:                                   # adjacent small topics may share the densest slides
+                if size[path[:1]] <= width:
+                    g = ("<small parts>",)
+                elif size[g] <= width or g == path[:1]:
+                    g = (path[0], "<small sections>")
+            if g != group:
+                group, room = g, 0
+            if chars <= room:
+                room -= chars
+                continue
+            n = math.ceil(chars / width)
+            room = n * width - chars
+            per_part[path[0]] = per_part.get(path[0], 0) + n
+        return per_part
+
+    def total(per_part: dict) -> tuple[int, int, int]:
+        content = sum(per_part.values())
+        long_parts = [p for p, n in per_part.items() if p and n >= 2]
+        chapters = len(long_parts) if content >= 12 and len(long_parts) >= 2 else 0
+        return content + chapters + 2, chapters, content
+
+    usual = count((TEXT_BUDGET_WARN + TEXT_BUDGET_ERROR) // 2)
+    n, chapters, content = total(usual)
+    least = total(count(TEXT_BUDGET_ERROR, merge_small=True))[0]
+    denser = f"{least} slides still show all of it, each slide denser; " if least < n else ""
+    lines = [f"▸ Page estimate: {n} slides (cover 1 + chapters {chapters} + content {content} + ending 1) show all the "
+             f"source at an easy reading density; {denser}with fewer than {least}, some source items are left out — "
+             "name which"]
+    lines += [f"  · {part or '(no heading)'}: {k}" for part, k in usual.items()]
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------- catalog
@@ -105,15 +186,23 @@ def catalog_text() -> str:
     groups: dict[str, list[str]] = {}
     for key, entry in CATALOG.items():
         req = entry["data_requirements"]
-        roles = "/".join(req["roles"])
-        dims = "/".join(dict.fromkeys(req["dimensions"])) or "—"
-        data = "" if req["family"] == "structure" else f" *(data: {roles}; {dims})*"
+        roles = "/".join(req["roles"]) + (" [target]" if req["family"] in ("progress", "kpi") else "")
+        dims = "/".join(dict.fromkeys(req["dimensions"] or ["category"]))
+        if req["family"] == "structure":
+            data = " *(table: needs a reason a chart cannot show it)*" if key in TABLE_TEMPLATES else ""
+        elif req["family"] == "milestones":
+            data = " *(blocks only: one block per milestone, its first date is the time point)*"
+        else:
+            data = f" *(data: {roles}; {dims})*"
         groups.setdefault(req["family"], []).append(f"- `{key}` — {entry['summary']}{data}")
     lines = ["# Chart and structure catalog", "",
-             f"All {len(CATALOG)} templates in `templates/charts/`, grouped by the data they need. A `structure` "
-             "template takes source blocks (no numbers); every other family takes `- data:` lines naming the source "
-             "number behind each mark (references/page-plan.md). Generated from charts_index.json by "
-             "`spec_build.py catalog --write`.", ""]
+             f"All {len(CATALOG)} templates in `templates/charts/`, grouped by the data they need. Every template "
+             "needs a `- why:` line. Data charts take one `- data:` line per mark with the number as `spec_build.py "
+             "source` prints it — `43,90%`, `7.480`, `271.7K` and ratios such as `45/50` (a ratio gives value 45 "
+             "and, for progress/kpi templates, target 50). Timelines take blocks only. `structure` templates take "
+             "blocks; tables among them are for data a chart cannot show (several columns per row, a source table). "
+             "Prefer a chart whenever a slide's numbers share one unit or one kind of progress (references/page-plan.md). "
+             "Generated from charts_index.json by `spec_build.py catalog --write`.", ""]
     for family in sorted(groups, key=lambda f: FAMILY_ORDER.index(f) if f in FAMILY_ORDER else 99):
         lines += [f"## {family}", "", *groups[family], ""]
     return "\n".join(lines)
@@ -197,23 +286,29 @@ class PageBuilder:
         self.by_id[fact["id"]] = fact
         return fact
 
-    def number_fact(self, bid: str, role: str, wanted: str, dims: dict[str, str]) -> dict | None:
+    def number_fact(self, bid: str, role: str, wanted: str, dims: dict[str, str], part: int | None = None) -> dict | None:
+        """`part` picks one side of a ratio token (0 → 45 and 1 → 50 of `45/50`), the whole token stays in `text`."""
         b = self.src.outline[bid]
         hit = number_token(b.text, wanted)
         if not hit:
             self.err(f"{self.src.label(bid)}: '{wanted}' is not a number of that block — copy it from `spec_build.py source`")
             return None
         raw, pos = hit
+        whole = raw
+        if part is not None:
+            pieces = raw.split("/")
+            pos += sum(len(x) + 1 for x in pieces[:part])
+            raw = pieces[part]
         after = re.sub(r"^/\d+(?:[.,]\d+)*", "", b.text[pos + len(raw):])   # 140/457 GP: both count GP
         unit = "%" if after.lstrip().startswith("%") else (re.match(r"\s*([^\W\d_][\w]*)", after) or [None, "n/a"])[1]
         clause = next((c for c in b.clauses() if fc.num_key(raw) in fc.number_set(c)), fc.norm(b.text))
         period = dims.get("period") or ", ".join(sorted({p for _, p in fc.periods(clause)})) or "n/a"
         category = dims.get("category") or lead(b)
-        fact = {"id": f"{self.src.label(bid).replace('-', '_')}_{role}", "text": f"{category}: {raw}{'%' if unit == '%' else ' ' + unit}",
+        fact = {"id": f"{self.src.label(bid).replace('-', '_')}_{role}", "text": f"{category}: {whole}{'%' if unit == '%' else ' ' + unit}",
                 "entity": dims.get("entity") or category, "unit": unit, "period": period,
                 "scope": b.path[-1] if b.path else "n/a", "status": dims.get("status") or "reported",
                 "category": category, "series": dims.get("series") or "A",
-                "sources": [{"ref": bid, "quote": self.quote_around(bid, raw)}]}
+                "sources": [{"ref": bid, "quote": self.quote_around(bid, whole)}]}
         if re.fullmatch(r"\d+(?:[.,]\d+)?[KkMB]", wanted) or "/" in raw:
             fact.update(value=raw, numeric=False)
         else:
@@ -270,7 +365,7 @@ class PageBuilder:
             title,
             {"id": "c_label", "kind": "editorial", "text": "Nhãn trình bày", "supports": [],
              "reason": "Neutral structural labels (section names, column heads, badges taken from the bound blocks)"},
-            {"id": "c_src", "kind": "editorial", "text": "Nguồn tài liệu", "supports": [],
+            {"id": "c_src", "kind": "editorial", "text": self.src.doc_line, "supports": [],
              "reason": "Source footer naming the document"},
         ]
         lock = {"page": self.pid, "svg": f"{page['num']:02d}_{slugify(page['title'])}.svg",
@@ -284,6 +379,8 @@ class PageBuilder:
     def visualization(self, template: str, shown: list[dict]) -> dict:
         req = CATALOG[template]["data_requirements"]
         why = self.page["keys"].get("why", "")
+        numeric = req["family"] not in ("structure", "milestones")
+        roles = req["roles"] + (["target"] if req["family"] in ("progress", "kpi") else [])
         observations: list[dict] = []
         if req["family"] in ("structure", "milestones") and not self.page["data"]:
             observations = [{"value": f["id"]} for f in shown]
@@ -301,23 +398,36 @@ class PageBuilder:
                 self.err(f"data line names unknown block {parts[0]}")
                 continue
             pairs = dict(p.split("=", 1) for p in parts[1:] if "=" in p)
-            unknown = [k for k in pairs if k not in req["roles"] and k not in DIMENSION_KEYS]
+            unknown = [k for k in pairs if k not in roles and k not in DIMENSION_KEYS]
             if unknown:
-                self.err(f"{template} has roles {req['roles']}; '{', '.join(unknown)}' is not one of them")
+                self.err(f"{template} has roles {roles}; '{', '.join(unknown)}' is not one of them")
             dims = {k: v for k, v in pairs.items() if k in DIMENSION_KEYS}
             row = {}
-            for role in req["roles"]:
+            for role in roles:
                 if role not in pairs:
-                    self.err(f"{template} needs '{role}=' on every data line ({parts[0]})")
+                    if role != "target":
+                        self.err(f"{template} needs '{role}=' on every data line ({parts[0]})")
                     continue
-                if fact := self.number_fact(bid, role, pairs[role], dims):
+                wanted = pairs[role]
+                if numeric and wanted.count("/") >= 2:
+                    self.err(f"{parts[0]}: '{wanted}' has {wanted.count('/') + 1} parts — chart one number of it")
+                    continue
+                if numeric and "/" in wanted:          # 45/50 → value 45, target 50 (progress/kpi)
+                    if fact := self.number_fact(bid, role, wanted, dims, part=0):
+                        row[role] = fact["id"]
+                    if role == "value" and "target" in roles and "target" not in pairs:
+                        if fact := self.number_fact(bid, "target", wanted, dims, part=1):
+                            row["target"] = fact["id"]
+                    continue
+                if fact := self.number_fact(bid, role, wanted, dims):
                     row[role] = fact["id"]
             if row:
                 observations.append(row)
         if req["family"] not in ("structure", "milestones") and not self.page["data"]:
             self.err(f"{template} is a {req['family']} chart: add one `- data:` line per mark")
-        if req["semantic_checks"] and not why:
-            self.err(f"{template} needs a `- why:` line: why the source supports {', '.join(dict.fromkeys(req['semantic_checks']))}")
+        if not why:
+            checks = ", ".join(dict.fromkeys(req["semantic_checks"])) or "this template"
+            self.err(f"{template} needs a `- why:` line: why the source supports {checks}")
         refs = [f["id"] for f in self.facts]
         viz = {"id": "v1", "template": template, "observations": observations,
                "evidence": {c: {"refs": refs, "reason": why} for c in dict.fromkeys(req["semantic_checks"])}}
@@ -378,7 +488,9 @@ def spec_lock_text(plan: dict, maps: dict[str, dict[str, str]], icons: tuple[str
            "## brand", "", "- profile: viettel_default", "- deep_blue_scope: chart_diagram_icon_catalog_background_only", "",
            "## colors", "", "- bg: #FFFFFF", "- surface: #F2F2F2", "- primary: #EE0033", "- chart_deep_blue: #12436D",
            "- text: #000000", "- text_secondary: #44494D", "- text_tertiary: #999999", "- border: #E6E6E6",
-           "- success: #28A197", "- warning: #F46A25", "- chart_neutral: #6B7280", "",
+           "- success: #28A197", "- warning: #F46A25", "- chart_neutral: #6B7280",
+           "- chart_series_5: #7C3AED (chart marks only, never text)",
+           *([f"- entity_colors: {h['colors']} (same color for these on every slide)"] if h.get("colors") else []), "",
            "## typography", "", '- font_family: "FS Magistral"',
            *[f"- {k}: {v}" for k, v in TYPOGRAPHY[density].items()], "",
            "## text_fit", "", "- card_padding: 20", "- chart_label_max_chars: 24", "- card_body_max_lines: 3",
@@ -444,6 +556,66 @@ def design_spec_text(plan: dict, built: list[tuple[dict, dict, dict]], src: Sour
     return "\n".join(out)
 
 
+# ---------------------------------------------------------------- variety
+
+PERCENT_RE = re.compile(r"\d+(?:[.,]\d+)?\s*%")
+
+
+def chart_hint(texts: list[str]) -> str:
+    """The data chart a slide's source numbers could carry, or '' when they are not chartable."""
+    joined = " ".join(texts)
+    percents = len(PERCENT_RE.findall(joined))
+    ratios = sum(1 for m in fc.RATIO_RE.finditer(joined) if int(m.group(2)) > 12 or int(m.group(1)) > 31)
+    dated = re.compile(r"^.{0,40}?\b\d{1,2}/\d{1,2}/\d{4}|\d{1,2}/\d{1,2}/\d{4}\W*$")   # a milestone leads or ends with its date
+    dates = sum(1 for t in texts if dated.search(t))
+    if percents + ratios >= 3:
+        return "progress_bar_chart / bullet_chart (data: value=37% or value=7.480/20.120)"
+    if dates >= 3:
+        return "timeline (blocks only)"
+    if percents + ratios >= 1:
+        return "gauge_chart / kpi_cards"
+    return ""
+
+
+def variety_errors(built: list[tuple[dict, dict, dict]], src: Source, warnings: list[str]) -> list[str]:
+    """Charts where the data allows them: prose numbers are not tables, no template repeats endlessly,
+    and decks with many numeric slides carry real data charts."""
+    errors: list[str] = []
+    numeric, charts, prose_tables, uses = [], [], [], {}
+    for page, lock, maps in built:
+        pid, template = lock["page"], maps["page_charts"]
+        ids = page.get("_shown_ids", [])
+        texts = [src.outline[b].text for b in ids]
+        measures = [k for t in texts for _, k in fc.numbers(t) if not fc._date_like(k)]
+        hint = chart_hint(texts)
+        source_table = any(src.outline[b].header or "<table" in src.raw[b].lower() for b in ids)
+        family = CATALOG[template]["data_requirements"]["family"] if template in CATALOG else ""
+        if template:
+            uses.setdefault(template, []).append(pid)
+        if page["keys"].get("rhythm", "dense") == "dense" and len(measures) >= 3:
+            numeric.append((pid, "" if source_table else hint, template))
+        if family and family != "structure":
+            charts.append(pid)
+        if template in TABLE_TEMPLATES and not source_table:
+            prose_tables.append(pid)
+            if len(prose_tables) > MAX_PROSE_TABLES:
+                errors.append(f"{pid}: {template} — {', '.join(prose_tables[:-1])} already show prose numbers as a "
+                              f"table (limit {MAX_PROSE_TABLES}); use {hint or 'a chart, a list or cards'}")
+        if family == "structure" and hint and template not in ("agenda_list",) and not source_table:
+            warnings.append(f"{pid}: {template or 'no template'} for chartable numbers — {hint} fits")
+        elif not template and hint and page["keys"].get("rhythm", "dense") == "dense":
+            warnings.append(f"{pid}: no template for chartable numbers — {hint} fits")
+    for template, pids in uses.items():
+        if len(pids) > TEMPLATE_REPEAT_WARN and template != "agenda_list":
+            warnings.append(f"{template} is used on {len(pids)} slides ({', '.join(pids)}) — vary the visual form")
+    need = -(-len(numeric) // CHART_SHARE)
+    if len(numeric) >= 6 and len(charts) < need:
+        candidates = [f"{pid} ({hint})" for pid, hint, _ in numeric if hint and pid not in charts]
+        errors.append(f"only {len(charts)} data chart(s) for {len(numeric)} slides with numbers — use at least {need}; "
+                      f"candidates: {'; '.join(candidates[:8]) or 'chart the figures of a table or list slide'}")
+    return errors
+
+
 # ---------------------------------------------------------------- build
 
 def cmd_build(project: Path, dry_run: bool = False) -> int:
@@ -460,6 +632,13 @@ def cmd_build(project: Path, dry_run: bool = False) -> int:
     nums = [p["num"] for p in plan["pages"]]
     if nums != list(range(1, len(nums) + 1)):
         errors.append(f"slides must be numbered P01…P{len(nums):02d} in order; got {', '.join(f'P{n:02d}' for n in nums)}")
+    confirmed = re.match(r"\d+", plan["header"].get("pages", ""))
+    if not confirmed:
+        warnings.append("add `- pages: <N>` to the plan header: the slide count the user confirmed (or named in the request)")
+    elif int(confirmed.group()) != len(nums):
+        errors.append(f"the plan has {len(nums)} slides but the user confirmed {confirmed.group()} (`pages:`) — keep that "
+                      "count: move detail blocks to `optional` or leave low-priority sections out; never add or remove "
+                      "slides without asking the user")
     for page in plan["pages"]:
         lock, page_maps = PageBuilder(src, page, errors).build()
         if not lock:
@@ -476,10 +655,32 @@ def cmd_build(project: Path, dry_run: bool = False) -> int:
             errors.append(f"{pid}: background '{page_maps['page_backgrounds']}' is not in backgrounds_index.json")
         if page_maps["page_backgrounds"] and page_maps["page_rhythm"] == "dense":
             warnings.append(f"{pid}: backgrounds belong to cover, chapter and ending pages only")
+        shown_ids = [s["ref"] for f in lock["facts"][:page.get("_shown", 0)] for s in f["sources"]]
+        chars = sum(len(src.outline[b].text) for b in shown_ids)
+        page["_chars"], page["_shown_ids"] = chars, shown_ids
+        if chars > TEXT_BUDGET_ERROR:
+            errors.append(f"{pid}: its blocks hold {chars} characters of source text (limit {TEXT_BUDGET_ERROR}) — "
+                          "move detail blocks to `optional` or drop them (the slide count is fixed); a readable slide shows ≤ 900 characters")
+        elif chars > TEXT_BUDGET_WARN:
+            warnings.append(f"{pid}: {chars} characters of source text — the slide must summarise hard (≤ 900 shown); "
+                            "consider moving detail blocks to `optional`")
+        labels = [page["title"]] + [v for line in page["data"] for k, v in
+                                    (x.split("=", 1) for x in shlex.split(line)[1:] if "=" in x) if k in DIMENSION_KEYS]
+        for name in dict.fromkeys(n for text in labels for n in fc.invented_codes(text, src.corpus)):
+            errors.append(f"{pid}: '{name}' is nowhere in the source — use the source's own name or plain words")
         count = fc.COUNT_RE.search(fc.norm(page["title"]))
         if count and int(count.group(1)) != page.get("_shown"):
             warnings.append(f"{pid}: title says '{count.group()}' but the slide lists {page.get('_shown')} blocks")
         built.append((page, lock, page_maps))
+    errors += variety_errors(built, src, warnings)
+    # colors of entities that recur across slides
+    pairs = [x.split("=", 1) for x in plan["header"].get("colors", "").split(",") if x.strip()]
+    for pair in pairs:
+        if len(pair) != 2 or pair[1].strip().upper() not in ENTITY_COLORS:
+            errors.append(f"colors: '{'='.join(pair).strip()}' — write `name=#hex` with one of "
+                          f"{', '.join(sorted(ENTITY_COLORS))} (red stays for the focal figure)")
+    if len(pairs) > 6:
+        errors.append(f"colors: {len(pairs)} entities — at most 6 keep their own color; leave the rest neutral")
     # icons
     lib, names = "", []
     if (spec := plan["header"].get("icons", "")) and spec.lower() != "none":
@@ -498,6 +699,15 @@ def cmd_build(project: Path, dry_run: bool = False) -> int:
         if bid not in used and fc.NUM_RE.search(b.text) and not b.title:          # numbers or dates
             key = " › ".join(b.path[-2:]) or "(top)"
             uncovered[key] = uncovered.get(key, 0) + 1
+    shown_all = {r for page, _, _ in built for r in page.get("_shown_ids", [])}
+    def risk_word(text: str) -> str | None:                   # "không có KPI nào cảnh báo đỏ" is good news
+        t = fc.norm(text)
+        return next((m.group() for m in RISK_RE.finditer(t) if "không" not in t[max(0, m.start() - 20):m.start()]), None)
+    risks = [f"{src.label(bid)} ({word}{', optional' if bid in used else ''})" for bid, b in src.outline.items()
+             if bid not in shown_all and not (b.title and len(b.text) <= 120) and (word := risk_word(b.text))]
+    if risks:
+        warnings.append(f"risk items in no slide's `blocks:`: {', '.join(risks)} — delays, warnings and overdue tasks are "
+                        "what the reader looks for: give them a place before detail blocks, or leave each out on purpose")
     if errors:
         print(json.dumps({"errors": errors, "warnings": warnings}, ensure_ascii=False, indent=1))
         return 1

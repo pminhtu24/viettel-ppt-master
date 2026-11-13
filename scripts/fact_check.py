@@ -38,8 +38,18 @@ PERIOD_RE = re.compile(r"\b(tuần(?: (?:này|sau|trước|tới|\d{1,2}))?|thá
                        r"|năm(?: \d{4})?|lũy kế|6 tháng đầu năm|nửa đầu năm|cả năm)\b")
 NUM_RE = re.compile(r"(?<![\w/.,])\d+(?:[.,]\d+)*(?:/\d+(?:[.,]\d+)*)*(?!G\b)")   # 5G is a name; v1.0.5 is not 0.5
 RATIO_RE = re.compile(r"(?<![\w/.,])(\d{1,4})/(\d{1,4})(?![\w/.,]*\d)")
-STATUS_RE = re.compile(r"\b(chậm|quá hạn|hoàn thành|không đạt|đạt|vượt|tăng|giảm|dẫn đầu|đứng đầu|thắng thầu)\b")
+STATUS_RE = re.compile(r"\b(chậm|quá hạn|hoàn thành|hoàn thiện|không đạt|đạt|vượt|tăng|giảm|dẫn đầu|đứng đầu|thắng thầu)\b")
 HEDGES = ("nguy cơ", "dự kiến", "có thể", "đề xuất", "mục tiêu", "chưa", "không", "cần", "kế hoạch")
+
+
+def hedge_before(text: str, at: int) -> str | None:
+    """The hedge or negation in the words before a status word; "đang" only right before "hoàn thành/thiện"
+    ("đang hoàn thiện" is not done yet, "đang chậm" is just "chậm")."""
+    if text[max(0, at - 5):at] == "đang " and text.startswith("hoàn", at):
+        return "đang"
+    return next((h for h in HEDGES if h in text[max(0, at - 25):at]), None)
+
+
 ORDINAL_RE = re.compile(r"\b(phần|part|chương|mục|bước|step|giai đoạn|gđ|section|sự cố|lần|đợt|kịch bản)\s*$")
 STOPWORDS = set("""và của các những cho với trong là được có đã đang sẽ này đó từ theo về tại trên để một
 hai ba bốn năm đến khi như cũng thì mà nên hoặc hay bị do vì nhằm qua ra vào lên xuống sau trước nhất
@@ -238,6 +248,25 @@ _ASCII_CODE = re.compile(r"^(?=(?:[^A-Z]*[A-Z]){2})[A-Za-z][A-Za-z0-9&]{2,}$")  
 _LATIN_NAME = re.compile(r"^[A-Z][a-z]{3,}$")                                  # Dominica, Starlink
 
 
+_CODE_TOKEN = re.compile(r"(?<![\w&])[A-Za-z][A-Za-z0-9&]{2,}(?![\w&])")
+BRAND_WORDS = {"viettel"}
+
+
+def source_corpus(outline: dict[str, Block]) -> str:
+    return " ".join(" ".join([b.text, b.header, *b.path]) for b in outline.values()).lower()
+
+
+def invented_codes(text: str, corpus: str) -> list[str]:
+    """Codes and capitalised names (VTNT, NetBi, TTDL) in mixed-case text that the source never writes.
+    All-caps lines (decorative labels, headings) are left alone: their words are not names."""
+    if not any(c.islower() for c in text):
+        return []
+    out = [m.group() for m in _CODE_TOKEN.finditer(text)
+           if _ASCII_CODE.match(m.group()) and m.group().lower() not in BRAND_WORDS
+           and not re.search(rf"(?<![\w&]){re.escape(m.group().lower())}(?![\w&])", corpus)]
+    return list(dict.fromkeys(out))
+
+
 def entity_vocabulary(outline: dict[str, Block]) -> tuple[set[str], set[str]]:
     """(names, section names). Names are proper names and codes that identify a part of the source;
     section names are the ones that also appear in a heading (place, project, unit, workstream).
@@ -378,6 +407,7 @@ class PageContext:
     number_home: dict[str, set[str]]    # number key → source blocks that contain it
     counting_nouns: set[str]            # words that follow real ratios in the source (trạm, nhiệm, đảo …)
     name_blocks: dict[str, set[str]] = field(default_factory=dict)
+    corpus: str = ""                    # the whole source, lower-cased (invented names)
 
     def blocks_with(self, name: str) -> set[str]:
         if name not in self.name_blocks:
@@ -459,10 +489,10 @@ def audit_page(page: str, items: list[SlideText], pc: PageContext) -> list[dict]
         # 4. status words: the bound source must say them, and with the same hedge or negation
         for m in STATUS_RE.finditer(text_n):
             word = m.group()
-            if any(h in text_n[max(0, m.start() - 25):m.start()] for h in HEDGES):
+            if hedge_before(text_n, m.start()):
                 continue
             def hits_in(texts: list[str]) -> list[str | None]:
-                return [next((h for h in HEDGES if h in t[max(0, x.start() - 25):x.start()]), None)
+                return [hedge_before(t, x.start())
                         for t in texts for x in re.finditer(rf"\b{word}\b", t)]
             own = hits_in([norm(b.text) for b in blocks]) if bound else hits_in([page_ctx])
             if own:
@@ -481,7 +511,7 @@ def audit_page(page: str, items: list[SlideText], pc: PageContext) -> list[dict]
                 found.append(finding(page, "status-unbound", "warn", item,
                                      f"'{word}' is said by another source block of this page — bind the text to it"))
             else:
-                strong = word not in ("hoàn thành", "đạt", "tăng")
+                strong = word not in ("hoàn thành", "hoàn thiện", "đạt", "tăng")
                 sections = {tuple(b.path) for b in blocks}
                 sibling = next((o.id for o in outline.values() if tuple(o.path) in sections
                                 and re.search(rf"\b{word}\b", norm(o.text))), None)
@@ -596,6 +626,10 @@ def audit_page(page: str, items: list[SlideText], pc: PageContext) -> list[dict]
                 found.append(finding(page, "foreign-section", "review", item,
                                      f"from '{' › '.join(blocks[0].path[:3])}' while its list comes from "
                                      f"'{' › '.join(common)}'"))
+        # 12. a code or name the source never writes (an invented unit, site or project abbreviation)
+        for name in invented_codes(item.text, pc.corpus) if pc.corpus else ():
+            found.append(finding(page, "name-invented", "error", item,
+                                 f"'{name}' is nowhere in the source — use the source's own name or plain words"))
         # 11. long text with little overlap with its source → human review
         w = words(text_n)
         if len(w) >= 6:
@@ -638,19 +672,22 @@ def audit(project: Path, pages: set[str] | None = None) -> tuple[list[dict], dic
             if not (1 <= int(m.group(1)) <= 31 and 1 <= int(m.group(2)) <= 12):
                 nouns.add(m.group(3).lower())
     findings, texts = [], {}
+    corpus = source_corpus(outline)
     for pid, svg, refs, derived in load_pages(project):
         if pages and pid not in pages or not svg.exists():
             continue
         items = slide_texts(svg, refs)
         texts[pid] = items
-        pc = PageContext(outline, names, sections, doc_head, children, derived, number_home, nouns - STOPWORDS)
+        pc = PageContext(outline, names, sections, doc_head, children, derived, number_home, nouns - STOPWORDS,
+                         corpus=corpus)
         findings += audit_page(pid, items, pc)
     return findings, {"outline": outline, "texts": texts}
 
 
 SEVERITY = {"error": 0, "warn": 1, "review": 2}
 REVIEW_FIELDS = {   # content_check review booleans and the rules that put each in doubt
-    "source_meaning": ("low-overlap", "foreign-section", "name-unbound", "status-unsourced", "status-unbound"),
+    "source_meaning": ("low-overlap", "foreign-section", "name-unbound", "name-invented", "status-unsourced",
+                       "status-unbound"),
     "numbers_units": ("number-unsourced", "number-unbound", "number-recomposed", "ratio-noun", "editorial-number"),
     "scope_period_status": ("period-invented", "period-other-clause", "period-dropped", "hedge-dropped", "heading-scope"),
     "titles_conclusions": ("count-mismatch",),

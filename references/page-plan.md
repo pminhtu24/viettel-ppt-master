@@ -13,7 +13,7 @@ python3 ${SKILL_DIR}/scripts/spec_build.py build <project_path> --check   # ever
 python3 ${SKILL_DIR}/scripts/spec_build.py build <project_path>           # writes the spec + lock and runs the plan gate
 ```
 
-Fix every error `build --check` lists in `plan.md` (one edit per error, never a rewrite of the file), re-run until it prints `"ok": true`, then `build`. It also lists `uncovered_sections_with_numbers`: source sections with figures that no slide shows — add them to a slide or leave them out on purpose.
+Fix every error `build --check` lists in `plan.md` (one edit per error, never a rewrite of the file), re-run until it prints `"ok": true`, then `build`. Act on every warning too: change the template it names, move detail blocks to `optional`, or leave it with a reason you can state. `uncovered_sections_with_numbers` lists source sections with figures that no slide shows — leave them out on purpose or give them a slide in place of a lower-priority one (the slide count is fixed); never cram them into an existing slide.
 
 ## Format
 
@@ -23,6 +23,8 @@ Fix every error `build --check` lists in `plan.md` (one edit per error, never a 
 - audience: Ban Tổng Giám đốc
 - purpose: Báo cáo tuần — tiến độ chỉ tiêu, sự cố, nhiệm vụ trọng tâm
 - style: B) General Consulting
+- pages: 28                           # the slide count the user confirmed (or named in the request); build enforces it
+- colors: KV1=#12436D, KV2=#28A197, KV3=#7C3AED   # optional: ≤ 6 entities that recur on ≥ 3 slides keep one color (not red)
 - density: dense                      # dense (body 20px) | standard (body 24px)
 - mode: parallel                      # the 💡 generation-mode line: parallel | sequential
 - icons: tabler-filled: calendar, alert-triangle, flag, shield-check
@@ -38,12 +40,12 @@ Fix every error `build --check` lists in `plan.md` (one edit per error, never a 
 
 ### P02 Hạ tầng 5G: hàng về cảng so với kế hoạch năm
 - job: Mức hàng về cảng của ba nhóm thiết bị 5G so với kế hoạch năm
-- template: progress_bar_chart
+- template: bullet_chart
 - blocks: B0024-B0027
-- data: B0025 value=37%
-- data: B0026 value=48%
-- data: B0027 value=61%
-- why: ba tỷ lệ cùng đo hàng về cảng trên kế hoạch năm của cùng chương trình 5G
+- data: B0025 value=7.480/20.120 category="Hàng vô tuyến"
+- data: B0026 value=10.144/20.929 category="Hàng cơ điện (DC)"
+- data: B0027 value=12.505/20.513 category="Hàng SRT (IP)"
+- why: ba nhóm hàng cùng đo lượng về cảng trên kế hoạch năm của cùng chương trình 5G
 - optional: B0028
 
 ### P03 Các mốc hợp đồng OS 2027-2029
@@ -68,9 +70,9 @@ Fix every error `build --check` lists in `plan.md` (one edit per error, never a 
 | `template` | A key from `catalog.md`, or `none` |
 | `blocks` | Source blocks the slide shows (`B0024-B0027, B0031`); each must appear on the slide |
 | `optional` | Blocks shown only if there is room |
-| `data` | One line per chart mark: `<block> <role>=<number as printed> [category="…"] [period="…"] [series="…"]` |
+| `data` | One line per chart mark: `<block> value=<number as printed> [category="…"] [period="…"] [series="…"]`. Numbers are taken as printed: `43,90%`, `7.480`, `271.7K`, and ratios — `value=45/50` gives value 45 and, on progress/kpi templates, target 50 (`target=` may also be written). `category=` is the mark's label on every chart |
 | `calc` | A number the source does not state, computed from source numbers: `<id> percent|ratio|sum|difference <block>:<n> <block>:<n>` |
-| `why` | One line: why the source supports the chart (same unit and period, parts of one whole, ordered stages …) |
+| `why` | Required with every `template`: why the source supports it (same unit and period, parts of one whole, ordered stages; for a table, why a chart cannot show it) |
 
 Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no block.
 
@@ -80,7 +82,14 @@ Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no b
 2. **Numbers as printed.** `data` and `calc` take numbers exactly as `spec_build.py source` prints them (`7.480`, `37%`, `271.7K`); the block must contain them. Period and scope labels (tháng, quý, lũy kế, năm, tuần) stay with their own number, from the same clause.
 3. **Statuses as the source says them.** "Chậm", "vượt", "đạt", "hoàn thành" appear only where the source says them, with their hedge ("nguy cơ chậm", "dự kiến hoàn thành", "chưa đạt").
 4. **Counts are counts.** "7 nhiệm vụ" in a title equals the blocks listed; ratios keep their noun ("9/9 nhiệm vụ").
-5. **Charts follow the data.** Choose by the data's shape first (catalog family), then by message. `structure` templates (lists, steps, frameworks, tables) take blocks; every other family needs `data` lines and a `why`. Never fill a template's slots with content the source does not have; a single KPI may use one card; `template: none` is valid. Composition charts (pie, donut, treemap, stacked) need explicit wholes, which `build` cannot write yet — use a comparison or progress chart, or write that page's lock by hand ([content-grounding](content-grounding.md) §2–3).
+5. **Charts first where the data allows.** Choose by the data's shape (catalog family), then by message:
+   - completion against a plan (`a/b ~x%`, `x% KH`) → `progress_bar_chart` (percentages) or `bullet_chart` (`value=a/b`); one headline ratio → `gauge_chart`; 2–8 headline figures → `kpi_cards`; one unit across categories → `bar_chart` / `horizontal_bar_chart`; dated milestones → `timeline` (blocks only); stages with drop-off → `funnel_chart`.
+   - Tables are for data a chart cannot show — a source table, or rows with several columns of different measures. At most 2 slides may turn prose numbers into a table (`metric_table`, `consulting_table`, …); `build` stops at the third.
+   - A deck whose slides carry numbers needs a data chart on at least one in three of them; `build` names candidate slides and the chart that fits.
+   - Lists, steps and frameworks (`vertical_list`, `numbered_steps`, `quadrant_text_bullets` …) are for text items; vary them — no template on more than 4 slides.
+   - A chart may be accompanied by a short supporting list or note on the same slide; it may not be replaced by a table to save a slide.
+   - Never fill a template's slots with content the source does not have; `template: none` is valid. Composition charts (pie, donut, treemap, stacked) need explicit wholes, which `build` cannot write yet — use a comparison or progress chart, or write that page's lock by hand ([content-grounding](content-grounding.md) §2–3).
+6. **Readable slides.** A slide's `blocks` hold at most 1.800 characters of source text (`build` warns above 1.200); a drawn slide shows at most 900 characters at ≥ 18px. Long sections become two slides, or move detail to `optional`. Slide titles and labels use the source's names — never a code or abbreviation the source does not write.
 
 ## Common `build` errors
 
@@ -89,6 +98,11 @@ Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no b
 | `'49%' is not a number of that block` | Copy the number from the `source` output of that block, or use the block that has it |
 | `unknown block B0099` | Use an ID printed by `source` |
 | `<template> needs '<role>=' on every data line` | Give every role the template lists in `catalog.md` |
+| `its blocks hold N characters of source text` | Move detail blocks to `optional` or drop them (the count is fixed) |
+| `the plan has N slides but the user confirmed M` | Return to M slides: merge or drop low-priority slides; ask the user before changing the count |
+| `'XYZ' is nowhere in the source` | Write the name as the source does (no invented abbreviation) |
+| `<table> — P.., P.. already show prose numbers as a table` | Use the chart the message names, a list or cards |
+| `only N data chart(s) for M slides with numbers` | Change the named candidates to the chart in brackets |
 | `<template> is a … chart: add one - data: line per mark` | Data charts need `data` lines; for a list use a `structure` template |
 | `needs a - why: line` | One line on why the source supports the chart |
 | `icon 'x' is not in <library>: use one of …` | Take a suggested name or drop the icon |

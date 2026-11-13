@@ -183,7 +183,7 @@ Hard constraints:
 - Do not place a long sentence in one `<text>` line inside a card. If it exceeds ~55 Latin characters or ~28 Vietnamese/CJK characters at body size, wrap it manually or use `data-box`.
 - Do not attach unit labels to large numbers with fixed x offsets unless the combined number+unit width was budgeted. Prefer separate rows (`220,4` on one line, `nghìn tỷ đồng` below) or a `data-box`.
 - Every card must reserve inner padding: at least 18px for body cards, 14px for dense chart labels, 24px for KPI cards.
-- If content does not fit after wrapping at the role's minimum size, split the slide or remove lower-priority text. Never shrink body text below the declared annotation range to force fit.
+- If content does not fit after wrapping at the role's minimum size, summarise it, drop optional blocks or split the slide. Never shrink text to force fit: when `typography.min_text` is locked, content text is at least that size (18px), short single-line labels at least `min_label` (14px), and a slide shows at most 900 characters (checker `[text-min-size]`, `[text-density]`).
 - Keep chart marks, data labels, and cards below the title divider unless the page is a designed hero/breathing page. On Viettel 16:9 shells, content should normally start at y>=128, and large chart bars/labels should not enter y<255 when a large title block is present.
 
 Example:
