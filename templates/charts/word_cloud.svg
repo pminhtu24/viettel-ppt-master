@@ -11,36 +11,36 @@
     <rect width="1280" height="720" fill="#FFFFFF"/>
     <!-- ==================== Header ==================== -->
     <g id="header">
-        <text x="640" y="60" text-anchor="middle" font-size="32" font-weight="800" fill="#0F172A">Industry Trending Keywords</text>
-        <text x="640" y="88" text-anchor="middle" font-size="14" font-weight="700" fill="#64748B" letter-spacing="1">WORD CLOUD · FONT SIZE INDICATES KEYWORD WEIGHT &amp; FREQUENCY</text>
+        <text x="640" y="60" text-anchor="middle" font-size="32" font-weight="800" fill="#000000">Industry Trending Keywords</text>
+        <text x="640" y="88" text-anchor="middle" font-size="14" font-weight="700" fill="#44494D" letter-spacing="1">WORD CLOUD · FONT SIZE INDICATES KEYWORD WEIGHT &amp; FREQUENCY</text>
     </g>
     <!-- ==================== Word Cloud Geometry ==================== -->
     <g id="word-cloud-body" text-anchor="middle">
         <!-- Tier 1: Extreme (Center Core) -->
         <g font-weight="900" font-size="64" letter-spacing="-1">
-            <text x="640" y="340" fill="#4F46E5">Artificial Intelligence</text>
-            <text x="640" y="420" fill="#7C3AED">Large Language Models</text>
+            <text x="640" y="340" fill="#000000">Artificial Intelligence</text>
+            <text x="640" y="420" fill="#000000">Large Language Models</text>
         </g>
         <!-- Tier 2: High (Inner Ring) -->
         <g font-weight="800" font-size="44" letter-spacing="-0.5">
-            <text x="320" y="280" fill="#F43F5E">Digital Transformation</text>
-            <text x="960" y="280" fill="#0EA5E9">Cloud Computing</text>
-            <text x="320" y="480" fill="#10B981">Smart Manufacturing</text>
-            <text x="960" y="480" fill="#F59E0B">Data Security</text>
+            <text x="320" y="280" fill="#EE0033">Digital Transformation</text>
+            <text x="960" y="280" fill="#000000">Cloud Computing</text>
+            <text x="320" y="480" fill="#28A197">Smart Manufacturing</text>
+            <text x="960" y="480" fill="#F46A25">Data Security</text>
         </g>
         <!-- Tier 3: Medium (Middle Ring) -->
         <g font-weight="700" font-size="32">
-            <text x="640" y="240" fill="#14B8A6">Autonomous Driving</text>
-            <text x="640" y="500" fill="#D946EF">Edge Computing</text>
-            <text x="180" y="380" fill="#8B5CF6">Metaverse</text>
-            <text x="1100" y="380" fill="#6366F1">Blockchain</text>
-            <text x="440" y="200" fill="#3B82F6">Quantum Computing</text>
-            <text x="840" y="200" fill="#FB7185">Machine Learning</text>
-            <text x="440" y="560" fill="#34D399">Digital Twins</text>
-            <text x="840" y="560" fill="#FBBF24">IoT / AIoT</text>
+            <text x="640" y="240" fill="#28A197">Autonomous Driving</text>
+            <text x="640" y="500" fill="#000000">Edge Computing</text>
+            <text x="180" y="380" fill="#000000">Metaverse</text>
+            <text x="1100" y="380" fill="#000000">Blockchain</text>
+            <text x="440" y="200" fill="#000000">Quantum Computing</text>
+            <text x="840" y="200" fill="#FFFFFF">Machine Learning</text>
+            <text x="440" y="560" fill="#28A197">Digital Twins</text>
+            <text x="840" y="560" fill="#F46A25">IoT / AIoT</text>
         </g>
         <!-- Tier 4: Low (Outer Ring) -->
-        <g font-weight="600" font-size="24" fill="#64748B">
+        <g font-weight="600" font-size="24" fill="#44494D">
             <text x="240" y="180">Web 3.0</text>
             <text x="1040" y="180">Low-Code</text>
             <text x="240" y="580">Zero Trust</text>
@@ -53,7 +53,7 @@
             <text x="640" y="580">GPT-4</text>
         </g>
         <!-- Tier 5: Minimum (Dust/Particles) -->
-        <g font-weight="500" font-size="16" fill="#94A3B8">
+        <g font-weight="500" font-size="16" fill="#999999">
             <text x="140" y="120">DevOps</text>
             <text x="1140" y="120">MLOps</text>
             <text x="140" y="640">Cybersecurity</text>
@@ -69,16 +69,16 @@
     <!-- ==================== UI Legend ==================== -->
     <g id="frequency-legend">
         <rect x="340" y="640" width="600" height="40" rx="20" fill="#FFFFFF"/>
-        <text x="640" y="665" font-size="14" font-weight="600" fill="#475569" text-anchor="middle">
+        <text x="640" y="665" font-size="14" font-weight="600" fill="#44494D" text-anchor="middle">
             Size indicates frequency:
-            <tspan fill="#4F46E5" font-weight="800"> Extreme</tspan> ·
-            <tspan fill="#F43F5E" font-weight="700"> High</tspan> ·
-            <tspan fill="#14B8A6" font-weight="600"> Medium</tspan> ·
-            <tspan fill="#64748B" font-weight="500"> Low</tspan>
+            <tspan fill="#000000" font-weight="800"> Extreme</tspan> ·
+            <tspan fill="#EE0033" font-weight="700"> High</tspan> ·
+            <tspan fill="#28A197" font-weight="600"> Medium</tspan> ·
+            <tspan fill="#44494D" font-weight="500"> Low</tspan>
         </text>
     </g>
     <!-- ==================== Footer ==================== -->
     <g id="source">
-        <text x="1220" y="700" text-anchor="end" font-weight="600" fill="#94A3B8">Data Source: Industry Reports &amp; Social Media Analysis · 2025</text>
+        <text x="1220" y="700" text-anchor="end" font-weight="600" fill="#999999">Data Source: Industry Reports &amp; Social Media Analysis · 2025</text>
     </g>
 </svg>

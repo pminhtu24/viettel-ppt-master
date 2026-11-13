@@ -23,51 +23,51 @@
 
     <!-- ==================== Header ==================== -->
     <g id="header">
-        <text x="60" y="60" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="30" font-weight="800" fill="#0F172A">
+        <text x="60" y="60" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="30" font-weight="800" fill="#000000">
             <tspan>SWOT Strategic Analysis</tspan>
         </text>
-        <text x="60" y="88" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="700" fill="#64748B" letter-spacing="1.5">
+        <text x="60" y="88" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="700" fill="#44494D" letter-spacing="1.5">
             <tspan>ABC TECH COMPANY · 2025 MARKET COMPETITION ASSESSMENT</tspan>
         </text>
         <!-- Right-side mini matrix decoration -->
         <g transform="translate(1140, 50)">
-            <rect x="0" y="0" width="22" height="22" rx="4" fill="#10B981"/>
-            <rect x="26" y="0" width="22" height="22" rx="4" fill="#F59E0B"/>
-            <rect x="0" y="26" width="22" height="22" rx="4" fill="#3B82F6"/>
-            <rect x="26" y="26" width="22" height="22" rx="4" fill="#FB7185"/>
+            <rect x="0" y="0" width="22" height="22" rx="4" fill="#28A197"/>
+            <rect x="26" y="0" width="22" height="22" rx="4" fill="#F46A25"/>
+            <rect x="0" y="26" width="22" height="22" rx="4" fill="#EE0033"/>
+            <rect x="26" y="26" width="22" height="22" rx="4" fill="#EE0033" fill-opacity="0.45"/>
         </g>
     </g>
 
     <!-- ==================== Axis Frame ==================== -->
     <g id="axisFrame">
         <!-- Top: HELPFUL ↔ HARMFUL -->
-        <rect x="80" y="115" width="540" height="22" rx="11" fill="#ECFDF5"/>
-        <text x="350" y="131" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="800" fill="#059669" text-anchor="middle" letter-spacing="2">
+        <rect x="80" y="115" width="540" height="22" rx="11" fill="#F2F2F2"/>
+        <text x="350" y="131" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="800" fill="#28A197" text-anchor="middle" letter-spacing="2">
             <tspan>HELPFUL TO OBJECTIVE</tspan>
         </text>
-        <rect x="660" y="115" width="540" height="22" rx="11" fill="#FFF1F2"/>
-        <text x="930" y="131" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="800" fill="#E11D48" text-anchor="middle" letter-spacing="2">
+        <rect x="660" y="115" width="540" height="22" rx="11" fill="#F2F2F2"/>
+        <text x="930" y="131" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="800" fill="#EE0033" text-anchor="middle" letter-spacing="2">
             <tspan>HARMFUL TO OBJECTIVE</tspan>
         </text>
         <!-- Left: INTERNAL ↔ EXTERNAL -->
-        <rect x="38" y="148" width="22" height="252" rx="11" fill="#F8FAFC"/>
-        <text x="49" y="274" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="800" fill="#475569" text-anchor="middle" letter-spacing="2" transform="rotate(-90, 49, 274)">
+        <rect x="38" y="148" width="22" height="252" rx="11" fill="#F2F2F2"/>
+        <text x="49" y="274" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="800" fill="#44494D" text-anchor="middle" letter-spacing="2" transform="rotate(-90, 49, 274)">
             <tspan>INTERNAL ORIGIN</tspan>
         </text>
-        <rect x="38" y="412" width="22" height="252" rx="11" fill="#F8FAFC"/>
-        <text x="49" y="538" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="800" fill="#475569" text-anchor="middle" letter-spacing="2" transform="rotate(-90, 49, 538)">
+        <rect x="38" y="412" width="22" height="252" rx="11" fill="#F2F2F2"/>
+        <text x="49" y="538" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="800" fill="#44494D" text-anchor="middle" letter-spacing="2" transform="rotate(-90, 49, 538)">
             <tspan>EXTERNAL ORIGIN</tspan>
         </text>
     </g>
 
     <!-- ==================== S - Strengths (Top-Left, Emerald) ==================== -->
-    <g id="strengths" transform="translate(80, 148)">
+    <g id="strengths" transform="translate(80, 148)" data-viettel-blue-scope="chart">
         <rect x="0" y="0" width="540" height="252" rx="14" fill="#FFFFFF" filter="url(#cardShadow)"/>
         <!-- Top tab -->
         <path d="M 14 0 h 512 a 14 14 0 0 1 14 14 v 46 h -540 v -46 a 14 14 0 0 1 14 -14 Z" fill="#10B981"/>
         <!-- Monogram circle -->
         <circle cx="36" cy="30" r="18" fill="#FFFFFF"/>
-        <text x="36" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="800" fill="#10B981" text-anchor="middle">
+        <text x="36" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="800" fill="#28A197" text-anchor="middle">
             <tspan>S</tspan>
         </text>
         <text x="64" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="19" font-weight="800" fill="#FFFFFF">
@@ -80,29 +80,29 @@
         </text>
         <!-- Items -->
         <g id="s-items">
-            <circle cx="30" cy="92" r="10" fill="#ECFDF5"/>
+            <circle cx="30" cy="92" r="10" fill="#F2F2F2"/>
             <path d="M 25 92 L 29 96 L 35 88" stroke="#10B981" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <text x="50" y="97" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
-                <tspan>Strong R&amp;D team, </tspan><tspan font-weight="800" fill="#10B981">200+</tspan><tspan> tech patents</tspan>
+            <text x="50" y="97" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
+                <tspan>Strong R&amp;D team, </tspan><tspan font-weight="800" fill="#28A197">200+</tspan><tspan> tech patents</tspan>
             </text>
-            <circle cx="30" cy="126" r="10" fill="#ECFDF5"/>
+            <circle cx="30" cy="126" r="10" fill="#F2F2F2"/>
             <path d="M 25 126 L 29 130 L 35 122" stroke="#10B981" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <text x="50" y="131" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
-                <tspan>High brand recognition, </tspan><tspan font-weight="800" fill="#10B981">85%</tspan><tspan> loyalty</tspan>
+            <text x="50" y="131" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
+                <tspan>High brand recognition, </tspan><tspan font-weight="800" fill="#28A197">85%</tspan><tspan> loyalty</tspan>
             </text>
-            <circle cx="30" cy="160" r="10" fill="#ECFDF5"/>
+            <circle cx="30" cy="160" r="10" fill="#F2F2F2"/>
             <path d="M 25 160 L 29 164 L 35 156" stroke="#10B981" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <text x="50" y="165" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
-                <tspan>Complete supply chain, </tspan><tspan font-weight="800" fill="#10B981">15%</tspan><tspan> cost edge</tspan>
+            <text x="50" y="165" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
+                <tspan>Complete supply chain, </tspan><tspan font-weight="800" fill="#28A197">15%</tspan><tspan> cost edge</tspan>
             </text>
-            <circle cx="30" cy="194" r="10" fill="#ECFDF5"/>
+            <circle cx="30" cy="194" r="10" fill="#F2F2F2"/>
             <path d="M 25 194 L 29 198 L 35 190" stroke="#10B981" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <text x="50" y="199" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <text x="50" y="199" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Strong cash flow, stable financials</tspan>
             </text>
-            <circle cx="30" cy="228" r="10" fill="#ECFDF5"/>
+            <circle cx="30" cy="228" r="10" fill="#F2F2F2"/>
             <path d="M 25 228 L 29 232 L 35 224" stroke="#10B981" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <text x="50" y="233" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <text x="50" y="233" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Efficient management, strong execution</tspan>
             </text>
         </g>
@@ -111,9 +111,9 @@
     <!-- ==================== W - Weaknesses (Top-Right, Amber) ==================== -->
     <g id="weaknesses" transform="translate(660, 148)">
         <rect x="0" y="0" width="540" height="252" rx="14" fill="#FFFFFF" filter="url(#cardShadow)"/>
-        <path d="M 14 0 h 512 a 14 14 0 0 1 14 14 v 46 h -540 v -46 a 14 14 0 0 1 14 -14 Z" fill="#F59E0B"/>
+        <path d="M 14 0 h 512 a 14 14 0 0 1 14 14 v 46 h -540 v -46 a 14 14 0 0 1 14 -14 Z" fill="#F46A25"/>
         <circle cx="36" cy="30" r="18" fill="#FFFFFF"/>
-        <text x="36" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="800" fill="#D97706" text-anchor="middle">
+        <text x="36" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="800" fill="#F46A25" text-anchor="middle">
             <tspan>W</tspan>
         </text>
         <text x="64" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="19" font-weight="800" fill="#FFFFFF">
@@ -124,40 +124,40 @@
             <tspan>ADDRESS</tspan>
         </text>
         <g id="w-items">
-            <circle cx="30" cy="92" r="10" fill="#FFFBEB"/>
-            <path d="M 25 87 L 35 97 M 35 87 L 25 97" stroke="#F59E0B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <text x="50" y="97" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <circle cx="30" cy="92" r="10" fill="#F2F2F2"/>
+            <path d="M 25 87 L 35 97 M 35 87 L 25 97" stroke="#F46A25" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <text x="50" y="97" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Insufficient marketing investment</tspan>
             </text>
-            <circle cx="30" cy="126" r="10" fill="#FFFBEB"/>
-            <path d="M 25 121 L 35 131 M 35 121 L 25 131" stroke="#F59E0B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <text x="50" y="131" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <circle cx="30" cy="126" r="10" fill="#F2F2F2"/>
+            <path d="M 25 121 L 35 131 M 35 121 L 25 131" stroke="#F46A25" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <text x="50" y="131" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Single product line, core dependency</tspan>
             </text>
-            <circle cx="30" cy="160" r="10" fill="#FFFBEB"/>
-            <path d="M 25 155 L 35 165 M 35 155 L 25 165" stroke="#F59E0B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <text x="50" y="165" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <circle cx="30" cy="160" r="10" fill="#F2F2F2"/>
+            <path d="M 25 155 L 35 165 M 35 155 L 25 165" stroke="#F46A25" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <text x="50" y="165" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Lack of overseas market experience</tspan>
             </text>
-            <circle cx="30" cy="194" r="10" fill="#FFFBEB"/>
-            <path d="M 25 189 L 35 199 M 35 189 L 25 199" stroke="#F59E0B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <text x="50" y="199" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
-                <tspan>High talent turnover </tspan><tspan font-weight="800" fill="#D97706">(12%)</tspan>
+            <circle cx="30" cy="194" r="10" fill="#F2F2F2"/>
+            <path d="M 25 189 L 35 199 M 35 189 L 25 199" stroke="#F46A25" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <text x="50" y="199" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
+                <tspan>High talent turnover </tspan><tspan font-weight="800" fill="#F46A25">(12%)</tspan>
             </text>
-            <circle cx="30" cy="228" r="10" fill="#FFFBEB"/>
-            <path d="M 25 223 L 35 233 M 35 223 L 25 233" stroke="#F59E0B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-            <text x="50" y="233" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <circle cx="30" cy="228" r="10" fill="#F2F2F2"/>
+            <path d="M 25 223 L 35 233 M 35 223 L 25 233" stroke="#F46A25" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <text x="50" y="233" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>After-sales response needs improvement</tspan>
             </text>
         </g>
     </g>
 
     <!-- ==================== O - Opportunities (Bottom-Left, Blue) ==================== -->
-    <g id="opportunities" transform="translate(80, 412)">
+    <g id="opportunities" transform="translate(80, 412)" data-viettel-blue-scope="chart">
         <rect x="0" y="0" width="540" height="252" rx="14" fill="#FFFFFF" filter="url(#cardShadow)"/>
-        <path d="M 14 0 h 512 a 14 14 0 0 1 14 14 v 46 h -540 v -46 a 14 14 0 0 1 14 -14 Z" fill="#3B82F6"/>
+        <path d="M 14 0 h 512 a 14 14 0 0 1 14 14 v 46 h -540 v -46 a 14 14 0 0 1 14 -14 Z" fill="#12436D"/>
         <circle cx="36" cy="30" r="18" fill="#FFFFFF"/>
-        <text x="36" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="800" fill="#2563EB" text-anchor="middle">
+        <text x="36" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="800" fill="#000000" text-anchor="middle">
             <tspan>O</tspan>
         </text>
         <text x="64" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="19" font-weight="800" fill="#FFFFFF">
@@ -168,29 +168,29 @@
             <tspan>PURSUE</tspan>
         </text>
         <g id="o-items">
-            <circle cx="30" cy="92" r="10" fill="#EFF6FF"/>
-            <path d="M 30 87 L 30 97 M 26 91 L 30 87 L 34 91" stroke="#3B82F6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <text x="50" y="97" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
-                <tspan>AI industry growing at </tspan><tspan font-weight="800" fill="#2563EB">25% CAGR</tspan>
+            <circle cx="30" cy="92" r="10" fill="#F2F2F2"/>
+            <path d="M 30 87 L 30 97 M 26 91 L 30 87 L 34 91" stroke="#12436D" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="50" y="97" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
+                <tspan>AI industry growing at </tspan><tspan font-weight="800" fill="#000000">25% CAGR</tspan>
             </text>
-            <circle cx="30" cy="126" r="10" fill="#EFF6FF"/>
-            <path d="M 30 121 L 30 131 M 26 125 L 30 121 L 34 125" stroke="#3B82F6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <text x="50" y="131" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <circle cx="30" cy="126" r="10" fill="#F2F2F2"/>
+            <path d="M 30 121 L 30 131 M 26 125 L 30 121 L 34 125" stroke="#12436D" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="50" y="131" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Increased policy support and subsidies</tspan>
             </text>
-            <circle cx="30" cy="160" r="10" fill="#EFF6FF"/>
-            <path d="M 30 155 L 30 165 M 26 159 L 30 155 L 34 159" stroke="#3B82F6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <text x="50" y="165" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <circle cx="30" cy="160" r="10" fill="#F2F2F2"/>
+            <path d="M 30 155 L 30 165 M 26 159 L 30 155 L 34 159" stroke="#12436D" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="50" y="165" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Strong demand in emerging markets (SEA)</tspan>
             </text>
-            <circle cx="30" cy="194" r="10" fill="#EFF6FF"/>
-            <path d="M 30 189 L 30 199 M 26 193 L 30 189 L 34 193" stroke="#3B82F6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <text x="50" y="199" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <circle cx="30" cy="194" r="10" fill="#F2F2F2"/>
+            <path d="M 30 189 L 30 199 M 26 193 L 30 189 L 34 193" stroke="#12436D" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="50" y="199" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Competitors repositioning, share available</tspan>
             </text>
-            <circle cx="30" cy="228" r="10" fill="#EFF6FF"/>
-            <path d="M 30 223 L 30 233 M 26 227 L 30 223 L 34 227" stroke="#3B82F6" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <text x="50" y="233" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <circle cx="30" cy="228" r="10" fill="#F2F2F2"/>
+            <path d="M 30 223 L 30 233 M 26 227 L 30 223 L 34 227" stroke="#12436D" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="50" y="233" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Digital transformation driving demand</tspan>
             </text>
         </g>
@@ -199,9 +199,9 @@
     <!-- ==================== T - Threats (Bottom-Right, Rose) ==================== -->
     <g id="threats" transform="translate(660, 412)">
         <rect x="0" y="0" width="540" height="252" rx="14" fill="#FFFFFF" filter="url(#cardShadow)"/>
-        <path d="M 14 0 h 512 a 14 14 0 0 1 14 14 v 46 h -540 v -46 a 14 14 0 0 1 14 -14 Z" fill="#FB7185"/>
+        <path d="M 14 0 h 512 a 14 14 0 0 1 14 14 v 46 h -540 v -46 a 14 14 0 0 1 14 -14 Z" fill="#EE0033" fill-opacity="0.45"/>
         <circle cx="36" cy="30" r="18" fill="#FFFFFF"/>
-        <text x="36" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="800" fill="#E11D48" text-anchor="middle">
+        <text x="36" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="800" fill="#EE0033" text-anchor="middle">
             <tspan>T</tspan>
         </text>
         <text x="64" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="19" font-weight="800" fill="#FFFFFF">
@@ -212,46 +212,46 @@
             <tspan>MITIGATE</tspan>
         </text>
         <g id="t-items">
-            <circle cx="30" cy="92" r="10" fill="#FFF1F2"/>
-            <path d="M 30 86 L 35 96 L 25 96 Z" fill="none" stroke="#FB7185" stroke-width="2" stroke-linejoin="round"/>
-            <line x1="30" y1="90" x2="30" y2="93" stroke="#FB7185" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="30" cy="95" r="0.8" fill="#FB7185"/>
-            <text x="50" y="97" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <circle cx="30" cy="92" r="10" fill="#F2F2F2"/>
+            <path d="M 30 86 L 35 96 L 25 96 Z" fill="none" stroke="#EE0033" stroke-width="2" stroke-linejoin="round" stroke-opacity="0.45"/>
+            <line x1="30" y1="90" x2="30" y2="93" stroke="#EE0033" stroke-width="2" stroke-linecap="round" stroke-opacity="0.45"/>
+            <circle cx="30" cy="95" r="0.8" fill="#EE0033" fill-opacity="0.45"/>
+            <text x="50" y="97" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Intensified competition, giants entering</tspan>
             </text>
-            <circle cx="30" cy="126" r="10" fill="#FFF1F2"/>
-            <path d="M 30 120 L 35 130 L 25 130 Z" fill="none" stroke="#FB7185" stroke-width="2" stroke-linejoin="round"/>
-            <line x1="30" y1="124" x2="30" y2="127" stroke="#FB7185" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="30" cy="129" r="0.8" fill="#FB7185"/>
-            <text x="50" y="131" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <circle cx="30" cy="126" r="10" fill="#F2F2F2"/>
+            <path d="M 30 120 L 35 130 L 25 130 Z" fill="none" stroke="#EE0033" stroke-width="2" stroke-linejoin="round" stroke-opacity="0.45"/>
+            <line x1="30" y1="124" x2="30" y2="127" stroke="#EE0033" stroke-width="2" stroke-linecap="round" stroke-opacity="0.45"/>
+            <circle cx="30" cy="129" r="0.8" fill="#EE0033" fill-opacity="0.45"/>
+            <text x="50" y="131" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Rapid technology iterations, R&amp;D pressure</tspan>
             </text>
-            <circle cx="30" cy="160" r="10" fill="#FFF1F2"/>
-            <path d="M 30 154 L 35 164 L 25 164 Z" fill="none" stroke="#FB7185" stroke-width="2" stroke-linejoin="round"/>
-            <line x1="30" y1="158" x2="30" y2="161" stroke="#FB7185" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="30" cy="163" r="0.8" fill="#FB7185"/>
-            <text x="50" y="165" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <circle cx="30" cy="160" r="10" fill="#F2F2F2"/>
+            <path d="M 30 154 L 35 164 L 25 164 Z" fill="none" stroke="#EE0033" stroke-width="2" stroke-linejoin="round" stroke-opacity="0.45"/>
+            <line x1="30" y1="158" x2="30" y2="161" stroke="#EE0033" stroke-width="2" stroke-linecap="round" stroke-opacity="0.45"/>
+            <circle cx="30" cy="163" r="0.8" fill="#EE0033" fill-opacity="0.45"/>
+            <text x="50" y="165" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Rising raw material costs, margin squeeze</tspan>
             </text>
-            <circle cx="30" cy="194" r="10" fill="#FFF1F2"/>
-            <path d="M 30 188 L 35 198 L 25 198 Z" fill="none" stroke="#FB7185" stroke-width="2" stroke-linejoin="round"/>
-            <line x1="30" y1="192" x2="30" y2="195" stroke="#FB7185" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="30" cy="197" r="0.8" fill="#FB7185"/>
-            <text x="50" y="199" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <circle cx="30" cy="194" r="10" fill="#F2F2F2"/>
+            <path d="M 30 188 L 35 198 L 25 198 Z" fill="none" stroke="#EE0033" stroke-width="2" stroke-linejoin="round" stroke-opacity="0.45"/>
+            <line x1="30" y1="192" x2="30" y2="195" stroke="#EE0033" stroke-width="2" stroke-linecap="round" stroke-opacity="0.45"/>
+            <circle cx="30" cy="197" r="0.8" fill="#EE0033" fill-opacity="0.45"/>
+            <text x="50" y="199" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Stricter regulations, compliance costs up</tspan>
             </text>
-            <circle cx="30" cy="228" r="10" fill="#FFF1F2"/>
-            <path d="M 30 222 L 35 232 L 25 232 Z" fill="none" stroke="#FB7185" stroke-width="2" stroke-linejoin="round"/>
-            <line x1="30" y1="226" x2="30" y2="229" stroke="#FB7185" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="30" cy="231" r="0.8" fill="#FB7185"/>
-            <text x="50" y="233" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#0F172A">
+            <circle cx="30" cy="228" r="10" fill="#F2F2F2"/>
+            <path d="M 30 222 L 35 232 L 25 232 Z" fill="none" stroke="#EE0033" stroke-width="2" stroke-linejoin="round" stroke-opacity="0.45"/>
+            <line x1="30" y1="226" x2="30" y2="229" stroke="#EE0033" stroke-width="2" stroke-linecap="round" stroke-opacity="0.45"/>
+            <circle cx="30" cy="231" r="0.8" fill="#EE0033" fill-opacity="0.45"/>
+            <text x="50" y="233" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600" fill="#000000">
                 <tspan>Economic uncertainty, budgets tightening</tspan>
             </text>
         </g>
     </g>
 
     <!-- ==================== Footer ==================== -->
-    <text x="60" y="695" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" font-weight="600" fill="#94A3B8">
+    <text x="60" y="695" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" font-weight="600" fill="#999999">
         <tspan>Data source: Strategic Planning Department · 2025 Annual Analysis Report</tspan>
     </text>
 </svg>

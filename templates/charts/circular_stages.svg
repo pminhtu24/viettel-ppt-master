@@ -27,39 +27,39 @@
     <rect width="1280" height="720" fill="#FFFFFF"/>
     <!-- Title Area -->
     <text x="60" y="70" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-          font-size="32" font-weight="700" fill="#0F172A" letter-spacing="-0.5">Continuous Improvement Cycle</text>
+          font-size="32" font-weight="700" fill="#000000" letter-spacing="-0.5">Continuous Improvement Cycle</text>
     <text x="60" y="100" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-          font-size="16" fill="#64748B">Continuous Improvement Cycle · Five-stage closed-loop drive</text>
+          font-size="16" fill="#44494D">Continuous Improvement Cycle · Five-stage closed-loop drive</text>
     <!-- Center guide ring (dashed) -->
-    <circle cx="480" cy="410" r="200" fill="none" stroke="#E0E0E0" stroke-width="2" stroke-dasharray="8,4"/>
-    <circle cx="480" cy="410" r="130" fill="none" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="4,4"/>
+    <circle cx="480" cy="410" r="200" fill="none" stroke="#E6E6E6" stroke-width="2" stroke-dasharray="8,4"/>
+    <circle cx="480" cy="410" r="130" fill="none" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="4,4"/>
     <!-- Center text -->
     <text x="480" y="398" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-          font-size="24" font-weight="800" fill="#0F172A">Continuous</text>
+          font-size="24" font-weight="800" fill="#000000">Continuous</text>
     <text x="480" y="428" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-          font-size="15" fill="#94A3B8">Continuous Loop</text>
+          font-size="15" fill="#999999">Continuous Loop</text>
     <!-- 5 nodes distributed along the ring (center 480,410 r=200) -->
     <!-- Positions: Top(480,210), Top-right(670,350), Bottom-right(600,570), Bottom-left(360,570), Top-left(290,350) -->
     <!-- Connecting arc arrows (curved path + polygon triangle) -->
     <!-- 1→2 -->
-    <path d="M 510,220 Q 620,240 650,340" stroke="#8B5CF6" stroke-width="3" fill="none" stroke-opacity="0.5"/>
-    <polygon points="655,340 645,332 648,348" fill="#8B5CF6" fill-opacity="0.6"/>
+    <path d="M 510,220 Q 620,240 650,340" stroke="#7C3AED" stroke-width="3" fill="none" stroke-opacity="0.5" data-viettel-blue-scope="chart"/>
+    <polygon points="655,340 645,332 648,348" fill="#7C3AED" fill-opacity="0.6" data-viettel-blue-scope="chart"/>
     <!-- 2→3 -->
-    <path d="M 670,380 Q 680,480 610,555" stroke="#10B981" stroke-width="3" fill="none" stroke-opacity="0.5"/>
-    <polygon points="605,558 618,552 610,565" fill="#10B981" fill-opacity="0.6"/>
+    <path d="M 670,380 Q 680,480 610,555" stroke="#10B981" stroke-width="3" fill="none" stroke-opacity="0.5" data-viettel-blue-scope="chart"/>
+    <polygon points="605,558 618,552 610,565" fill="#10B981" fill-opacity="0.6" data-viettel-blue-scope="chart"/>
     <!-- 3→4 -->
-    <path d="M 575,580 Q 480,620 375,575" stroke="#F59E0B" stroke-width="3" fill="none" stroke-opacity="0.5"/>
-    <polygon points="372,572 380,584 368,580" fill="#F59E0B" fill-opacity="0.6"/>
+    <path d="M 575,580 Q 480,620 375,575" stroke="#F46A25" stroke-width="3" fill="none" stroke-opacity="0.5"/>
+    <polygon points="372,572 380,584 368,580" fill="#F46A25" fill-opacity="0.6"/>
     <!-- 4→5 -->
-    <path d="M 340,555 Q 280,470 285,365" stroke="#F43F5E" stroke-width="3" fill="none" stroke-opacity="0.5"/>
-    <polygon points="287,360 278,372 294,368" fill="#F43F5E" fill-opacity="0.6"/>
+    <path d="M 340,555 Q 280,470 285,365" stroke="#EE0033" stroke-width="3" fill="none" stroke-opacity="0.5"/>
+    <polygon points="287,360 278,372 294,368" fill="#EE0033" fill-opacity="0.6"/>
     <!-- 5→1 -->
-    <path d="M 310,340 Q 340,250 460,215" stroke="#3B82F6" stroke-width="3" fill="none" stroke-opacity="0.5"/>
-    <polygon points="462,213 452,206 454,222" fill="#3B82F6" fill-opacity="0.6"/>
-    <g id="nodes">
+    <path d="M 310,340 Q 340,250 460,215" stroke="#12436D" stroke-width="3" fill="none" stroke-opacity="0.5" data-viettel-blue-scope="chart"/>
+    <polygon points="462,213 452,206 454,222" fill="#12436D" fill-opacity="0.6" data-viettel-blue-scope="chart"/>
+    <g id="nodes" data-viettel-blue-scope="chart">
     <g id="node-1">
     <!-- Node 1: Research & Analysis (Top) -->
-    <circle cx="480" cy="210" r="45" fill="#8B5CF6" filter="url(#nodeShadow)"/>
+    <circle cx="480" cy="210" r="45" fill="#7C3AED" filter="url(#nodeShadow)"/>
     <text x="480" y="205" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
           font-size="32" font-weight="700" fill="#FFFFFF">01</text>
     <text x="480" y="228" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
@@ -75,7 +75,7 @@
         </g>
     <g id="node-3">
     <!-- Node 3: Execution (Bottom-right) -->
-    <circle cx="600" cy="570" r="45" fill="#F59E0B" filter="url(#nodeShadow)"/>
+    <circle cx="600" cy="570" r="45" fill="#F46A25" filter="url(#nodeShadow)"/>
     <text x="600" y="565" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
           font-size="32" font-weight="700" fill="#FFFFFF">03</text>
     <text x="600" y="588" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
@@ -83,7 +83,7 @@
         </g>
     <g id="node-4">
     <!-- Node 4: Evaluation (Bottom-left) -->
-    <circle cx="360" cy="570" r="45" fill="#F43F5E" filter="url(#nodeShadow)"/>
+    <circle cx="360" cy="570" r="45" fill="#EE0033" filter="url(#nodeShadow)"/>
     <text x="360" y="565" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
           font-size="32" font-weight="700" fill="#FFFFFF">04</text>
     <text x="360" y="588" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
@@ -91,23 +91,23 @@
         </g>
     <g id="node-5">
     <!-- Node 5: Iteration (Top-left) -->
-    <circle cx="290" cy="355" r="45" fill="#3B82F6" filter="url(#nodeShadow)"/>
+    <circle cx="290" cy="355" r="45" fill="#12436D" filter="url(#nodeShadow)"/>
     <text x="290" y="350" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
           font-size="32" font-weight="700" fill="#FFFFFF">05</text>
     <text x="290" y="373" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
           font-size="13" font-weight="600" fill="#FFFFFF" fill-opacity="0.85">Iteration</text>
         </g>
     </g>
-    <g id="cards">
+    <g id="cards" data-viettel-blue-scope="chart">
     <!-- Right Description Panel -->
     <g id="card-1">
     <g filter="url(#cardShadow)">
         <rect x="780" y="150" width="440" height="75" rx="8" fill="#FFFFFF"/>
-        <rect x="780" y="150" width="5" height="75" rx="3" fill="#8B5CF6"/>
+        <rect x="780" y="150" width="5" height="75" rx="3" fill="#7C3AED"/>
         <text x="802" y="180" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-              font-size="18" font-weight="700" fill="#8B5CF6">01 Research &amp; Analysis</text>
+              font-size="18" font-weight="700" fill="#000000">01 Research &amp; Analysis</text>
         <text x="802" y="206" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-              font-size="14" fill="#64748B">Conduct research and collect user data</text>
+              font-size="14" fill="#44494D">Conduct research and collect user data</text>
     </g>
     </g>
     <g id="card-2">
@@ -115,43 +115,43 @@
         <rect x="780" y="240" width="440" height="75" rx="8" fill="#FFFFFF"/>
         <rect x="780" y="240" width="5" height="75" rx="3" fill="#10B981"/>
         <text x="802" y="270" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-              font-size="18" font-weight="700" fill="#10B981">02 Solution Design</text>
+              font-size="18" font-weight="700" fill="#28A197">02 Solution Design</text>
         <text x="802" y="296" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-              font-size="14" fill="#64748B">Define clear goals and improvement paths</text>
+              font-size="14" fill="#44494D">Define clear goals and improvement paths</text>
     </g>
     </g>
     <g id="card-3">
     <g filter="url(#cardShadow)">
         <rect x="780" y="330" width="440" height="75" rx="8" fill="#FFFFFF"/>
-        <rect x="780" y="330" width="5" height="75" rx="3" fill="#F59E0B"/>
+        <rect x="780" y="330" width="5" height="75" rx="3" fill="#F46A25"/>
         <text x="802" y="360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-              font-size="18" font-weight="700" fill="#D97706">03 Execution</text>
+              font-size="18" font-weight="700" fill="#F46A25">03 Execution</text>
         <text x="802" y="386" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-              font-size="14" fill="#64748B">Implement solutions and track project progress</text>
+              font-size="14" fill="#44494D">Implement solutions and track project progress</text>
     </g>
     </g>
     <g id="card-4">
     <g filter="url(#cardShadow)">
         <rect x="780" y="420" width="440" height="75" rx="8" fill="#FFFFFF"/>
-        <rect x="780" y="420" width="5" height="75" rx="3" fill="#F43F5E"/>
+        <rect x="780" y="420" width="5" height="75" rx="3" fill="#EE0033"/>
         <text x="802" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-              font-size="18" font-weight="700" fill="#F43F5E">04 Evaluation</text>
+              font-size="18" font-weight="700" fill="#EE0033">04 Evaluation</text>
         <text x="802" y="476" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-              font-size="14" fill="#64748B">Measure outcomes against target objectives</text>
+              font-size="14" fill="#44494D">Measure outcomes against target objectives</text>
     </g>
     </g>
     <g id="card-5">
     <g filter="url(#cardShadow)">
         <rect x="780" y="510" width="440" height="75" rx="8" fill="#FFFFFF"/>
-        <rect x="780" y="510" width="5" height="75" rx="3" fill="#3B82F6"/>
+        <rect x="780" y="510" width="5" height="75" rx="3" fill="#12436D"/>
         <text x="802" y="540" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-              font-size="18" font-weight="700" fill="#3B82F6">05 Iteration &amp; Optimization</text>
+              font-size="18" font-weight="700" fill="#000000">05 Iteration &amp; Optimization</text>
         <text x="802" y="566" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-              font-size="14" fill="#64748B">Review lessons learned for the next cycle</text>
+              font-size="14" fill="#44494D">Review lessons learned for the next cycle</text>
     </g>
         </g>
     </g>
     <!-- Footer Note -->
     <text x="60" y="690" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-          font-size="12" fill="#94A3B8">With each completed cycle, overall capability leaps to a higher level</text>
+          font-size="12" fill="#999999">With each completed cycle, overall capability leaps to a higher level</text>
 </svg>

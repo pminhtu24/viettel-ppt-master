@@ -8,11 +8,11 @@
     Supports: 12 time points × 2 series (adjustable)
     Difference from Line Chart: Filled area emphasizes cumulative volume and changes
     -->
-    <defs>
+    <defs data-viettel-blue-scope="chart">
         <!-- Area fill gradient (Blue series) -->
         <linearGradient id="areaGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:0.6" />
-            <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:0.1" />
+            <stop offset="0%" style="stop-color:#12436D;stop-opacity:0.6" />
+            <stop offset="100%" style="stop-color:#12436D;stop-opacity:0.1" />
         </linearGradient>
         <!-- Area fill gradient (Green series) -->
         <linearGradient id="areaGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -25,68 +25,68 @@
     <!-- Title -->
     <g id="header"
        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
-        <text x="60" y="70" font-size="34" font-weight="bold" fill="#0F172A">Website Traffic Trend Analysis</text>
-        <text x="60" y="105" font-size="18" fill="#64748B">2025 Monthly Data · Unit: 10K Visits</text>
+        <text x="60" y="70" font-size="34" font-weight="bold" fill="#000000">Website Traffic Trend Analysis</text>
+        <text x="60" y="105" font-size="18" fill="#44494D">2025 Monthly Data · Unit: 10K Visits</text>
     </g>
     <!-- Legend -->
     <g id="legend" transform="translate(950, 70)"
-       font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
-        <line x1="0" y1="10" x2="30" y2="10" stroke="#3B82F6" stroke-width="3"/>
-        <circle cx="15" cy="10" r="5" fill="#3B82F6"/>
-        <text x="40" y="15" font-size="15" fill="#475569">PC Visits</text>
+       font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" data-viettel-blue-scope="chart">
+        <line x1="0" y1="10" x2="30" y2="10" stroke="#12436D" stroke-width="3"/>
+        <circle cx="15" cy="10" r="5" fill="#12436D"/>
+        <text x="40" y="15" font-size="15" fill="#44494D">PC Visits</text>
         <line x1="150" y1="10" x2="180" y2="10" stroke="#10B981" stroke-width="3"/>
         <circle cx="165" cy="10" r="5" fill="#10B981"/>
-        <text x="190" y="15" font-size="15" fill="#475569">Mobile Visits</text>
+        <text x="190" y="15" font-size="15" fill="#44494D">Mobile Visits</text>
     </g>
     <!-- Chart Area -->
-    <g id="area_chart">
+    <g id="area_chart" data-viettel-blue-scope="chart">
     <g id="chartArea">
         <!-- Y-axis Grid Lines -->
-        <line x1="120" y1="560" x2="1200" y2="560" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="4,4"/>
-        <line x1="120" y1="470" x2="1200" y2="470" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="4,4"/>
-        <line x1="120" y1="380" x2="1200" y2="380" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="4,4"/>
-        <line x1="120" y1="290" x2="1200" y2="290" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="4,4"/>
-        <line x1="120" y1="200" x2="1200" y2="200" stroke="#E0E0E0" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="120" y1="560" x2="1200" y2="560" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="120" y1="470" x2="1200" y2="470" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="120" y1="380" x2="1200" y2="380" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="120" y1="290" x2="1200" y2="290" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="120" y1="200" x2="1200" y2="200" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="4,4"/>
         <!-- Y-axis Labels -->
         <text x="105" y="565"
-              font-size="14" fill="#64748B" text-anchor="end">0</text>
+              font-size="14" fill="#44494D" text-anchor="end">0</text>
         <text x="105" y="475"
-              font-size="14" fill="#64748B" text-anchor="end">200</text>
+              font-size="14" fill="#44494D" text-anchor="end">200</text>
         <text x="105" y="385"
-              font-size="14" fill="#64748B" text-anchor="end">400</text>
+              font-size="14" fill="#44494D" text-anchor="end">400</text>
         <text x="105" y="295"
-              font-size="14" fill="#64748B" text-anchor="end">600</text>
+              font-size="14" fill="#44494D" text-anchor="end">600</text>
         <text x="105" y="205"
-              font-size="14" fill="#64748B" text-anchor="end">800</text>
+              font-size="14" fill="#44494D" text-anchor="end">800</text>
         <!-- Axes -->
-        <line x1="120" y1="160" x2="120" y2="560" stroke="#94A3B8" stroke-width="2"/>
-        <line x1="120" y1="560" x2="1200" y2="560" stroke="#94A3B8" stroke-width="2"/>
+        <line x1="120" y1="160" x2="120" y2="560" stroke="#999999" stroke-width="2"/>
+        <line x1="120" y1="560" x2="1200" y2="560" stroke="#999999" stroke-width="2"/>
         <!-- X-axis Labels (12 months) -->
         <!-- Distance between each month: (1200-120)/12 = 90px -->
         <text x="165" y="590"
-              font-size="14" fill="#64748B" text-anchor="middle">Jan</text>
+              font-size="14" fill="#44494D" text-anchor="middle">Jan</text>
         <text x="255" y="590"
-              font-size="14" fill="#64748B" text-anchor="middle">Feb</text>
+              font-size="14" fill="#44494D" text-anchor="middle">Feb</text>
         <text x="345" y="590"
-              font-size="14" fill="#64748B" text-anchor="middle">Mar</text>
+              font-size="14" fill="#44494D" text-anchor="middle">Mar</text>
         <text x="435" y="590"
-              font-size="14" fill="#64748B" text-anchor="middle">Apr</text>
+              font-size="14" fill="#44494D" text-anchor="middle">Apr</text>
         <text x="525" y="590"
-              font-size="14" fill="#64748B" text-anchor="middle">May</text>
+              font-size="14" fill="#44494D" text-anchor="middle">May</text>
         <text x="615" y="590"
-              font-size="14" fill="#64748B" text-anchor="middle">Jun</text>
+              font-size="14" fill="#44494D" text-anchor="middle">Jun</text>
         <text x="705" y="590"
-              font-size="14" fill="#64748B" text-anchor="middle">Jul</text>
+              font-size="14" fill="#44494D" text-anchor="middle">Jul</text>
         <text x="795" y="590"
-              font-size="14" fill="#64748B" text-anchor="middle">Aug</text>
+              font-size="14" fill="#44494D" text-anchor="middle">Aug</text>
         <text x="885" y="590"
-              font-size="14" fill="#64748B" text-anchor="middle">Sep</text>
+              font-size="14" fill="#44494D" text-anchor="middle">Sep</text>
         <text x="975" y="590"
-              font-size="14" fill="#64748B" text-anchor="middle">Oct</text>
+              font-size="14" fill="#44494D" text-anchor="middle">Oct</text>
         <text x="1065" y="590"
-              font-size="14" fill="#64748B" text-anchor="middle">Nov</text>
+              font-size="14" fill="#44494D" text-anchor="middle">Nov</text>
         <text x="1155" y="590"
-              font-size="14" fill="#64748B" text-anchor="middle">Dec</text>
+              font-size="14" fill="#44494D" text-anchor="middle">Dec</text>
         <!-- chart-plot-area: 120,160,1200,560 -->
         <!-- X increments 90 from 165; Y = 560 - (value / 200) × 90. -->
         <!-- Area 1: PC (Blue) -->
@@ -96,7 +96,7 @@
               fill="url(#areaGrad1)"/>
         <!-- Line 1: PC -->
         <path d="M 165,416 L 255,434 L 345,402.5 L 435,371 L 525,344 L 615,326 L 705,299 L 795,281 L 885,312.5 L 975,339.5 L 1065,353 L 1155,326"
-              fill="none" stroke="#3B82F6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              fill="none" stroke="#12436D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         <!-- Area 2: Mobile (Green) -->
         <path d="M 165,560
                  L 165,479 L 255,488 L 345,465.5 L 435,434 L 525,402.5 L 615,371 L 705,344 L 795,317 L 885,335 L 975,353 L 1065,366.5 L 1155,339.5
@@ -106,18 +106,18 @@
         <path d="M 165,479 L 255,488 L 345,465.5 L 435,434 L 525,402.5 L 615,371 L 705,344 L 795,317 L 885,335 L 975,353 L 1065,366.5 L 1155,339.5"
               fill="none" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         <!-- PC Data Points -->
-        <circle cx="165" cy="416" r="5" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2"/>
-        <circle cx="255" cy="434" r="5" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2"/>
-        <circle cx="345" cy="402.5" r="5" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2"/>
-        <circle cx="435" cy="371" r="5" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2"/>
-        <circle cx="525" cy="344" r="5" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2"/>
-        <circle cx="615" cy="326" r="5" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2"/>
-        <circle cx="705" cy="299" r="5" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2"/>
-        <circle cx="795" cy="281" r="6" fill="#3B82F6" stroke="#FFFFFF" stroke-width="2"/>
-        <circle cx="885" cy="312.5" r="5" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2"/>
-        <circle cx="975" cy="339.5" r="5" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2"/>
-        <circle cx="1065" cy="353" r="5" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2"/>
-        <circle cx="1155" cy="326" r="5" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2"/>
+        <circle cx="165" cy="416" r="5" fill="#FFFFFF" stroke="#12436D" stroke-width="2"/>
+        <circle cx="255" cy="434" r="5" fill="#FFFFFF" stroke="#12436D" stroke-width="2"/>
+        <circle cx="345" cy="402.5" r="5" fill="#FFFFFF" stroke="#12436D" stroke-width="2"/>
+        <circle cx="435" cy="371" r="5" fill="#FFFFFF" stroke="#12436D" stroke-width="2"/>
+        <circle cx="525" cy="344" r="5" fill="#FFFFFF" stroke="#12436D" stroke-width="2"/>
+        <circle cx="615" cy="326" r="5" fill="#FFFFFF" stroke="#12436D" stroke-width="2"/>
+        <circle cx="705" cy="299" r="5" fill="#FFFFFF" stroke="#12436D" stroke-width="2"/>
+        <circle cx="795" cy="281" r="6" fill="#12436D" stroke="#FFFFFF" stroke-width="2"/>
+        <circle cx="885" cy="312.5" r="5" fill="#FFFFFF" stroke="#12436D" stroke-width="2"/>
+        <circle cx="975" cy="339.5" r="5" fill="#FFFFFF" stroke="#12436D" stroke-width="2"/>
+        <circle cx="1065" cy="353" r="5" fill="#FFFFFF" stroke="#12436D" stroke-width="2"/>
+        <circle cx="1155" cy="326" r="5" fill="#FFFFFF" stroke="#12436D" stroke-width="2"/>
         <!-- Mobile Data Points -->
         <circle cx="165" cy="479" r="5" fill="#FFFFFF" stroke="#10B981" stroke-width="2"/>
         <circle cx="255" cy="488" r="5" fill="#FFFFFF" stroke="#10B981" stroke-width="2"/>
@@ -133,53 +133,53 @@
         <circle cx="1155" cy="339.5" r="5" fill="#FFFFFF" stroke="#10B981" stroke-width="2"/>
         <!-- Peak Label (Aug) -->
         <g>
-            <rect x="755" y="225" width="80" height="45" rx="6" fill="#3B82F6"/>
+            <rect x="755" y="225" width="80" height="45" rx="6" fill="#12436D"/>
             <text x="795" y="245"
                   font-size="14" font-weight="600" fill="#FFFFFF" text-anchor="middle">Peak</text>
             <text x="795" y="262"
                   font-size="13" fill="#FFFFFF" text-anchor="middle">6.2M</text>
-            <path d="M 795,270 L 790,281 L 800,281 Z" fill="#3B82F6"/>
+            <path d="M 795,270 L 790,281 L 800,281 Z" fill="#12436D"/>
         </g>
     </g>
     </g>
     <!-- Stat Cards -->
-    <g id="statsCards" transform="translate(60, 620)">
+    <g id="statsCards" transform="translate(60, 620)" data-viettel-blue-scope="chart">
         <!-- Card 1: Total Visits -->
         <g id="card-total-visits">
-            <rect x="0" y="0" width="200" height="70" rx="8" fill="#F8F9FA" stroke="#E0E0E0" stroke-width="1"/>
+            <rect x="0" y="0" width="200" height="70" rx="8" fill="#F2F2F2" stroke="#E6E6E6" stroke-width="1"/>
             <text x="20" y="25" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-                  font-size="14" fill="#64748B">Total Annual Visits</text>
+                  font-size="14" fill="#44494D">Total Annual Visits</text>
             <text x="20" y="55"
-                  font-size="24" font-weight="bold" fill="#0F172A">102.4M</text>
+                  font-size="24" font-weight="bold" fill="#000000">102.4M</text>
         </g>
         <!-- Card 2: PC Share -->
         <g id="card-pc-share">
-            <rect x="220" y="0" width="180" height="70" rx="8" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1"/>
+            <rect x="220" y="0" width="180" height="70" rx="8" fill="#F2F2F2" stroke="#12436D" stroke-width="1"/>
             <text x="240" y="25" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-                  font-size="14" fill="#2563EB">PC Share</text>
+                  font-size="14" fill="#000000">PC Share</text>
             <text x="240" y="55"
-                  font-size="24" font-weight="bold" fill="#3B82F6">55.8%</text>
+                  font-size="24" font-weight="bold" fill="#000000">55.8%</text>
         </g>
         <!-- Card 3: Mobile Share -->
         <g id="card-mobile-share">
-            <rect x="420" y="0" width="180" height="70" rx="8" fill="#ECFDF5" stroke="#34D399" stroke-width="1"/>
+            <rect x="420" y="0" width="180" height="70" rx="8" fill="#F2F2F2" stroke="#10B981" stroke-width="1"/>
             <text x="440" y="25" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-                  font-size="14" fill="#059669">Mobile Share</text>
+                  font-size="14" fill="#28A197">Mobile Share</text>
             <text x="440" y="55"
-                  font-size="24" font-weight="bold" fill="#34D399">44.2%</text>
+                  font-size="24" font-weight="bold" fill="#28A197">44.2%</text>
         </g>
         <!-- Card 4: YoY Growth -->
         <g id="card-yoy-growth">
-            <rect x="620" y="0" width="180" height="70" rx="8" fill="#FFFBEB" stroke="#F59E0B" stroke-width="1"/>
+            <rect x="620" y="0" width="180" height="70" rx="8" fill="#F2F2F2" stroke="#F46A25" stroke-width="1"/>
             <text x="640" y="25" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-                  font-size="14" fill="#D97706">YoY Growth</text>
+                  font-size="14" fill="#F46A25">YoY Growth</text>
             <text x="640" y="55"
-                  font-size="24" font-weight="bold" fill="#F59E0B">+23.5%</text>
+                  font-size="24" font-weight="bold" fill="#F46A25">+23.5%</text>
         </g>
     </g>
     <!-- Data Source -->
     <g id="source"
        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
-        <text x="1220" y="695" font-size="14" fill="#94A3B8" text-anchor="end">Data Source: Website Analytics Platform</text>
+        <text x="1220" y="695" font-size="14" fill="#999999" text-anchor="end">Data Source: Website Analytics Platform</text>
     </g>
 </svg>

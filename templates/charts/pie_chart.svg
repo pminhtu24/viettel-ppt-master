@@ -13,11 +13,11 @@
     <!-- Title Area -->
     <g id="header">
         <text x="60" y="80"
-              font-size="32" font-weight="800" fill="#0F172A">Market Share Distribution</text>
+              font-size="32" font-weight="800" fill="#000000">Market Share Distribution</text>
         <text x="60" y="115"
-              font-size="14" font-weight="700" fill="#64748B" letter-spacing="1.5">Q3 2025 · TOTAL INDUSTRY MARKET SIZE: $12B</text>
+              font-size="14" font-weight="700" fill="#44494D" letter-spacing="1.5">Q3 2025 · TOTAL INDUSTRY MARKET SIZE: $12B</text>
     </g>
-    <g id="pie_chart">
+    <g id="pie_chart" data-viettel-blue-scope="chart">
     <!-- chart-plot-area: pie | center: 420,400 | radius: 200 -->
     <!-- ==================== Pie Chart Graphic ==================== -->
     <g id="pieChart" transform="translate(420, 400)">
@@ -30,19 +30,19 @@
         -->
         <!-- Segment 1: Competitor A 35% (-90° to 36°) -->
         <path d="M 0,0 L 0,-200 A 200,200 0 0,1 161.80,117.56 Z"
-              fill="#3B82F6" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/>
+              fill="#12436D" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/>
         <!-- Segment 2: Competitor B 25% (36° to 126°) -->
         <path d="M 0,0 L 161.80,117.56 A 200,200 0 0,1 -117.56,161.80 Z"
               fill="#10B981" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/>
         <!-- Segment 3: Competitor C 20% (126° to 198°) -->
         <path d="M 0,0 L -117.56,161.80 A 200,200 0 0,1 -190.21,-61.80 Z"
-              fill="#F59E0B" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/>
+              fill="#F46A25" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/>
         <!-- Segment 4: Competitor D 12% (198° to 241.2°) -->
         <path d="M 0,0 L -190.21,-61.80 A 200,200 0 0,1 -96.35,-175.26 Z"
-              fill="#8B5CF6" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/>
+              fill="#7C3AED" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/>
         <!-- Segment 5: Others 8% (241.2° to 270°) -->
         <path d="M 0,0 L -96.35,-175.26 A 200,200 0 0,1 0,-200 Z"
-              fill="#94A3B8" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/>
+              fill="#999999" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/>
     </g>
     <!-- ==================== Pie Chart Labels ==================== -->
     <!-- Label 1: Competitor A 35% -->
@@ -59,52 +59,52 @@
           font-size="18" font-weight="800" fill="#FFFFFF" text-anchor="middle">12%</text>
     <!-- Label 5: Others 8% (Callout Line) -->
     <g>
-        <line x1="380" y1="220" x2="330" y2="170" stroke="#94A3B8" stroke-width="2"/>
-        <circle cx="380" cy="220" r="5" fill="#FFFFFF" stroke="#94A3B8" stroke-width="2"/>
+        <line x1="380" y1="220" x2="330" y2="170" stroke="#999999" stroke-width="2"/>
+        <circle cx="380" cy="220" r="5" fill="#FFFFFF" stroke="#999999" stroke-width="2"/>
         <text x="320" y="165"
-              font-size="16" font-weight="800" fill="#64748B" text-anchor="end">8%</text>
+              font-size="16" font-weight="800" fill="#44494D" text-anchor="end">8%</text>
     </g>
     </g>
     <!-- ==================== Data Table Legend ==================== -->
-    <g id="legend" transform="translate(720, 200)">
+    <g id="legend" transform="translate(720, 200)" data-viettel-blue-scope="chart">
         <!-- Card Background -->
-        <rect x="-20" y="-40" width="500" height="380" rx="12" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+        <rect x="-20" y="-40" width="500" height="380" rx="12" fill="#F2F2F2" stroke="#E6E6E6" stroke-width="1.5"/>
         <!-- Table Header -->
-        <text x="20" y="0" font-size="18" font-weight="800" fill="#0F172A">Market Share</text>
-        <text x="440" y="0" font-size="13" font-weight="700" fill="#64748B" text-anchor="end">Value (Mil)</text>
-        <line x1="20" y1="15" x2="440" y2="15" stroke="#CBD5E1" stroke-width="1.5"/>
+        <text x="20" y="0" font-size="18" font-weight="800" fill="#000000">Market Share</text>
+        <text x="440" y="0" font-size="13" font-weight="700" fill="#44494D" text-anchor="end">Value (Mil)</text>
+        <line x1="20" y1="15" x2="440" y2="15" stroke="#E6E6E6" stroke-width="1.5"/>
         <!-- Item 1: Competitor A -->
-        <rect x="20" y="35" width="16" height="16" rx="4" fill="#3B82F6"/>
-        <text x="50" y="48" font-size="16" font-weight="700" fill="#1E293B">Competitor A</text>
-        <text x="440" y="48" font-size="16" font-weight="800" fill="#0F172A" text-anchor="end">$4.2B <tspan fill="#64748B" font-size="14" font-weight="600">(35%)</tspan></text>
-        <line x1="20" y1="65" x2="440" y2="65" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4 4"/>
+        <rect x="20" y="35" width="16" height="16" rx="4" fill="#12436D"/>
+        <text x="50" y="48" font-size="16" font-weight="700" fill="#000000">Competitor A</text>
+        <text x="440" y="48" font-size="16" font-weight="800" fill="#000000" text-anchor="end">$4.2B <tspan fill="#44494D" font-size="14" font-weight="600">(35%)</tspan></text>
+        <line x1="20" y1="65" x2="440" y2="65" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="4 4"/>
         <!-- Item 2: Competitor B -->
         <rect x="20" y="85" width="16" height="16" rx="4" fill="#10B981"/>
-        <text x="50" y="98" font-size="16" font-weight="700" fill="#1E293B">Competitor B</text>
-        <text x="440" y="98" font-size="16" font-weight="800" fill="#0F172A" text-anchor="end">$3.0B <tspan fill="#64748B" font-size="14" font-weight="600">(25%)</tspan></text>
-        <line x1="20" y1="115" x2="440" y2="115" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4 4"/>
+        <text x="50" y="98" font-size="16" font-weight="700" fill="#000000">Competitor B</text>
+        <text x="440" y="98" font-size="16" font-weight="800" fill="#000000" text-anchor="end">$3.0B <tspan fill="#44494D" font-size="14" font-weight="600">(25%)</tspan></text>
+        <line x1="20" y1="115" x2="440" y2="115" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="4 4"/>
         <!-- Item 3: Competitor C -->
-        <rect x="20" y="135" width="16" height="16" rx="4" fill="#F59E0B"/>
-        <text x="50" y="148" font-size="16" font-weight="700" fill="#1E293B">Competitor C</text>
-        <text x="440" y="148" font-size="16" font-weight="800" fill="#0F172A" text-anchor="end">$2.4B <tspan fill="#64748B" font-size="14" font-weight="600">(20%)</tspan></text>
-        <line x1="20" y1="165" x2="440" y2="165" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4 4"/>
+        <rect x="20" y="135" width="16" height="16" rx="4" fill="#F46A25"/>
+        <text x="50" y="148" font-size="16" font-weight="700" fill="#000000">Competitor C</text>
+        <text x="440" y="148" font-size="16" font-weight="800" fill="#000000" text-anchor="end">$2.4B <tspan fill="#44494D" font-size="14" font-weight="600">(20%)</tspan></text>
+        <line x1="20" y1="165" x2="440" y2="165" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="4 4"/>
         <!-- Item 4: Competitor D -->
-        <rect x="20" y="185" width="16" height="16" rx="4" fill="#8B5CF6"/>
-        <text x="50" y="198" font-size="16" font-weight="700" fill="#1E293B">Competitor D</text>
-        <text x="440" y="198" font-size="16" font-weight="800" fill="#0F172A" text-anchor="end">$1.44B <tspan fill="#64748B" font-size="14" font-weight="600">(12%)</tspan></text>
-        <line x1="20" y1="215" x2="440" y2="215" stroke="#E2E8F0" stroke-width="1" stroke-dasharray="4 4"/>
+        <rect x="20" y="185" width="16" height="16" rx="4" fill="#7C3AED"/>
+        <text x="50" y="198" font-size="16" font-weight="700" fill="#000000">Competitor D</text>
+        <text x="440" y="198" font-size="16" font-weight="800" fill="#000000" text-anchor="end">$1.44B <tspan fill="#44494D" font-size="14" font-weight="600">(12%)</tspan></text>
+        <line x1="20" y1="215" x2="440" y2="215" stroke="#E6E6E6" stroke-width="1" stroke-dasharray="4 4"/>
         <!-- Item 5: Others -->
-        <rect x="20" y="235" width="16" height="16" rx="4" fill="#94A3B8"/>
-        <text x="50" y="248" font-size="16" font-weight="700" fill="#1E293B">Others</text>
-        <text x="440" y="248" font-size="16" font-weight="800" fill="#0F172A" text-anchor="end">$0.96B <tspan fill="#64748B" font-size="14" font-weight="600">(8%)</tspan></text>
-        <line x1="20" y1="275" x2="440" y2="275" stroke="#CBD5E1" stroke-width="1.5"/>
+        <rect x="20" y="235" width="16" height="16" rx="4" fill="#999999"/>
+        <text x="50" y="248" font-size="16" font-weight="700" fill="#000000">Others</text>
+        <text x="440" y="248" font-size="16" font-weight="800" fill="#000000" text-anchor="end">$0.96B <tspan fill="#44494D" font-size="14" font-weight="600">(8%)</tspan></text>
+        <line x1="20" y1="275" x2="440" y2="275" stroke="#E6E6E6" stroke-width="1.5"/>
         <!-- Total Row -->
-        <text x="20" y="305" font-size="18" font-weight="800" fill="#0F172A">Total Market Size</text>
-        <text x="440" y="305" font-size="20" font-weight="800" fill="#0F172A" text-anchor="end">$12.0B <tspan fill="#64748B" font-size="16" font-weight="700">(100%)</tspan></text>
+        <text x="20" y="305" font-size="18" font-weight="800" fill="#000000">Total Market Size</text>
+        <text x="440" y="305" font-size="20" font-weight="800" fill="#000000" text-anchor="end">$12.0B <tspan fill="#44494D" font-size="16" font-weight="700">(100%)</tspan></text>
     </g>
     <!-- Data Source -->
     <g id="source">
         <text x="60" y="685"
-              font-size="13" font-weight="500" fill="#94A3B8">Source: Industry Research Report</text>
+              font-size="13" font-weight="500" fill="#999999">Source: Industry Research Report</text>
     </g>
 </svg>

@@ -9,12 +9,12 @@
       - Do not use marker-end to simulate these wide arrows
     Reusable snippet 1: Pentagon chevron (phase arrow)
       <polygon points="40,0 220,0 260,48 220,96 40,96 80,48"
-               fill="#4F46E5"/>
+               fill="#12436D"/>
     Reusable snippet 2: Block arrow with long head (conclusion pointer)
       <path d="M60,10 H300 V-36 L470,80 L300,196 V150 H60 Z"
-            fill="#5D96E4" stroke="#3F76C8" stroke-width="4"/>
+            fill="#12436D" stroke="#12436D" stroke-width="4"/>
     -->
-    <defs>
+    <defs data-viettel-blue-scope="chart">
                 <filter id="chevronShadow" x="-15%" y="-15%" width="130%" height="130%">
             <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
             <feOffset dx="2" dy="4" result="offsetblur"/>
@@ -31,33 +31,33 @@
         </filter>
         <!-- Phase Gradients -->
         <linearGradient id="gradPhase1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#6366F1;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#4F46E5;stop-opacity:1" />
+            <stop offset="0%" style="stop-color:#12436D;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#12436D;stop-opacity:1" />
         </linearGradient>
         <linearGradient id="gradPhase2" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1" />
+            <stop offset="0%" style="stop-color:#12436D;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#12436D;stop-opacity:1" />
         </linearGradient>
         <linearGradient id="gradPhase3" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#0EA5E9;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#0284C7;stop-opacity:1" />
+            <stop offset="0%" style="stop-color:#12436D;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#12436D;stop-opacity:1" />
         </linearGradient>
         <linearGradient id="gradPhase4" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
             <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
         </linearGradient>
         <linearGradient id="gradPhase5" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#D97706;stop-opacity:1" />
+            <stop offset="0%" style="stop-color:#F46A25;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#F46A25;stop-opacity:1" />
         </linearGradient>
     </defs>
     <rect width="1280" height="720" fill="#FFFFFF"/>
     <!-- Title -->
     <text x="640" y="55" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-          font-size="30" font-weight="700" fill="#1E293B">Digital Transformation Methodology</text>
+          font-size="30" font-weight="700" fill="#000000">Digital Transformation Methodology</text>
     <text x="640" y="82" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-          font-size="14" fill="#64748B">Chevron Process · Five-Stage Progressive Framework</text>
-    <g id="main-content" transform="translate(75, -60)">
+          font-size="14" fill="#44494D">Chevron Process · Five-Stage Progressive Framework</text>
+    <g id="main-content" transform="translate(75, -60)" data-viettel-blue-scope="chart">
     <g id="chevrons">
     <!-- Chevron 1 (Leftmost) -->
     <g id="chevron-1">
@@ -102,21 +102,21 @@
     </g>
     <!-- Phase Timeline Bar -->
     <g id="timeline">
-    <rect x="40" y="325" width="190" height="20" rx="4" fill="#4F46E5" fill-opacity="0.15"/>
+    <rect x="40" y="325" width="190" height="20" rx="4" fill="#12436D" fill-opacity="0.15"/>
     <text x="135" y="339" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-          font-size="12" font-weight="600" fill="#4F46E5">2-4 Weeks</text>
-    <rect x="245" y="325" width="195" height="20" rx="4" fill="#2563EB" fill-opacity="0.15"/>
+          font-size="12" font-weight="600" fill="#000000">2-4 Weeks</text>
+    <rect x="245" y="325" width="195" height="20" rx="4" fill="#12436D" fill-opacity="0.15"/>
     <text x="342" y="339" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-          font-size="12" font-weight="600" fill="#2563EB">4-6 Weeks</text>
-    <rect x="450" y="325" width="195" height="20" rx="4" fill="#0284C7" fill-opacity="0.15"/>
+          font-size="12" font-weight="600" fill="#000000">4-6 Weeks</text>
+    <rect x="450" y="325" width="195" height="20" rx="4" fill="#12436D" fill-opacity="0.15"/>
     <text x="547" y="339" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-          font-size="12" font-weight="600" fill="#0284C7">8-12 Weeks</text>
+          font-size="12" font-weight="600" fill="#000000">8-12 Weeks</text>
     <rect x="655" y="325" width="210" height="20" rx="4" fill="#059669" fill-opacity="0.15"/>
     <text x="760" y="339" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-          font-size="12" font-weight="600" fill="#059669">12-16 Weeks</text>
-    <rect x="875" y="325" width="215" height="20" rx="4" fill="#D97706" fill-opacity="0.15"/>
+          font-size="12" font-weight="600" fill="#28A197">12-16 Weeks</text>
+    <rect x="875" y="325" width="215" height="20" rx="4" fill="#F46A25" fill-opacity="0.15"/>
     <text x="982" y="339" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-          font-size="12" font-weight="600" fill="#D97706">Ongoing</text>
+          font-size="12" font-weight="600" fill="#F46A25">Ongoing</text>
         </g>
     <!-- Detail Cards Row -->
     <g id="cards">
@@ -124,54 +124,54 @@
     <g id="card-1">
     <g filter="url(#cardShadow)">
         <rect x="40" y="370" width="190" height="290" rx="10" fill="#FFFFFF"/>
-        <rect x="40" y="370" width="190" height="5" rx="3" fill="#4F46E5"/>
+        <rect x="40" y="370" width="190" height="5" rx="3" fill="#12436D"/>
         <text x="135" y="405" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-              font-size="15" font-weight="700" fill="#1E293B">Diagnostics</text>
-        <line x1="65" y1="425" x2="205" y2="425" stroke="#F0F0F0" stroke-width="1"/>
-        <text x="60" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Current State Review</text>
-        <text x="60" y="478" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Identify Pain Points</text>
-        <text x="60" y="506" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Maturity Evaluation</text>
-        <text x="60" y="534" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Gap Analysis</text>
-        <line x1="65" y1="560" x2="205" y2="560" stroke="#F0F0F0" stroke-width="1"/>
-        <text x="60" y="585" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="600" fill="#4F46E5">Deliverables:</text>
-        <text x="60" y="608" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#94A3B8">Diagnostic Report</text>
-        <text x="60" y="630" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#94A3B8">Maturity Scorecard</text>
+              font-size="15" font-weight="700" fill="#000000">Diagnostics</text>
+        <line x1="65" y1="425" x2="205" y2="425" stroke="#F2F2F2" stroke-width="1"/>
+        <text x="60" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Current State Review</text>
+        <text x="60" y="478" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Identify Pain Points</text>
+        <text x="60" y="506" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Maturity Evaluation</text>
+        <text x="60" y="534" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Gap Analysis</text>
+        <line x1="65" y1="560" x2="205" y2="560" stroke="#F2F2F2" stroke-width="1"/>
+        <text x="60" y="585" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="600" fill="#000000">Deliverables:</text>
+        <text x="60" y="608" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#999999">Diagnostic Report</text>
+        <text x="60" y="630" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#999999">Maturity Scorecard</text>
     </g>
         </g>
     <!-- Card 2 -->
     <g id="card-2">
     <g filter="url(#cardShadow)">
         <rect x="250" y="370" width="190" height="290" rx="10" fill="#FFFFFF"/>
-        <rect x="250" y="370" width="190" height="5" rx="3" fill="#2563EB"/>
+        <rect x="250" y="370" width="190" height="5" rx="3" fill="#12436D"/>
         <text x="345" y="405" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-              font-size="15" font-weight="700" fill="#1E293B">Planning &amp; Design</text>
-        <line x1="275" y1="425" x2="415" y2="425" stroke="#F0F0F0" stroke-width="1"/>
-        <text x="270" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Architecture Design</text>
-        <text x="270" y="478" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Tech Stack Eval.</text>
-        <text x="270" y="506" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Roadmap Dev.</text>
-        <text x="270" y="534" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· ROI Calculation</text>
-        <line x1="275" y1="560" x2="415" y2="560" stroke="#F0F0F0" stroke-width="1"/>
-        <text x="270" y="585" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="600" fill="#2563EB">Deliverables:</text>
-        <text x="270" y="608" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#94A3B8">Strategic Blueprint</text>
-        <text x="270" y="630" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#94A3B8">ROI Analysis</text>
+              font-size="15" font-weight="700" fill="#000000">Planning &amp; Design</text>
+        <line x1="275" y1="425" x2="415" y2="425" stroke="#F2F2F2" stroke-width="1"/>
+        <text x="270" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Architecture Design</text>
+        <text x="270" y="478" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Tech Stack Eval.</text>
+        <text x="270" y="506" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Roadmap Dev.</text>
+        <text x="270" y="534" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· ROI Calculation</text>
+        <line x1="275" y1="560" x2="415" y2="560" stroke="#F2F2F2" stroke-width="1"/>
+        <text x="270" y="585" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="600" fill="#000000">Deliverables:</text>
+        <text x="270" y="608" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#999999">Strategic Blueprint</text>
+        <text x="270" y="630" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#999999">ROI Analysis</text>
     </g>
         </g>
     <!-- Card 3 -->
     <g id="card-3">
     <g filter="url(#cardShadow)">
         <rect x="460" y="370" width="190" height="290" rx="10" fill="#FFFFFF"/>
-        <rect x="460" y="370" width="190" height="5" rx="3" fill="#0284C7"/>
+        <rect x="460" y="370" width="190" height="5" rx="3" fill="#12436D"/>
         <text x="555" y="405" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-              font-size="15" font-weight="700" fill="#1E293B">Pilot Validation</text>
-        <line x1="485" y1="425" x2="625" y2="425" stroke="#F0F0F0" stroke-width="1"/>
-        <text x="480" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Select Scenarios</text>
-        <text x="480" y="478" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Rapid MVP Launch</text>
-        <text x="480" y="506" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Performance Data</text>
-        <text x="480" y="534" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Feedback Iteration</text>
-        <line x1="485" y1="560" x2="625" y2="560" stroke="#F0F0F0" stroke-width="1"/>
-        <text x="480" y="585" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="600" fill="#0284C7">Deliverables:</text>
-        <text x="480" y="608" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#94A3B8">Pilot Summary</text>
-        <text x="480" y="630" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#94A3B8">Feasibility Report</text>
+              font-size="15" font-weight="700" fill="#000000">Pilot Validation</text>
+        <line x1="485" y1="425" x2="625" y2="425" stroke="#F2F2F2" stroke-width="1"/>
+        <text x="480" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Select Scenarios</text>
+        <text x="480" y="478" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Rapid MVP Launch</text>
+        <text x="480" y="506" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Performance Data</text>
+        <text x="480" y="534" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Feedback Iteration</text>
+        <line x1="485" y1="560" x2="625" y2="560" stroke="#F2F2F2" stroke-width="1"/>
+        <text x="480" y="585" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="600" fill="#000000">Deliverables:</text>
+        <text x="480" y="608" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#999999">Pilot Summary</text>
+        <text x="480" y="630" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#999999">Feasibility Report</text>
     </g>
         </g>
     <!-- Card 4 -->
@@ -180,39 +180,39 @@
         <rect x="670" y="370" width="190" height="290" rx="10" fill="#FFFFFF"/>
         <rect x="670" y="370" width="190" height="5" rx="3" fill="#059669"/>
         <text x="765" y="405" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-              font-size="15" font-weight="700" fill="#1E293B">Scale &amp; Rollout</text>
-        <line x1="695" y1="425" x2="835" y2="425" stroke="#F0F0F0" stroke-width="1"/>
-        <text x="690" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Full-Scale Rollout</text>
-        <text x="690" y="478" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Org. Change Mgt.</text>
-        <text x="690" y="506" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Team Training</text>
-        <text x="690" y="534" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Build Standards</text>
-        <line x1="695" y1="560" x2="835" y2="560" stroke="#F0F0F0" stroke-width="1"/>
-        <text x="690" y="585" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="600" fill="#059669">Deliverables:</text>
-        <text x="690" y="608" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#94A3B8">Rollout Plan</text>
-        <text x="690" y="630" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#94A3B8">Capability Playbook</text>
+              font-size="15" font-weight="700" fill="#000000">Scale &amp; Rollout</text>
+        <line x1="695" y1="425" x2="835" y2="425" stroke="#F2F2F2" stroke-width="1"/>
+        <text x="690" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Full-Scale Rollout</text>
+        <text x="690" y="478" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Org. Change Mgt.</text>
+        <text x="690" y="506" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Team Training</text>
+        <text x="690" y="534" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Build Standards</text>
+        <line x1="695" y1="560" x2="835" y2="560" stroke="#F2F2F2" stroke-width="1"/>
+        <text x="690" y="585" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="600" fill="#28A197">Deliverables:</text>
+        <text x="690" y="608" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#999999">Rollout Plan</text>
+        <text x="690" y="630" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#999999">Capability Playbook</text>
     </g>
         </g>
     <!-- Card 5 -->
     <g id="card-5">
     <g filter="url(#cardShadow)">
         <rect x="880" y="370" width="190" height="290" rx="10" fill="#FFFFFF"/>
-        <rect x="880" y="370" width="190" height="5" rx="3" fill="#D97706"/>
+        <rect x="880" y="370" width="190" height="5" rx="3" fill="#F46A25"/>
         <text x="975" y="405" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-              font-size="15" font-weight="700" fill="#1E293B">Optimization</text>
-        <line x1="905" y1="425" x2="1045" y2="425" stroke="#F0F0F0" stroke-width="1"/>
-        <text x="900" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Ops Monitoring</text>
-        <text x="900" y="478" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Data-Driven Opt.</text>
-        <text x="900" y="506" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Tech Upgrades</text>
-        <text x="900" y="534" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#475569">· Scenario Expansion</text>
-        <line x1="905" y1="560" x2="1045" y2="560" stroke="#F0F0F0" stroke-width="1"/>
-        <text x="900" y="585" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="600" fill="#D97706">Deliverables:</text>
-        <text x="900" y="608" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#94A3B8">Ops Dashboard</text>
-        <text x="900" y="630" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#94A3B8">Quarterly Report</text>
+              font-size="15" font-weight="700" fill="#000000">Optimization</text>
+        <line x1="905" y1="425" x2="1045" y2="425" stroke="#F2F2F2" stroke-width="1"/>
+        <text x="900" y="450" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Ops Monitoring</text>
+        <text x="900" y="478" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Data-Driven Opt.</text>
+        <text x="900" y="506" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Tech Upgrades</text>
+        <text x="900" y="534" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" fill="#44494D">· Scenario Expansion</text>
+        <line x1="905" y1="560" x2="1045" y2="560" stroke="#F2F2F2" stroke-width="1"/>
+        <text x="900" y="585" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="600" fill="#F46A25">Deliverables:</text>
+        <text x="900" y="608" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#999999">Ops Dashboard</text>
+        <text x="900" y="630" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" fill="#999999">Quarterly Report</text>
     </g>
         </g>
     </g>
     </g>
     <!-- Footer Note -->
     <text x="640" y="660" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-          font-size="12" fill="#CBD5E1">Phase durations and deliverables can be flexibly adjusted based on actual enterprise situations.</text>
+          font-size="12" fill="#E6E6E6">Phase durations and deliverables can be flexibly adjusted based on actual enterprise situations.</text>
 </svg>

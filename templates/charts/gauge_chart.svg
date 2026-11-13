@@ -8,71 +8,71 @@
     Skip: Multiple peer metrics; use bullet_chart or progress_bar_chart
     -->
     <!-- Background -->
-    <rect width="1280" height="720" fill="#F8FAFC"/>
+    <rect width="1280" height="720" fill="#F2F2F2"/>
     <!-- Title -->
     <g id="header">
         <text x="640" y="60"
-              font-size="32" font-weight="700" fill="#0F172A" text-anchor="middle">Sales Target Attainment</text>
+              font-size="32" font-weight="700" fill="#000000" text-anchor="middle">Sales Target Attainment</text>
         <text x="640" y="95"
-              font-size="18" fill="#64748B" text-anchor="middle">Q4 2025 · Actual 85% against an 80% target</text>
+              font-size="18" fill="#44494D" text-anchor="middle">Q4 2025 · Actual 85% against an 80% target</text>
     </g>
     <!-- One hero gauge: Sales target attainment 85% -->
-    <g id="heroGauge" transform="translate(640, 380)">
+    <g id="heroGauge" transform="translate(640, 380)" data-viettel-blue-scope="chart">
         <g id="gaugeScale" transform="scale(1.35)">
         <!-- Scales (0-60% Red, 60-80% Amber, 80-100% Emerald) -->
-        <path d="M -150,0 A 150,150 0 0,1 46.35,-142.66" fill="none" stroke="#FECACA" stroke-width="30" stroke-linecap="round"/>
-        <path d="M 46.35,-142.66 A 150,150 0 0,1 121.35,-88.17" fill="none" stroke="#FDE68A" stroke-width="30" stroke-linecap="round"/>
-        <path d="M 121.35,-88.17 A 150,150 0 0,1 150,0" fill="none" stroke="#A7F3D0" stroke-width="30" stroke-linecap="round"/>
+        <path d="M -150,0 A 150,150 0 0,1 46.35,-142.66" fill="none" stroke="#EE0033" stroke-width="30" stroke-linecap="round" stroke-opacity="0.25"/>
+        <path d="M 46.35,-142.66 A 150,150 0 0,1 121.35,-88.17" fill="none" stroke="#F46A25" stroke-width="30" stroke-linecap="round" stroke-opacity="0.45"/>
+        <path d="M 121.35,-88.17 A 150,150 0 0,1 150,0" fill="none" stroke="#10B981" stroke-width="30" stroke-linecap="round" stroke-opacity="0.25"/>
         <!-- Tick Marks -->
-        <line x1="-135" y1="0" x2="-120" y2="0" stroke="#64748B" stroke-width="2"/>
-        <line x1="-95.5" y1="-95.5" x2="-84.85" y2="-84.85" stroke="#64748B" stroke-width="2"/>
-        <line x1="0" y1="-135" x2="0" y2="-120" stroke="#64748B" stroke-width="2"/>
-        <line x1="95.5" y1="-95.5" x2="84.85" y2="-84.85" stroke="#64748B" stroke-width="2"/>
-        <line x1="135" y1="0" x2="120" y2="0" stroke="#64748B" stroke-width="2"/>
+        <line x1="-135" y1="0" x2="-120" y2="0" stroke="#44494D" stroke-width="2"/>
+        <line x1="-95.5" y1="-95.5" x2="-84.85" y2="-84.85" stroke="#44494D" stroke-width="2"/>
+        <line x1="0" y1="-135" x2="0" y2="-120" stroke="#44494D" stroke-width="2"/>
+        <line x1="95.5" y1="-95.5" x2="84.85" y2="-84.85" stroke="#44494D" stroke-width="2"/>
+        <line x1="135" y1="0" x2="120" y2="0" stroke="#44494D" stroke-width="2"/>
         </g>
         <!-- Tick Labels -->
         <text x="-215" y="30"
-              font-size="14" fill="#64748B" text-anchor="middle">0%</text>
+              font-size="14" fill="#44494D" text-anchor="middle">0%</text>
         <text x="0" y="-230"
-              font-size="14" fill="#64748B" text-anchor="middle">50%</text>
+              font-size="14" fill="#44494D" text-anchor="middle">50%</text>
         <text x="215" y="30"
-              font-size="14" fill="#64748B" text-anchor="middle">100%</text>
+              font-size="14" fill="#44494D" text-anchor="middle">100%</text>
         <!-- Needle (85% = 153°, start from -90°) -->
         <g id="gaugeNeedle" transform="scale(1.35)">
             <g transform="rotate(63)">
-                <path d="M 0,-100 L -8,0 L 0,15 L 8,0 Z" fill="#0F172A"/>
+                <path d="M 0,-100 L -8,0 L 0,15 L 8,0 Z" fill="#000000"/>
             </g>
-            <circle cx="0" cy="0" r="15" fill="#0F172A"/>
+            <circle cx="0" cy="0" r="15" fill="#000000"/>
             <circle cx="0" cy="0" r="8" fill="#FFFFFF"/>
         </g>
         <!-- Center Value -->
         <text x="0" y="80"
-              font-size="64" font-weight="700" fill="#10B981" text-anchor="middle">85%</text>
+              font-size="64" font-weight="700" fill="#28A197" text-anchor="middle">85%</text>
         <text x="0" y="125"
-              font-size="24" font-weight="600" fill="#0F172A" text-anchor="middle">Current achievement</text>
+              font-size="24" font-weight="600" fill="#000000" text-anchor="middle">Current achievement</text>
         <!-- Status Tag -->
-        <rect x="-68" y="142" width="136" height="35" rx="18" fill="#D1FAE5"/>
+        <rect x="-68" y="142" width="136" height="35" rx="18" fill="#10B981" fill-opacity="0.25"/>
         <text x="0" y="166"
-              font-size="17" font-weight="600" fill="#047857" text-anchor="middle">Above target</text>
+              font-size="17" font-weight="600" fill="#28A197" text-anchor="middle">Above target</text>
     </g>
     <!-- Threshold legend -->
-    <g id="legendBar" transform="translate(340, 600)">
-        <rect x="0" y="0" width="600" height="40" rx="8" fill="#FFFFFF" stroke="#E2E8F0"/>
-        <rect x="30" y="12" width="16" height="16" rx="3" fill="#FECACA"/>
+    <g id="legendBar" transform="translate(340, 600)" data-viettel-blue-scope="chart">
+        <rect x="0" y="0" width="600" height="40" rx="8" fill="#FFFFFF" stroke="#E6E6E6"/>
+        <rect x="30" y="12" width="16" height="16" rx="3" fill="#EE0033" fill-opacity="0.25"/>
         <text x="55" y="24"
-              font-size="13" font-weight="600" fill="#475569">Critical (0-60%)</text>
-        <rect x="180" y="12" width="16" height="16" rx="3" fill="#FDE68A"/>
+              font-size="13" font-weight="600" fill="#44494D">Critical (0-60%)</text>
+        <rect x="180" y="12" width="16" height="16" rx="3" fill="#F46A25" fill-opacity="0.45"/>
         <text x="205" y="24"
-              font-size="13" font-weight="600" fill="#475569">Warning (60-80%)</text>
-        <rect x="340" y="12" width="16" height="16" rx="3" fill="#A7F3D0"/>
+              font-size="13" font-weight="600" fill="#44494D">Warning (60-80%)</text>
+        <rect x="340" y="12" width="16" height="16" rx="3" fill="#10B981" fill-opacity="0.25"/>
         <text x="365" y="24"
-              font-size="13" font-weight="600" fill="#475569">Target (80-100%)</text>
+              font-size="13" font-weight="600" fill="#44494D">Target (80-100%)</text>
         <text x="500" y="24"
-              font-size="13" fill="#94A3B8">Benchmark: 80%</text>
+              font-size="13" fill="#999999">Benchmark: 80%</text>
     </g>
     <!-- Data Source -->
     <g id="source">
         <text x="640" y="695"
-              font-size="14" fill="#94A3B8" text-anchor="middle">Source: Business Intelligence Platform · Q4 2025</text>
+              font-size="14" fill="#999999" text-anchor="middle">Source: Business Intelligence Platform · Q4 2025</text>
     </g>
 </svg>

@@ -19,61 +19,61 @@
     </defs>
     <rect width="1280" height="720" fill="#FFFFFF"/>
     <!-- ==================== Header ==================== -->
-    <text x="640" y="65" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="32" font-weight="800" fill="#0F172A"><tspan>Four Pillars of Our Approach</tspan></text>
-    <text x="640" y="95" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="14" font-weight="600" fill="#64748B" letter-spacing="1.5"><tspan>PARALLEL CAPABILITY OVERVIEW · 2×2 SECTION LAYOUT</tspan></text>
+    <text x="640" y="65" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="32" font-weight="800" fill="#000000"><tspan>Four Pillars of Our Approach</tspan></text>
+    <text x="640" y="95" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="14" font-weight="600" fill="#44494D" letter-spacing="1.5"><tspan>PARALLEL CAPABILITY OVERVIEW · 2×2 SECTION LAYOUT</tspan></text>
 
     <!-- ==================== Card 1: Top Left ==================== -->
-    <g id="card-discovery">
+    <g id="card-discovery" data-viettel-blue-scope="chart">
         <!-- Outer tinted frame (the "border" without stroke) -->
-        <rect x="60" y="140" width="560" height="255" rx="20" fill="#F1F5F9"/>
+        <rect x="60" y="140" width="560" height="255" rx="20" fill="#F2F2F2"/>
         <!-- Domed top-rounded section tab (圆顶角分区头) -->
-        <path d="M 245 140 h 190 a 25 25 0 0 1 25 25 v 25 h -240 v -25 a 25 25 0 0 1 25 -25 Z" fill="#2563EB"/>
+        <path d="M 245 140 h 190 a 25 25 0 0 1 25 25 v 25 h -240 v -25 a 25 25 0 0 1 25 -25 Z" fill="#12436D"/>
         <text x="340" y="173" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="18" font-weight="700" fill="#FFFFFF"><tspan>Discovery</tspan></text>
         <!-- Inner white content card -->
         <rect x="80" y="210" width="520" height="165" rx="12" fill="#FFFFFF"/>
         <!-- Body lines -->
-        <text x="105" y="248" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#0F172A"><tspan>Stakeholder Research</tspan></text>
-        <text x="105" y="272" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#475569"><tspan>Interview 15+ stakeholders to surface the underlying problem statement.</tspan></text>
-        <text x="105" y="312" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#0F172A"><tspan>Quantitative Baseline</tspan></text>
-        <text x="105" y="336" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#475569"><tspan>Lock the metrics that will be used to evaluate every option later.</tspan></text>
+        <text x="105" y="248" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#000000"><tspan>Stakeholder Research</tspan></text>
+        <text x="105" y="272" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#44494D"><tspan>Interview 15+ stakeholders to surface the underlying problem statement.</tspan></text>
+        <text x="105" y="312" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#000000"><tspan>Quantitative Baseline</tspan></text>
+        <text x="105" y="336" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#44494D"><tspan>Lock the metrics that will be used to evaluate every option later.</tspan></text>
     </g>
 
     <!-- ==================== Card 2: Top Right ==================== -->
-    <g id="card-design">
-        <rect x="660" y="140" width="560" height="255" rx="20" fill="#F1F5F9"/>
+    <g id="card-design" data-viettel-blue-scope="chart">
+        <rect x="660" y="140" width="560" height="255" rx="20" fill="#F2F2F2"/>
         <path d="M 845 140 h 190 a 25 25 0 0 1 25 25 v 25 h -240 v -25 a 25 25 0 0 1 25 -25 Z" fill="#059669"/>
         <text x="940" y="173" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="18" font-weight="700" fill="#FFFFFF"><tspan>Design</tspan></text>
         <rect x="680" y="210" width="520" height="165" rx="12" fill="#FFFFFF"/>
-        <text x="705" y="248" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#0F172A"><tspan>Solution Shaping</tspan></text>
-        <text x="705" y="272" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#475569"><tspan>Translate findings into three viable architectures with explicit trade-offs.</tspan></text>
-        <text x="705" y="312" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#0F172A"><tspan>Prototype Validation</tspan></text>
-        <text x="705" y="336" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#475569"><tspan>Build the thinnest slice that proves the chosen direction can ship.</tspan></text>
+        <text x="705" y="248" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#000000"><tspan>Solution Shaping</tspan></text>
+        <text x="705" y="272" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#44494D"><tspan>Translate findings into three viable architectures with explicit trade-offs.</tspan></text>
+        <text x="705" y="312" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#000000"><tspan>Prototype Validation</tspan></text>
+        <text x="705" y="336" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#44494D"><tspan>Build the thinnest slice that proves the chosen direction can ship.</tspan></text>
     </g>
 
     <!-- ==================== Card 3: Bottom Left ==================== -->
     <g id="card-delivery">
-        <rect x="60" y="420" width="560" height="255" rx="20" fill="#F1F5F9"/>
-        <path d="M 245 420 h 190 a 25 25 0 0 1 25 25 v 25 h -240 v -25 a 25 25 0 0 1 25 -25 Z" fill="#D97706"/>
+        <rect x="60" y="420" width="560" height="255" rx="20" fill="#F2F2F2"/>
+        <path d="M 245 420 h 190 a 25 25 0 0 1 25 25 v 25 h -240 v -25 a 25 25 0 0 1 25 -25 Z" fill="#F46A25"/>
         <text x="340" y="453" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="18" font-weight="700" fill="#FFFFFF"><tspan>Delivery</tspan></text>
         <rect x="80" y="490" width="520" height="165" rx="12" fill="#FFFFFF"/>
-        <text x="105" y="528" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#0F172A"><tspan>Implementation Sprints</tspan></text>
-        <text x="105" y="552" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#475569"><tspan>Two-week cadence with end-of-sprint demo and explicit go/no-go gate.</tspan></text>
-        <text x="105" y="592" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#0F172A"><tspan>Quality Gates</tspan></text>
-        <text x="105" y="616" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#475569"><tspan>Automated checks plus a release captain who owns the deploy decision.</tspan></text>
+        <text x="105" y="528" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#000000"><tspan>Implementation Sprints</tspan></text>
+        <text x="105" y="552" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#44494D"><tspan>Two-week cadence with end-of-sprint demo and explicit go/no-go gate.</tspan></text>
+        <text x="105" y="592" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#000000"><tspan>Quality Gates</tspan></text>
+        <text x="105" y="616" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#44494D"><tspan>Automated checks plus a release captain who owns the deploy decision.</tspan></text>
     </g>
 
     <!-- ==================== Card 4: Bottom Right ==================== -->
-    <g id="card-evolve">
-        <rect x="660" y="420" width="560" height="255" rx="20" fill="#F1F5F9"/>
+    <g id="card-evolve" data-viettel-blue-scope="chart">
+        <rect x="660" y="420" width="560" height="255" rx="20" fill="#F2F2F2"/>
         <path d="M 845 420 h 190 a 25 25 0 0 1 25 25 v 25 h -240 v -25 a 25 25 0 0 1 25 -25 Z" fill="#7C3AED"/>
         <text x="940" y="453" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="18" font-weight="700" fill="#FFFFFF"><tspan>Evolve</tspan></text>
         <rect x="680" y="490" width="520" height="165" rx="12" fill="#FFFFFF"/>
-        <text x="705" y="528" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#0F172A"><tspan>Telemetry Loop</tspan></text>
-        <text x="705" y="552" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#475569"><tspan>Production metrics flow back into the discovery backlog within 24 hours.</tspan></text>
-        <text x="705" y="592" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#0F172A"><tspan>Quarterly Rebase</tspan></text>
-        <text x="705" y="616" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#475569"><tspan>Reset priorities against the latest market signal, not yesterday's roadmap.</tspan></text>
+        <text x="705" y="528" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#000000"><tspan>Telemetry Loop</tspan></text>
+        <text x="705" y="552" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#44494D"><tspan>Production metrics flow back into the discovery backlog within 24 hours.</tspan></text>
+        <text x="705" y="592" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" font-weight="700" fill="#000000"><tspan>Quarterly Rebase</tspan></text>
+        <text x="705" y="616" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#44494D"><tspan>Reset priorities against the latest market signal, not yesterday's roadmap.</tspan></text>
     </g>
 
     <!-- Data Source -->
-    <text x="640" y="705" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="500" fill="#94A3B8"><tspan>Source: Methodology framework · Updated for the current planning cycle</tspan></text>
+    <text x="640" y="705" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="500" fill="#999999"><tspan>Source: Methodology framework · Updated for the current planning cycle</tspan></text>
 </svg>
