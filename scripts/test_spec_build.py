@@ -128,6 +128,13 @@ class SpecBuildTests(unittest.TestCase):
                     if f["id"].startswith("B0011_value"))
         self.assertEqual((fact["value"], fact["unit"]), (-4.1, "%"))
 
+    def test_kpi_cards_with_more_numbers_than_cards_is_warned(self):
+        data = "".join(f"- data: B0006 value={v}\n" for v in ("140", "457", "110", "140", "457", "110", "140"))
+        code, report = self.build(PLAN.replace("- template: progress_bar_chart", "- template: kpi_cards")
+                                  .replace("- data: B0004 value=37%\n- data: B0005 value=48%\n", data)
+                                  .replace("B0004-B0005", "B0006"))
+        self.assertIn("P02: kpi_cards with 7 numbers", " | ".join(report.get("warnings", [])), report)
+
     def test_ratio_gives_value_and_target_and_footer_carries_the_document_line(self):
         plan = PLAN.replace("- template: progress_bar_chart", "- template: bullet_chart").replace(
             "- data: B0004 value=37%\n- data: B0005 value=48%",

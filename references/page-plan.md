@@ -59,7 +59,7 @@ Fix every error `build --check` lists in `plan.md` (one edit per error, never a 
 | `title`, `audience`, `purpose`, `style` | §I of the Design Spec (from the confirmed Eight Confirmations) |
 | `density` | Typography profile: `dense` for data reports and multi-block pages, `standard` otherwise |
 | `mode` | `parallel` or `sequential`, as confirmed in the 💡 generation-mode line |
-| `icons` | `<library>: names` — one stylistic library (`chunk-filled`, `tabler-filled`, `tabler-outline`, `phosphor-duotone`); names are drawable objects (`bulb`, `target`, `trending-up`, `alert-triangle`), not concepts (`idea`, `growth`). `build` rejects names the library lacks and suggests real ones |
+| `icons` | `<library>: names` — one stylistic library (`chunk-filled`, `tabler-filled`, `tabler-outline`, `phosphor-duotone`); names are drawable objects (`bulb`, `target`, `trending-up`, `alert-triangle`), not concepts (`idea`, `growth`). The bundled icon sets are name subsets, not stock Tabler — common stock names (`target`, `trending-up`, `users`, `cpu`, `rocket`, `chart-bar`) can be absent from `tabler-filled`. Never guess: take names from the suggestion list a `build` error prints, or `ls templates/icons/<library>/` before writing the `icons:` line |
 | `images` | `none`, or the image approach (images also need `strategist-options.md` §h) |
 | `## Part N: …` | Chapter grouping of the slides that follow |
 | `### P<NN> <title>` | One slide, numbered P01… in order; the title may summarise but its numbers and counts must come from its blocks |
@@ -78,6 +78,9 @@ Fix every error `build --check` lists in `plan.md` (one edit per error, never a 
 
 - The unit line above a table ("Đơn vị: tỷ đồng …") and the header row ("Mảng kinh doanh | T1 | … | Lũy kế 9T | …") are their own blocks. A slide that prints the unit caption or a series/legend label like "Lũy kế 9T" must list those blocks in `blocks:` and bind the text to them — binding such labels to `c_label` alone fails the fact check (`editorial-number`, `period-invented`) because the number or period lives only in that block.
 - Copy period labels verbatim from the header block's column names ("Lũy kế 9T", "Cùng kỳ 9T 2025"); do not compose "Lũy kế 9T 2026" from the year standing in the title.
+- Count a table slide's `- data:` lines from the source's row and column counts before writing the plan. A 12-row × 5-column table will not fit under the ~900-character drawn-slide cap; decide before drawing — split it across two slides, or trim low-value columns (row numbers, priority marks) as a deliberate trade-off with a stated reason — never discover the density violation after the page is drawn.
+- Every number on a slide stays bound to the block it comes from, including labels that ride along a row's value ("tăng 3,2%", "73,8% KH năm") — bind them to that row's block, never leave a number decorative; an unbound number escapes the fact check.
+- Give every warning/observation block ("Cảnh báo", "Nhận xét") a home in the `blocks:` of the slide about its subject — a warning parked in `optional:` or left unlisted is flagged as a risk item no slide shows. Put a source disclaimer block ("SỐ LIỆU GIẢ LẬP …", "dữ liệu mẫu") in the cover slide's `blocks:` so it stays visible instead of being dropped.
 
 Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no block.
 

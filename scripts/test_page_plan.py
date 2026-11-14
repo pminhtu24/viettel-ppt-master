@@ -133,22 +133,25 @@ class PagePlanTests(unittest.TestCase):
         project = make_project(self.root, 8)
         bare = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">{}</svg>'
         pages = {
-            4: '<rect x="88" y="140" width="300" height="6" fill="#EE0033"/><text y="300">a</text>',  # thin stripe, ends 300
-            5: '<g transform="translate(0,300)" font-size="24"><text y="320" fill="#28A197">97%</text></g>',  # 620
+            4: '<rect x="88" y="150" width="300" height="6" fill="#EE0033"/><text y="300">a</text>',  # thin stripe, ends 300
+            5: '<text y="160">top</text>'
+               '<g transform="translate(0,300)" font-size="24"><text y="320" fill="#28A197">97%</text></g>',  # 620
             6: '<g id="footer"><rect x="0" y="674" width="1280" height="46" fill="#EE0033"/></g>'
-               '<text x="88" y="600" fill="#000000">b</text>',  # accent only in footer
+               '<text x="88" y="170">c</text><text x="88" y="600" fill="#000000">b</text>',  # accent only in footer
+            7: '<text y="300" font-size="24" fill="#EE0033">9</text><text y="600">z</text>',  # starts at 300
             3: '<text y="200">chapter</text>',  # anchor rhythm: not checked
         }
         for n, body in pages.items():
             (project.svg_dir / f"{n:02d}_page.svg").write_text(bare.format(body), encoding="utf-8")
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            main(["check", str(self.root), "--pages", "P03,P04,P05,P06"])
+            main(["check", str(self.root), "--pages", "P03,P04,P05,P06,P07"])
         report = json.loads(out.getvalue())
         self.assertEqual(report["P03"], [])
         self.assertEqual(len(report["P04"]), 2, report)                     # no focal accent + ends at 300
         self.assertEqual(report["P05"], [])                                 # 24px teal, translated down to 620
         self.assertEqual([e[:30] for e in report["P06"]], ["visual: no focal accent in the"])
+        self.assertEqual([e[:34] for e in report["P07"]], ["visual: the content starts at y=30"])
 
     def test_briefs_carry_section_style_and_pick_the_richest_chart_as_anchor(self, _):
         project = make_project(self.root, 20)

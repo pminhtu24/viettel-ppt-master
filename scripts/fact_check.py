@@ -596,6 +596,8 @@ def audit_page(page: str, items: list[SlideText], pc: PageContext) -> list[dict]
                                          f"{key} is not in any source block of this page"))
                 continue
             homes = sorted(pc.number_home.get(key, set()))
+            if homes and re.fullmatch(r"(0?[1-9]|1[0-2])/(19|20)\d\d", key):
+                continue        # a period label (Quý 4/2026, 12/2026) the source prints — not a measured value
             if homes:
                 found.append(finding(page, "number-unbound", "warn", item,
                                      f"{key} is in the source ({homes[0]}) but not in the blocks this page binds"))
@@ -676,7 +678,10 @@ def audit(project: Path, pages: set[str] | None = None) -> tuple[list[dict], dic
     for pid, svg, refs, derived in load_pages(project):
         if pages and pid not in pages or not svg.exists():
             continue
-        items = slide_texts(svg, refs)
+        try:
+            items = slide_texts(svg, refs)
+        except ET.ParseError:      # empty or half-written: page_plan check reports it
+            continue
         texts[pid] = items
         pc = PageContext(outline, names, sections, doc_head, children, derived, number_home, nouns - STOPWORDS,
                          corpus=corpus)

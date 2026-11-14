@@ -37,8 +37,9 @@ _SERIES = ("series red → deep blue → teal → orange → purple #7C3AED, the
 _TIMELINE = ("past milestones #999999, those the source calls done/hoàn thành teal, a red line at the report date, "
              "upcoming ones white with a deep-blue outline")
 COLOR_RECIPES = {   # one line per chart family, in each page brief (rule 10 has the shared system)
-    "progress": "actual solid over its plan/target in the same color at fill-opacity 0.25; a dashed #6B7280 line at "
-                "100% or the target; thin bars (≤ 24px) — the bar the title names red, the others deep blue; teal where "
+    "progress": "actual solid over its plan/target in the same color at fill-opacity 0.25; rows in different units "
+                "(trạm, km, cổng…) are drawn as % of their own plan, so every plan mark is one dashed #6B7280 line at the "
+                "same x (100%) — never one absolute axis for mixed units; thin bars (≤ 24px) — the bar the title names red, the others deep blue; teal where "
                 "the source says done/vượt/≥100% or growth, orange where it says chậm/cảnh báo/giảm",
     "kpi": "identical white cards (#E6E6E6 stroke); only the focal card gets a red top stripe and a red number, every "
            "other number black",
@@ -648,6 +649,7 @@ def chrome_drift(project: Project, pid: str) -> str | None:
 ACCENT_COLORS = {"#EE0033", "#28A197", "#F46A25", "#10B981", "#059669"}   # emerald may replace teal in charts
 FRAME_GROUP_IDS = ("header", "footer", "bg", "background", "decor", "viettel-brand-chrome")
 CONTENT_BOTTOM_MIN = 470  # a dense page whose content ends above this leaves its lower third empty
+CONTENT_TOP_MAX = 250     # content area starts at y=132; a first element below this leaves a band empty under the title
 
 
 def visual_findings(project: Project, page: dict, svg: Path) -> list[str]:
@@ -660,7 +662,7 @@ def visual_findings(project: Project, page: dict, svg: Path) -> list[str]:
         root = ET.parse(svg).getroot()
     except ET.ParseError:
         return []
-    accent, bottom = False, 0.0
+    accent, bottom, top = False, 0.0, 720.0
 
     def num(el: ET.Element, name: str, default: float = 0.0) -> float:
         try:
@@ -669,7 +671,7 @@ def visual_findings(project: Project, page: dict, svg: Path) -> list[str]:
             return default
 
     def walk(el: ET.Element, dy: float, size: float) -> None:
-        nonlocal accent, bottom
+        nonlocal accent, bottom, top
         gid = (el.get("id") or "").lower()
         if el.get("data-chrome") or any(k in gid for k in FRAME_GROUP_IDS):
             return
@@ -688,6 +690,8 @@ def visual_findings(project: Project, page: dict, svg: Path) -> list[str]:
             }.get(tag, False)
         if tag == "text" and "".join(el.itertext()).strip() and num(el, "y") + dy < 660:
             bottom = max(bottom, num(el, "y") + dy)
+        if tag in ("text", "rect", "use", "circle", "image") and 140 < num(el, "y", num(el, "cy")) + dy < 660:
+            top = min(top, num(el, "y", num(el, "cy")) + dy)    # below the subtitle line
         for child in el:
             walk(child, dy, size)
 
@@ -697,6 +701,9 @@ def visual_findings(project: Project, page: dict, svg: Path) -> list[str]:
         found.append("visual: no focal accent in the content — give the page its key number or phrase in red "
                      "#EE0033 at ≥ 22px bold, or a red bar, card stripe or icon ≥ 10px; color the statuses the source "
                      "states (teal #28A197 done, orange #F46A25 cảnh báo/chậm/nguy cơ) (shared rule 10)")
+    if top > CONTENT_TOP_MAX and top < 720:
+        found.append(f"visual: the content starts at y={top:.0f} — leave no empty band under the title; start the "
+                     "first row or card at y≈140–180 and use the height for bigger rows (shared rule 10)")
     if bottom and bottom < CONTENT_BOTTOM_MIN:
         found.append(f"visual: the last text ends at y={bottom:.0f} — the content area runs to y≈650; enlarge rows, "
                      "cards and numbers to fill it, never leave the lower third empty (shared rule 10)")
@@ -711,8 +718,10 @@ def cmd_check(project: Project, args) -> int:
     report = {}
     for pid in pids:
         svg = project.svg_path(project.by_id[pid])
-        drawn = [] if args.lock_only else (checker_errors(svg) if svg.exists() else
-                                           [f"svg missing: {svg.name} not written yet"])
+        drawn = [] if args.lock_only else (
+            [f"svg missing: {svg.name} not written yet"] if not svg.exists() else
+            [f"svg empty: {svg.name} has no content — write the page again"] if not svg.stat().st_size else
+            checker_errors(svg))
         report[pid] = list(drawn) + ([f"content: {e}" for e in content[pid].split("\n")] if pid in content else [])
         if not args.lock_only and (drift := chrome_drift(project, pid)):
             report[pid].append(drift)

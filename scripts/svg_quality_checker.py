@@ -862,6 +862,7 @@ class SVGQualityChecker:
         containers: List[Dict] = []
         texts: List[Dict] = []
         shapes: List[Dict] = []
+        plan_ticks: Dict[str, List[Tuple[float, float]]] = {}
 
         def visit(
             elem: ET.Element,
@@ -872,6 +873,7 @@ class SVGQualityChecker:
             allow_overlap: bool = False,
             opacity: float = 1.0,
             rotated: bool = False,
+            chart: str = '',
         ):
             dx, dy = _parse_translate(elem.get('transform', ''))
             tx += dx
@@ -880,6 +882,12 @@ class SVGQualityChecker:
             allow_overlap = allow_overlap or elem.get('data-allow-overlap') == 'true'
             opacity *= _float_attr(elem, 'opacity', 1.0)
             rotated = rotated or bool(re.search(r'rotate|matrix|skew', elem.get('transform', '')))
+            chart = elem.get('data-chart') or chart
+            if _local_name(elem.tag) == 'line' and elem.get('stroke-dasharray') and chart:
+                x1, x2 = _float_attr(elem, 'x1') + tx, _float_attr(elem, 'x2') + tx
+                y1, y2 = _float_attr(elem, 'y1') + ty, _float_attr(elem, 'y2') + ty
+                if abs(x1 - x2) < 0.5 and 0 < abs(y2 - y1) <= 60:
+                    plan_ticks.setdefault(chart, []).append((x1, min(y1, y2)))
             allow_title_zone = (
                 allow_title_zone or
                 elem.get('data-allow-title-zone') == 'true'
@@ -1002,6 +1010,7 @@ class SVGQualityChecker:
                         'box_fit': box_fit,
                         'order': len(shapes) + len(texts),
                         'allow_overlap': allow_overlap,
+                        'weight': fw, 'anchor': anchor, 'chart': chart,
                         # glyph band of a plain one-line label: cap height to descender
                         'rotated': rotated,
                         # faint watermark text is a deliberate backdrop, not a label
@@ -1012,10 +1021,11 @@ class SVGQualityChecker:
                     })
 
             for child in list(elem):
-                visit(child, tx, ty, allow_title_zone, fam, allow_overlap, opacity, rotated)
+                visit(child, tx, ty, allow_title_zone, fam, allow_overlap, opacity, rotated, chart)
 
         visit(root)
         self._report_text_collisions(texts, shapes, result)
+        self._report_alignment(texts, plan_ticks, result)
 
         clip_left = 12  # labels whose start is left of this are clipped by the slide edge
         content_right = 1208
@@ -1100,7 +1110,9 @@ class SVGQualityChecker:
             for b in labels[i + 1:]:
                 ox, oy = overlap(a['ink'], b['ink'])
                 size = min(a['font_size'], b['font_size'])
-                if ox > max(1.0, 0.15 * size) and oy > 0.25 * size:  # width estimate slack; stacked lines graze
+                paragraph = abs(a['x1'] - b['x1']) < 2 and a['font_size'] == b['font_size']   # wrapped lines graze
+                big = max(a['font_size'], b['font_size'])   # the wider label carries the width-estimate slack
+                if ox > max(1.0, 0.15 * big) and oy > (0.25 if paragraph else 0.1) * size:
                     result['errors'].append(
                         f"[text-collision] locator={a['locator']} text={_text_excerpt(a['text'], 40)!r} "
                         f"overlaps locator={b['locator']} text={_text_excerpt(b['text'], 40)!r} by "
@@ -1109,6 +1121,18 @@ class SVGQualityChecker:
                         f'data-allow-overlap="true".'
                     )
             area = (a['ink'][2] - a['ink'][0]) * (a['ink'][3] - a['ink'][1])
+            ink_h = a['ink'][3] - a['ink'][1]
+            for shape in shapes:
+                if (shape['order'] < a['order'] and shape['opaque'] and shape['h'] <= 40 and shape['tag'] == 'rect'
+                        and shape['fill'] not in ('#FFFFFF', '#F2F2F2', '#E6E6E6', 'WHITE')):   # data bars, not row bands
+                    ox, oy = overlap(a['ink'], (shape['x1'], shape['y1'], shape['x2'], shape['y2']))
+                    if ox > 4 and 1.5 < oy < 0.6 * ink_h:   # straddles a bar's edge; labels inside a bar are whole
+                        result['errors'].append(
+                            f"[text-on-edge] locator={a['locator']} text={_text_excerpt(a['text'], 40)!r} sits "
+                            f"{oy:.0f}px into <{shape['tag']}> locator={shape['locator']} bounds={_fmt_bounds(shape)}. "
+                            f"Fix: leave >= 12px between a bar and the next row's text, or put the label inside the bar."
+                        )
+                        break
             for shape in shapes:
                 if shape['order'] < a['order'] or not shape['opaque']:
                     continue
@@ -1121,6 +1145,38 @@ class SVGQualityChecker:
                         f"Fix: move the label off the shape or draw the shape before the label."
                     )
                     break
+
+    def _report_alignment(self, texts: List[Dict], plan_ticks: Dict[str, List[Tuple[float, float]]],
+                          result: Dict) -> None:
+        """Warnings: plan marks of one chart scattered across x; a row label off its column."""
+        for chart, ticks in plan_ticks.items():
+            xs = sorted({round(x) for x, _ in ticks})
+            if len({round(y) for _, y in ticks}) >= 3 and len(xs) >= 3:
+                result['warnings'].append(
+                    f"[plan-line-misaligned] chart={chart}: {len(ticks)} dashed plan marks at x={xs[:6]} — rows in "
+                    f"different units must be drawn as % of their own plan with one shared 100% line."
+                )
+        columns: Dict[Tuple, List[Dict]] = {}
+        for t in texts:
+            if t['anchor'] == 'start' and not t['rotated'] and 120 < t['y'] < 660 and t['text'] != t['text'].upper():
+                columns.setdefault((t['chart'], t['font_size'], t['weight']), []).append(t)
+        for rows in columns.values():
+            xs: Dict[float, List[Dict]] = {}
+            for t in rows:
+                xs.setdefault(round(t['x']), []).append(t)
+            if len(rows) < 6:
+                continue
+            main_x, main = max(xs.items(), key=lambda item: len(item[1]))
+            if len(main) < 4:
+                continue
+            for x, stray in xs.items():
+                ys = [t['y'] for t in main]
+                if (8 <= abs(x - main_x) <= 60 and len(stray) <= 3
+                        and all(min(ys) - 150 < t["y"] < max(ys) + 150 for t in stray)):
+                    result['warnings'].append(
+                        f"[column-misaligned] {len(stray)} label(s) at x={x} beside {len(main)} at x={main_x} "
+                        f"(same size and weight), e.g. {_text_excerpt(stray[0]['text'], 40)!r}: align the column."
+                    )
 
     def _report_text_box_fit(self, text: Dict, result: Dict) -> None:
         """Compare measured, wrapped text against its own data-box."""

@@ -4,11 +4,15 @@
 from svg_quality_checker import SVGQualityChecker
 
 
-def errors(body: str) -> list[str]:
+def check(body: str) -> dict:
     result = {'errors': [], 'warnings': []}
     svg = f'<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" font-family="FS Magistral">{body}</svg>'
     SVGQualityChecker()._check_text_layout_risk(svg, result)
-    return result['errors']
+    return result
+
+
+def errors(body: str) -> list[str]:
+    return check(body)['errors']
 
 
 def main() -> None:
@@ -38,6 +42,26 @@ def main() -> None:
         '<text x="30" y="380" font-size="16" text-anchor="middle" transform="rotate(-90 30 380)">Doanh thu (tỷ đồng)</text>'
     )
     assert not any('[text-c' in e or 'overflow(left' in e for e in fine), fine
+    # run 2026-11-14 P05: rows packed 58px apart — next label inside the bar above, value over the next row
+    packed = errors(
+        '<rect x="88" y="230" width="610" height="18" rx="9" fill="#EE0033"/>'
+        '<text x="708" y="245" font-size="22" font-weight="700">55.743</text>'
+        '<text x="88" y="258" font-size="18" font-weight="700">Kinh doanh quốc tế (quy đổi)</text>'
+        '<text x="752" y="258" text-anchor="end" font-size="16">72.3% KH năm</text>'
+    )
+    assert any('[text-on-edge]' in e for e in packed), packed
+    assert any('[text-collision]' in e and '55.743' in e for e in packed), packed
+
+    # P14: mixed units on one absolute axis scatter the plan marks
+    ticks = check('<g data-chart="v1">' + ''.join(
+        f'<line x1="{x}" y1="{y}" x2="{x}" y2="{y + 34}" stroke="#6B7280" stroke-dasharray="5 3"/>'
+        for x, y in ((1080, 146), (520, 213), (607, 280))) + '</g>')['warnings']
+    assert any('[plan-line-misaligned]' in w for w in ticks), ticks
+
+    # P02: the last rows of a table lost their indent
+    rows = check(''.join(f'<text x="{112 if i < 9 else 64}" y="{211 + 38 * i}" font-size="18">Chỉ tiêu {i}</text>'
+                         for i in range(12)))['warnings']
+    assert any('[column-misaligned]' in w and 'x=64' in w for w in rows), rows
     print("OK: text collisions")
 
 

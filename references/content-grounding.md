@@ -79,7 +79,7 @@ Choose in this order: source meaning → available dimensions → eligibility �
 - At least two real dated observations **per series**, the same measure/unit/scope, and meaningful chronological ordering. Use actual temporal spacing; missing periods stay gaps. A single cumulative snapshot plus planned dates is a milestone/KPI page, not an eight-week history.
 - Connecting observed points is a visual interpolation, not evidence of measurements at intermediate dates. Never extrapolate history/forecast. Label actual, planned and forecast series distinctly; forecast needs an authorized method/source.
 - Area needs nonnegative quantities where magnitude/volume matters. Stacked area additionally needs mutually exclusive, additive components of the same whole at each point; provide period-specific totals.
-- Dual axes need separately labeled units/scales and a justified question. Similar shapes do not establish correlation, much less causation. Avoid visual scale choices that imply a relationship unsupported by the observations.
+- Dual axes need separately labeled units/scales and a justified question. Similar shapes do not establish correlation, much less causation. Avoid visual scale choices that imply a relationship unsupported by the observations. A total and its own subset (all subscribers and the 5G ones) share one unit: never put them on two axes — draw two small charts side by side, or chart the subset as a share of the total.
 
 ### Composition: pie/donut, stacked bars, treemap
 

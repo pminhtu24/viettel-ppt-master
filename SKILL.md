@@ -9,7 +9,7 @@ description: >
 
 > Multi-role SVG presentation workflow. Converts source documents into high-quality SVG pages and exports them to PPTX.
 
-**Content integrity (mandatory for new decks):** every fact on a slide comes from a source block named in `plan.md`; `spec_build.py build` turns the plan into per-page content locks and runs the plan gate, `page_plan.py check` and `fact_check.py` trace each drawn page's numbers, period labels, section names and statuses back to those blocks, and the export gate needs a recorded semantic review. Wording is free; facts, comparisons, trends and causal claims the source does not state must not be added to fill a layout.
+**Content integrity (mandatory for new decks):** every fact on a slide comes from a source block named in `plan.md`; `spec_build.py build` turns the plan into per-page content locks and runs the plan gate, `page_plan.py check` and `fact_check.py` trace each drawn page's numbers, period labels, section names and statuses back to those blocks, and the export gate needs a recorded semantic review. Wording is free; facts, comparisons, trends and causal claims the source does not state must not be added to fill a layout. A source that self-declares simulated or sample data ("SỐ LIỆU GIẢ LẬP", "dữ liệu mẫu") keeps that disclaimer visible on the cover — list the disclaimer block in the cover slide's `blocks:`; never drop or soften it.
 
 **Core Pipeline**: `Source Document → Create Project → [Template] → Strategist → [Web Image Acquisition] → Executor Live Preview → Quality Check → [Chart Verification] → Native PPTX Export`
 
@@ -278,5 +278,4 @@ Before switching roles, **MUST first read** the corresponding reference file. Ou
 ## Notes
 
 - Local preview: `python3 -m http.server -d <project_path> 8000` then open `/svg_output/`
-- **Never edit the installed skill during a run** (`${SKILL_DIR}`: SKILL.md, references, scripts, templates) — not to record lessons, not to patch a rule. Write lessons and suspected skill defects to `<project_path>/skill_feedback.md` (one line each: what happened, page, suggested fix); the maintainers merge them into the skill.
 - **Troubleshooting**: on generation issues (layout overflow, export errors, blank images, etc.), check `docs/faq.md` for known solutions

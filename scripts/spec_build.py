@@ -591,6 +591,9 @@ def chart_hint(texts: list[str]) -> str:
     return ""
 
 
+KPI_CARDS_MAX = 6
+
+
 def variety_errors(built: list[tuple[dict, dict, dict]], src: Source, warnings: list[str]) -> list[str]:
     """Charts where the data allows them: prose numbers are not tables, no template repeats endlessly,
     and decks with many numeric slides carry real data charts."""
@@ -606,6 +609,9 @@ def variety_errors(built: list[tuple[dict, dict, dict]], src: Source, warnings: 
         family = CATALOG[template]["data_requirements"]["family"] if template in CATALOG else ""
         if template:
             uses.setdefault(template, []).append(pid)
+        if template == "kpi_cards" and len(page["data"]) > KPI_CARDS_MAX:
+            warnings.append(f"{pid}: kpi_cards with {len(page['data'])} numbers — the template holds 4–{KPI_CARDS_MAX} "
+                            f"cards; split the page, keep the {KPI_CARDS_MAX} that carry the title, or use metric_table")
         if page["keys"].get("rhythm", "dense") == "dense" and len(measures) >= 3:
             numeric.append((pid, "" if source_table else hint, template))
         if family and family != "structure":
