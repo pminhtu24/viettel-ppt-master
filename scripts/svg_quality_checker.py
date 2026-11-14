@@ -248,6 +248,15 @@ def _is_opaque_fill(elem: ET.Element, fill: str, opacity: float) -> bool:
     return opacity * _float_attr(elem, 'fill-opacity', 1.0) >= 0.6  # opacity already folded in by the caller
 
 
+def _wrapped_ink(fit: Dict, x: float, y: float, weight: str, family: str):
+    """Ink box of a data-box text after wrapping: its widest measured line and its wrapped height."""
+    lines = fit['wrap'].line_texts or []
+    widths = [_text_metrics.measure_line(t, fit['size'], weight, family) or 0 for t in lines]
+    if not widths:
+        return None
+    return (x + 1, y + 2, x + min(fit['w'], max(widths)) - 1, y + min(fit['h'], fit['wrap'].height) - 2)
+
+
 def _fmt_bounds(item: Dict) -> str:
     """Format an x1/y1/x2/y2 dictionary compactly for diagnostics."""
     return (
@@ -911,6 +920,7 @@ class SVGQualityChecker:
                     'allow_title_zone': allow_title_zone,
                     'order': len(shapes) + len(texts),
                     'opaque': _is_opaque_fill(elem, fill, opacity),
+                    'chart': chart, 'solid': opacity * _float_attr(elem, 'fill-opacity', 1.0) >= 0.95,
                 }
                 # Containers are real cards / panels, not bars or decorative
                 # strips. Width threshold avoids mistaking chart bars for cards.
@@ -1014,7 +1024,8 @@ class SVGQualityChecker:
                         # glyph band of a plain one-line label: cap height to descender
                         'rotated': rotated,
                         # faint watermark text is a deliberate backdrop, not a label
-                        'ink': None if data_box or tspan_count or rotated
+                        'ink': _wrapped_ink(box_fit, box_x, box_y, fw, fam) if box_fit and not rotated else None
+                        if data_box or tspan_count or rotated
                         or opacity * _float_attr(elem, 'fill-opacity', 1.0) < 0.5 else (
                             box_x + 1, y - fs * 0.72, box_x + estimated_w / 1.05 - 1, y + fs * 0.18
                         ),
@@ -1025,6 +1036,26 @@ class SVGQualityChecker:
 
         visit(root)
         self._report_text_collisions(texts, shapes, result)
+        for t in texts:
+            if 300 < t['y'] < 674 and t['y2'] > 678:
+                result['errors'].append(
+                    f"[footer-overlap] locator={t['locator']} text={_text_excerpt(t['text'], 40)!r} reaches "
+                    f"y={t['y2']:.0f}, into the footer band (y=674). Fix: move it up, shorten it, or end the content "
+                    f"above y=650."
+                )
+        bars: Dict[str, List[Dict]] = {}
+        for shape in shapes:
+            if shape.get('chart') and shape['tag'] == 'rect' and shape.get('solid') and min(shape['w'], shape['h']) >= 8 \
+                    and shape['fill'] in ('#EE0033', '#12436D'):   # status colors (teal, orange) may repeat
+                bars.setdefault(shape.get('chart'), []).append(shape)
+        for chart, marks in bars.items():
+            fills = {m['fill'] for m in marks}
+            lengths = {round(max(m['w'], m['h'])) for m in marks}
+            if len(marks) >= 5 and len(fills) == 1 and len(lengths) >= 4:
+                result['warnings'].append(
+                    f"[no-focus] chart={chart}: {len(marks)} bars all solid {fills.pop()} — keep the key bar solid and "
+                    f"draw the others at fill-opacity 0.4 (color recipe)."
+                )
         self._report_alignment(texts, plan_ticks, result)
 
         clip_left = 12  # labels whose start is left of this are clipped by the slide edge
@@ -1088,7 +1119,7 @@ class SVGQualityChecker:
         title_intrusions = self._count_title_zone_intrusions(shapes)
 
         if unbounded_long:
-            result['warnings'].append(
+            result['errors'].append(
                 f"Long text without a wrap contract at: {', '.join(unbounded_long)}. "
                 f"Use separate <text> lines or data-box/data-wrap so PPTX export cannot render past the intended block."
             )
@@ -1111,6 +1142,8 @@ class SVGQualityChecker:
                 ox, oy = overlap(a['ink'], b['ink'])
                 size = min(a['font_size'], b['font_size'])
                 paragraph = abs(a['x1'] - b['x1']) < 2 and a['font_size'] == b['font_size']   # wrapped lines graze
+                if (a['box_fit'] or b['box_fit']) and abs(a['x1'] - b['x1']) < 4:
+                    continue    # a wrap box above its own sub-line: height is checked by [text-box-*]
                 big = max(a['font_size'], b['font_size'])   # the wider label carries the width-estimate slack
                 if ox > max(1.0, 0.15 * big) and oy > (0.25 if paragraph else 0.1) * size:
                     result['errors'].append(

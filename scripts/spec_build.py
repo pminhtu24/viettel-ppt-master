@@ -609,6 +609,9 @@ def variety_errors(built: list[tuple[dict, dict, dict]], src: Source, warnings: 
         family = CATALOG[template]["data_requirements"]["family"] if template in CATALOG else ""
         if template:
             uses.setdefault(template, []).append(pid)
+        if "ending" in page["keys"].get("layout", "") and re.search(r"(?i)trang kết|ending|kết thúc", page["title"]):
+            warnings.append(f"{pid}: the ending title '{page['title']}' names the page — use a closing phrase such as "
+                            "'Trân trọng cảm ơn!'")
         if template == "kpi_cards" and len(page["data"]) > KPI_CARDS_MAX:
             warnings.append(f"{pid}: kpi_cards with {len(page['data'])} numbers — the template holds 4–{KPI_CARDS_MAX} "
                             f"cards; split the page, keep the {KPI_CARDS_MAX} that carry the title, or use metric_table")

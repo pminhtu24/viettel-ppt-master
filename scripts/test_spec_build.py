@@ -128,6 +128,10 @@ class SpecBuildTests(unittest.TestCase):
                     if f["id"].startswith("B0011_value"))
         self.assertEqual((fact["value"], fact["unit"]), (-4.1, "%"))
 
+    def test_an_ending_titled_trang_ket_is_warned(self):
+        code, report = self.build(PLAN + "\n### P04 Trang kết\n- rhythm: anchor\n- layout: 04_ending\n")
+        self.assertIn("P04: the ending title 'Trang kết'", " | ".join(report.get("warnings", [])), report)
+
     def test_kpi_cards_with_more_numbers_than_cards_is_warned(self):
         data = "".join(f"- data: B0006 value={v}\n" for v in ("140", "457", "110", "140", "457", "110", "140"))
         code, report = self.build(PLAN.replace("- template: progress_bar_chart", "- template: kpi_cards")

@@ -82,7 +82,7 @@ Fix every error `build --check` lists in `plan.md` (one edit per error, never a 
 - Every number on a slide stays bound to the block it comes from, including labels that ride along a row's value ("tăng 3,2%", "73,8% KH năm") — bind them to that row's block, never leave a number decorative; an unbound number escapes the fact check.
 - Give every warning/observation block ("Cảnh báo", "Nhận xét") a home in the `blocks:` of the slide about its subject — a warning parked in `optional:` or left unlisted is flagged as a risk item no slide shows. Put a source disclaimer block ("SỐ LIỆU GIẢ LẬP …", "dữ liệu mẫu") in the cover slide's `blocks:` so it stays visible instead of being dropped.
 
-Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no block.
+Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no block. Title chapter slides `Chương N — <name>`; title the ending slide with its closing phrase (`Trân trọng cảm ơn!`), never "Trang kết".
 
 ## Content rules (checked by `build`, then by `fact_check` on the drawn slides)
 

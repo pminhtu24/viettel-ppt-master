@@ -62,6 +62,15 @@ def main() -> None:
     rows = check(''.join(f'<text x="{112 if i < 9 else 64}" y="{211 + 38 * i}" font-size="18">Chỉ tiêu {i}</text>'
                          for i in range(12)))['warnings']
     assert any('[column-misaligned]' in w and 'x=64' in w for w in rows), rows
+    # run 2026-11-14 P14: a summary line pushed into the footer band
+    footer = errors('<text x="88" y="666" data-box="88,656,1128,24" data-wrap="true" font-size="18">Cổng GPON mới đạt 88,1% KH năm</text>')
+    assert any('[footer-overlap]' in e for e in footer), footer
+
+    # P11: ten bars, all solid red — no focal bar
+    flat = check('<g data-chart="v1">' + ''.join(
+        f'<rect x="190" y="{150 + 30 * i}" width="{500 - 30 * i}" height="18" fill="#EE0033"/>' for i in range(6))
+        + '</g>')['warnings']
+    assert any('[no-focus]' in w for w in flat), flat
     print("OK: text collisions")
 
 
