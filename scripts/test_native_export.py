@@ -15,12 +15,12 @@ sys.path.insert(0, str(SCRIPT.parent))
 from svg_to_pptx.drawingml_utils import resolve_viettel_face
 
 SVG = """<svg width="1280" height="720" viewBox="0 0 1280 720"
-xmlns="http://www.w3.org/2000/svg">
+xmlns="http://www.w3.org/2000/svg" font-family="FS Magistral">
 <rect width="1280" height="720" fill="#FFFFFF"/>
 <use data-icon="tabler-filled/layout-cards" x="40" y="40" width="48" height="48" fill="#000000"/>
 <text x="80" y="120" font-family="FS Magistral" font-size="32" font-weight="400">Book</text>
 <text x="80" y="180" font-family="FS Magistral" font-size="32" font-weight="500">Medium</text>
-<text x="80" y="240" font-family="FS Magistral" font-size="32" font-weight="700">Bold</text>
+<text x="80" y="240" font-size="32" font-weight="700">Bold inherits the root font</text>
 <text x="80" y="320" data-box="80,280,400,48" data-wrap="true"
       font-family="FS Magistral" font-size="32" font-weight="700">A deliberately long title that must stay inside its fixed text box</text>
 </svg>"""
@@ -84,6 +84,7 @@ def main() -> None:
             assert f'<p:font typeface="{typeface}"' in presentation_xml
         assert 'saveSubsetFonts="0"' in presentation_xml
         assert 'typeface="FS Magistral"' not in slide_xml
+        assert "Segoe UI" not in slide_xml, "font-family on the root <svg> must reach every text"
         assert ' b="1"' not in slide_xml
         assert '<a:normAutofit/>' in slide_xml
         assert '<a:noAutofit/>' not in slide_xml

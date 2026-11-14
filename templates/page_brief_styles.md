@@ -25,5 +25,5 @@
 
 - The title states the page's conclusion (only what its blocks support); the body proves it top-down: the key figure first, then the two or three supporting points.
 - Every figure sits next to its reference: plan, target, previous period or benchmark, as the source gives it.
-- Color is reserved: `#999999` or deep blue for context, red only on the one figure or bar that carries the conclusion.
+- Color is reserved: context in red at fill-opacity 0.4 or deep blue, solid red only on the one figure or bar that carries the conclusion.
 - A strict grid with even gutters; no decoration that does not carry data.

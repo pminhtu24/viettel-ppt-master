@@ -74,6 +74,11 @@ Fix every error `build --check` lists in `plan.md` (one edit per error, never a 
 | `calc` | A number the source does not state, computed from source numbers: `<id> percent|ratio|sum|difference <block>:<n> <block>:<n>` |
 | `why` | Required with every `template`: why the source supports it (same unit and period, parts of one whole, ordered stages; for a table, why a chart cannot show it) |
 
+### Spreadsheet sources (`excel_to_md`)
+
+- The unit line above a table ("Đơn vị: tỷ đồng …") and the header row ("Mảng kinh doanh | T1 | … | Lũy kế 9T | …") are their own blocks. A slide that prints the unit caption or a series/legend label like "Lũy kế 9T" must list those blocks in `blocks:` and bind the text to them — binding such labels to `c_label` alone fails the fact check (`editorial-number`, `period-invented`) because the number or period lives only in that block.
+- Copy period labels verbatim from the header block's column names ("Lũy kế 9T", "Cùng kỳ 9T 2025"); do not compose "Lũy kế 9T 2026" from the year standing in the title.
+
 Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no block.
 
 ## Content rules (checked by `build`, then by `fact_check` on the drawn slides)
@@ -102,6 +107,9 @@ Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no b
 | `the plan has N slides but the user confirmed M` | Return to M slides: merge or drop low-priority slides; ask the user before changing the count |
 | `'XYZ' is nowhere in the source` | Write the name as the source does (no invented abbreviation) |
 | `<table> — P.., P.. already show prose numbers as a table` | Use the chart the message names, a list or cards |
+| `value=55743/75500 is not a number of that block` on a spreadsheet row | The slash ratio parses only when the source prints `a/b` as one token; an Excel row prints the two numbers in separate columns — write `value=55743 target=75500` |
+| plan gate `Mixed units in one quantitative encoding` | Percent marks taken from a block whose own unit is a quantity (e.g. the growth column of a tỷ đồng revenue row) trip the gate — chart the underlying same-unit values (two series) instead of the percents |
+| the table-limit error names a third table | The 2-table limit counts all table templates together (`metric_table` + `project_schedule_table` + …), not per template — convert one of them to a list or cards |
 | `only N data chart(s) for M slides with numbers` | Change the named candidates to the chart in brackets |
 | `<template> is a … chart: add one - data: line per mark` | Data charts need `data` lines; for a list use a `structure` template |
 | `needs a - why: line` | One line on why the source supports the chart |

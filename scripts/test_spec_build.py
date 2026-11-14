@@ -109,6 +109,25 @@ class SpecBuildTests(unittest.TestCase):
             self.assertIn(needle, errors)
         self.assertFalse((self.root / "design_spec.md").exists())
 
+    def test_spreadsheet_rows_keep_a_minus_and_point_split_ratios_to_value_target(self):
+        (self.root / "sources/report.md").write_text(
+            SOURCE + "\n## Doanh thu\n* Truyền hình: lũy kế 2747 tỷ, KH năm 3900 tỷ, tăng trưởng -4.1%.\n",
+            encoding="utf-8")
+        build_index(self.root)
+        code, report = self.build(PLAN.replace("value=37%", "value=-4.1%").replace("B0004 value", "B0011 value")
+                                  .replace("value=48%", "value=2747/3900").replace("B0005 value", "B0011 value")
+                                  .replace("B0004-B0005", "B0011"))
+        errors = " | ".join(report["errors"])
+        self.assertNotIn("'-4.1%'", errors)
+        self.assertIn("'2747/3900' is not a number of that block — the block prints 2747 and 3900 as separate "
+                      "numbers (spreadsheet columns): write `value=2747 target=3900`", errors)
+        code, report = self.build(PLAN.replace("value=37%", "value=-4.1%").replace("B0004 value", "B0011 value")
+                                  .replace("- data: B0005 value=48%\n", "").replace("B0004-B0005", "B0011"))
+        self.assertEqual((code, report["plan_gate"]), (0, "pass"), report)
+        fact = next(f for f in {p["page"]: p for p in cc.load_contract(self.root)}["P02"]["facts"]
+                    if f["id"].startswith("B0011_value"))
+        self.assertEqual((fact["value"], fact["unit"]), (-4.1, "%"))
+
     def test_ratio_gives_value_and_target_and_footer_carries_the_document_line(self):
         plan = PLAN.replace("- template: progress_bar_chart", "- template: bullet_chart").replace(
             "- data: B0004 value=37%\n- data: B0005 value=48%",

@@ -178,7 +178,7 @@ class PagePlanTests(unittest.TestCase):
             self.assertIn(str(self.root.resolve() / "briefs/_shared.md"), text)
         self.assertIn(project.by_id["P05"]["text"], texts["P05"])
         self.assertIn("bar_chart.svg", texts["P05"])
-        self.assertIn("- color recipe: one measure, one hue", texts["P05"])   # bar_chart is a comparison chart
+        self.assertIn("- color recipe: red leads: context columns red at fill-opacity 0.4", texts["P05"])   # bar_chart is a comparison chart
         self.assertIn(str(project.svg_dir / "05_page.svg"), texts["P05"])
         context = self.plan()["waves"][0][0]["context"]
         self.assertIn("ONLY these files", context)

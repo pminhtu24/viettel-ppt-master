@@ -13,10 +13,13 @@ All paths produce the same output convention:
     <input>.md                     Markdown file
 """
 
+from __future__ import annotations
+
 import argparse
 import re
 import sys
 from datetime import date, datetime, time
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Any
 
@@ -68,9 +71,37 @@ def _format_cell_value(value: Any) -> str:
         return value.isoformat()
     if isinstance(value, time):
         return value.isoformat(timespec="seconds")
-    if isinstance(value, float):
-        return _markdown_escape(f"{value:g}")
+    if isinstance(value, float):   # plain digits: 1234567.5, never 1.23457e+06
+        text = f"{value:.6f}".rstrip("0").rstrip(".") if abs(value) < 1e15 else f"{value:g}"
+        return _markdown_escape(text)
     return _markdown_escape(str(value))
+
+
+def _apply_number_format(value: Any, number_format: str | None) -> Any:
+    """The value as the sheet shows it: percent cells as 72.5%, day-first date formats as 15/12/2026, fixed
+    decimals rounded. No thousands separators — in Vietnamese they read as decimal marks."""
+    if isinstance(value, bool) or not number_format or number_format == "General":
+        return value
+    section = number_format.split(";")[0]
+    if isinstance(value, (datetime, date)):
+        if re.search(r"d.*m.*y", section, re.I):
+            timed = isinstance(value, datetime) and "h" in section.lower()
+            return value.strftime("%d/%m/%Y %H:%M" if timed else "%d/%m/%Y")
+        return value
+    if not isinstance(value, (int, float)):
+        return value
+    match = re.search(r"\.([0#]+)", section)
+    decimals = len(match.group(1)) if match else 0
+
+    def excel_round(number: float) -> Decimal:            # 15 significant digits, then half away from zero, as Excel
+        return Decimal(f"{number:.15g}").quantize(Decimal(1).scaleb(-decimals), ROUND_HALF_UP)
+
+    if "%" in section:
+        return f"{excel_round(value * 100)}%"
+    if re.search(r"[0#]", section):
+        rounded = excel_round(value)
+        return int(rounded) if decimals == 0 else float(rounded)
+    return value
 
 
 def _is_numeric_value(value: Any) -> bool:
@@ -92,11 +123,13 @@ def _merged_value_map(worksheet) -> dict[tuple[int, int], Any]:
 
     Merged regions whose top-left cell is empty are intentionally skipped.
     These are typically formatting-only ranges that carry no textual content.
+    Long text (a note or comment merged across a row) stays in its top-left cell only;
+    short labels (group headers such as "Quý 3") repeat so every column keeps its meaning.
     """
     merged_values: dict[tuple[int, int], Any] = {}
     for merged_range in worksheet.merged_cells.ranges:
         value = worksheet.cell(merged_range.min_row, merged_range.min_col).value
-        if _is_empty(value):
+        if _is_empty(value) or (isinstance(value, str) and len(value) > 40):
             continue
         for row in range(merged_range.min_row, merged_range.max_row + 1):
             for col in range(merged_range.min_col, merged_range.max_col + 1):
@@ -105,10 +138,10 @@ def _merged_value_map(worksheet) -> dict[tuple[int, int], Any]:
 
 
 def _cell_value(worksheet, row: int, col: int, merged_values: dict[tuple[int, int], Any]) -> Any:
-    value = worksheet.cell(row, col).value
-    if _is_empty(value):
-        return merged_values.get((row, col), value)
-    return value
+    cell = worksheet.cell(row, col)
+    if _is_empty(cell.value):
+        return merged_values.get((row, col), cell.value)
+    return _apply_number_format(cell.value, cell.number_format)
 
 
 def _content_bounds(worksheet, merged_values: dict[tuple[int, int], Any]) -> tuple[int, int, int, int] | None:

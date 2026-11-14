@@ -47,7 +47,7 @@ MAX_PROSE_TABLES = 2          # tables for numbers the source writes as prose (a
 TEMPLATE_REPEAT_WARN = 4
 TEXT_BUDGET_WARN, TEXT_BUDGET_ERROR = 1200, 1800   # characters of source text in a slide's `blocks`
 ENTITY_COLORS = {"#12436D", "#28A197", "#10B981", "#F46A25", "#7C3AED", "#6B7280"}
-TOC_RE = re.compile(r"(?i)^(mục lục|table of contents|contents)\W*$")
+TOC_RE = re.compile(r"(?i)^(mục lục|table of contents|contents|workbook summary)\W*$")   # not slide content
 RISK_RE = re.compile(r"\b(chậm|quá hạn|cảnh báo|nguy cơ|vướng mắc|khó khăn|không đạt)\b")   # what a report reader looks for
 CHART_SHARE = 3               # at least one data chart per this many numeric slides (decks with ≥ 6 of them)
 FAMILY_ORDER = ["structure", "kpi", "progress", "comparison", "time", "milestones", "composition", "pareto",
@@ -118,7 +118,7 @@ def cmd_source(project: Path) -> int:
 
 def page_estimate(src: Source) -> str:
     """Slides this source needs at the density `build` accepts: sibling sections share slides up to a text budget,
-    top-level parts never do; in decks of ≥ 12 content slides with ≥ 2 such parts, a chapter slide per part spanning ≥ 2; cover, ending."""
+    top-level parts never do; in decks of ≥ 12 content slides with ≥ 2 such parts, a chapter slide per part spanning ≥ 3; cover, ending."""
     leaves: list[list] = []                                   # [section path, characters] in source order
     for bid in src.ids:
         b = src.outline[bid]
@@ -165,7 +165,7 @@ def page_estimate(src: Source) -> str:
 
     def total(per_part: dict) -> tuple[int, int, int]:
         content = sum(per_part.values())
-        long_parts = [p for p, n in per_part.items() if p and n >= 2]
+        long_parts = [p for p, n in per_part.items() if p and n >= 3]
         chapters = len(long_parts) if content >= 12 and len(long_parts) >= 2 else 0
         return content + chapters + 2, chapters, content
 
@@ -237,11 +237,20 @@ def to_json_number(value: Decimal):
 
 
 def number_token(block_text: str, wanted: str) -> tuple[str, int] | None:
-    """The token as written in the block (and its position) whose canonical form equals `wanted`."""
-    key = fc.num_key(wanted.rstrip("%"))
+    """The token as written in the block (and its position) whose canonical form equals `wanted`.
+
+    A signed value (`-4.1%`, a spreadsheet decline) matches only a token the block itself prints with that
+    minus sign, and comes back signed."""
+    negative = wanted[:1] in "-−"
+    key = fc.num_key(wanted.lstrip("+-−").rstrip("%"))
     for m in fc.NUM_RE.finditer(re.sub(r"(?<=[^\W\d_])/(?=\d)", " ", block_text)):
         if fc.num_key(m.group()) == key:
-            return m.group(), m.start()
+            if not negative:
+                return m.group(), m.start()
+            if re.search(r"(?:^|[\s(|:])[-−]$", block_text[:m.start()]):
+                return "-" + m.group(), m.start() - 1
+    if negative:
+        return None
     for m in fc.NUM_RE.finditer(re.sub(r"(?<=[^\W\d_])/(?=\d)", " ", block_text)):
         offset = m.start()
         for part in m.group().split("/"):                  # 140 inside 140/457
@@ -291,7 +300,12 @@ class PageBuilder:
         b = self.src.outline[bid]
         hit = number_token(b.text, wanted)
         if not hit:
-            self.err(f"{self.src.label(bid)}: '{wanted}' is not a number of that block — copy it from `spec_build.py source`")
+            parts = wanted.rstrip("%").split("/")
+            hint = (f" — the block prints {parts[0]} and {parts[1]} as separate numbers (spreadsheet columns): "
+                    f"write `value={parts[0]} target={parts[1]}`"
+                    if len(parts) == 2 and all(number_token(b.text, x) for x in parts)
+                    else " — copy it from `spec_build.py source`")
+            self.err(f"{self.src.label(bid)}: '{wanted}' is not a number of that block{hint}")
             return None
         raw, pos = hit
         whole = raw

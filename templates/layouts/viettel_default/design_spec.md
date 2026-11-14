@@ -75,9 +75,9 @@ design_tone: "Structured, restrained, brand-led, enterprise telecom"
 | Order | Value     | Usage                                      |
 | ----- | --------- | ------------------------------------------ |
 | 1     | `#EE0033` | Primary data series, key metrics           |
-| 2     | `#12436D` | Secondary data series, comparisons         |
-| 3     | `#28A197` | Tertiary series, positive trends           |
-| 4     | `#F46A25` | Warning series, risk data                  |
+| 2     | `#12436D` | Secondary data series, earlier period / plan (often at fill-opacity 0.45) |
+| 3     | `#28A197` | Tertiary series; growth, above plan, positive trends |
+| 4     | `#F46A25` | Warning series, decline, risk data         |
 | 5     | `#7C3AED` | Fifth series or a recurring entity; chart/diagram marks only, never text |
 | —     | `#10B981` / `#059669` | Emerald, the templates' green: may replace teal in chart/diagram marks (one green per chart); never text — green text stays `#28A197` |
 | 6     | `#6B7280` | Neutral series; always `Other` when present |
@@ -641,7 +641,7 @@ pages omit `page_backgrounds` and keep the clean Viettel shell.
 ### Chart Usage Rules
 
 1. Use `#EE0033` only for the primary series, key metric, or threshold signal.
-2. Use `#12436D`, `#28A197`, `#F46A25`, `#7C3AED`, and `#6B7280` in categorical order. Place every `#12436D` mark inside a `data-viettel-blue-scope="chart|diagram|icon"` group and every `#7C3AED`, `#10B981` or `#059669` mark inside a `data-viettel-blue-scope="chart|diagram"` group.
+2. Use `#12436D`, `#28A197`, `#F46A25`, `#7C3AED`, and `#6B7280` in categorical order after red; columns of one measure are red (key column solid, others at fill-opacity 0.4); gray is never a data column. Place every `#12436D` mark inside a `data-viettel-blue-scope="chart|diagram|icon"` group and every `#7C3AED`, `#10B981` or `#059669` mark inside a `data-viettel-blue-scope="chart|diagram"` group.
 3. Donut is limited to a 2-slice KPI or a MECE 3-6-slice composition; pie is limited to a MECE 3-6-slice composition without a center KPI. Use horizontal bars for multi-select data or at least 7 flat groups, and treemap for hierarchical data.
 4. KPI donut uses `#EE0033` for the primary slice and `#E6E6E6` for the remainder. Composition donuts/pies use unique categorical colors, put `Other` last in `#6B7280`, directly label every slice, and keep legend/card colors identical to slice colors.
 5. Long labels such as CVE IDs, malware names, agency names, and sector names stay outside bars; values sit at the bar end.

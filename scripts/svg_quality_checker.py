@@ -241,6 +241,13 @@ def _element_locators(root: ET.Element) -> Dict[int, str]:
     return locators
 
 
+def _is_opaque_fill(elem: ET.Element, fill: str, opacity: float) -> bool:
+    """True when a shape's fill would hide text drawn underneath it."""
+    if fill in ('', 'NONE', 'TRANSPARENT') or fill.startswith('URL('):
+        return False
+    return opacity * _float_attr(elem, 'fill-opacity', 1.0) >= 0.6  # opacity already folded in by the caller
+
+
 def _fmt_bounds(item: Dict) -> str:
     """Format an x1/y1/x2/y2 dictionary compactly for diagnostics."""
     return (
@@ -862,11 +869,17 @@ class SVGQualityChecker:
             ty: float = 0.0,
             allow_title_zone: bool = False,
             fam: str = '',
+            allow_overlap: bool = False,
+            opacity: float = 1.0,
+            rotated: bool = False,
         ):
             dx, dy = _parse_translate(elem.get('transform', ''))
             tx += dx
             ty += dy
             fam = _get_svg_attr(elem, 'font-family') or fam
+            allow_overlap = allow_overlap or elem.get('data-allow-overlap') == 'true'
+            opacity *= _float_attr(elem, 'opacity', 1.0)
+            rotated = rotated or bool(re.search(r'rotate|matrix|skew', elem.get('transform', '')))
             allow_title_zone = (
                 allow_title_zone or
                 elem.get('data-allow-title-zone') == 'true'
@@ -888,6 +901,8 @@ class SVGQualityChecker:
                     'x2': x + w, 'y2': y + h,
                     'fill': fill, 'stroke': stroke, 'rx': rx,
                     'allow_title_zone': allow_title_zone,
+                    'order': len(shapes) + len(texts),
+                    'opaque': _is_opaque_fill(elem, fill, opacity),
                 }
                 # Containers are real cards / panels, not bars or decorative
                 # strips. Width threshold avoids mistaking chart bars for cards.
@@ -920,6 +935,8 @@ class SVGQualityChecker:
                     'stroke': (_get_svg_attr(elem, 'stroke') or '').upper(),
                     'rx': 0,
                     'allow_title_zone': allow_title_zone,
+                    'order': len(shapes) + len(texts),
+                    'opaque': _is_opaque_fill(elem, (_get_svg_attr(elem, 'fill') or '').upper(), opacity),
                 })
 
             elif tag == 'text':
@@ -983,13 +1000,24 @@ class SVGQualityChecker:
                             data_box or elem.get('data-wrap') == 'true'
                         ),
                         'box_fit': box_fit,
+                        'order': len(shapes) + len(texts),
+                        'allow_overlap': allow_overlap,
+                        # glyph band of a plain one-line label: cap height to descender
+                        'rotated': rotated,
+                        # faint watermark text is a deliberate backdrop, not a label
+                        'ink': None if data_box or tspan_count or rotated
+                        or opacity * _float_attr(elem, 'fill-opacity', 1.0) < 0.5 else (
+                            box_x + 1, y - fs * 0.72, box_x + estimated_w / 1.05 - 1, y + fs * 0.18
+                        ),
                     })
 
             for child in list(elem):
-                visit(child, tx, ty, allow_title_zone, fam)
+                visit(child, tx, ty, allow_title_zone, fam, allow_overlap, opacity, rotated)
 
         visit(root)
+        self._report_text_collisions(texts, shapes, result)
 
+        clip_left = 12  # labels whose start is left of this are clipped by the slide edge
         content_right = 1208
         content_bottom = 640
         unbounded_long: List[str] = []
@@ -1002,6 +1030,11 @@ class SVGQualityChecker:
                 reasons.append(
                     f"safe-area overflow(right={text['x2'] - content_right:.1f}px, "
                     f"limit={content_right:.1f})"
+                )
+            if 120 < text['y'] < content_bottom and text['x1'] < clip_left and not text['rotated']:
+                reasons.append(
+                    f"safe-area overflow(left={clip_left - text['x1']:.1f}px past x={clip_left}; "
+                    f"an end-anchored label grows leftwards: split it into two lines or move the anchor right)"
                 )
 
             container = self._find_text_container(text, containers)
@@ -1056,6 +1089,38 @@ class SVGQualityChecker:
                 f"{shape['title_zone_bottom']:.1f}; move it below the divider or "
                 f"mark the intentional shape/group data-allow-title-zone=\"true\""
             )
+
+    def _report_text_collisions(self, texts: List[Dict], shapes: List[Dict], result: Dict) -> None:
+        """Plain one-line labels that touch another label, or sit under a shape drawn after them."""
+        def overlap(a, b) -> Tuple[float, float]:
+            return min(a[2], b[2]) - max(a[0], b[0]), min(a[3], b[3]) - max(a[1], b[1])
+
+        labels = [t for t in texts if t['ink'] and not t['allow_overlap']]
+        for i, a in enumerate(labels):
+            for b in labels[i + 1:]:
+                ox, oy = overlap(a['ink'], b['ink'])
+                size = min(a['font_size'], b['font_size'])
+                if ox > max(1.0, 0.15 * size) and oy > 0.25 * size:  # width estimate slack; stacked lines graze
+                    result['errors'].append(
+                        f"[text-collision] locator={a['locator']} text={_text_excerpt(a['text'], 40)!r} "
+                        f"overlaps locator={b['locator']} text={_text_excerpt(b['text'], 40)!r} by "
+                        f"{ox:.0f}x{oy:.0f}px. Fix: move one label, center a column header on its column, "
+                        f"or split a long label into two lines; mark a deliberate overlay "
+                        f'data-allow-overlap="true".'
+                    )
+            area = (a['ink'][2] - a['ink'][0]) * (a['ink'][3] - a['ink'][1])
+            for shape in shapes:
+                if shape['order'] < a['order'] or not shape['opaque']:
+                    continue
+                ox, oy = overlap(a['ink'], (shape['x1'], shape['y1'], shape['x2'], shape['y2']))
+                if ox > 0 and oy > 0 and ox * oy > 0.3 * area:
+                    result['errors'].append(
+                        f"[text-covered] locator={a['locator']} text={_text_excerpt(a['text'], 40)!r} is "
+                        f"drawn under <{shape['tag']}> locator={shape['locator']} "
+                        f"bounds={_fmt_bounds(shape)} ({ox * oy / area:.0%} of the label hidden). "
+                        f"Fix: move the label off the shape or draw the shape before the label."
+                    )
+                    break
 
     def _report_text_box_fit(self, text: Dict, result: Dict) -> None:
         """Compare measured, wrapped text against its own data-box."""

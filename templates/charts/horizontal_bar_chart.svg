@@ -47,19 +47,19 @@
         <!-- Bar 1: Brand A - 92% (Rank 1, Blue) -->
         <text x="290" y="178"
               font-size="15" font-weight="500" fill="#44494D" text-anchor="end">Brand A (Market Leader)</text>
-        <rect x="300" y="155" width="828" height="36" rx="4" fill="#12436D"/>
+        <rect x="300" y="155" width="828" height="36" rx="4" fill="#EE0033"/>
         <text x="1138" y="179"
               font-size="16" font-weight="700" fill="#000000">92%</text>
         <!-- Bar 2: Brand B - 78% (Rank 2, Blue) -->
         <text x="290" y="238"
               font-size="15" font-weight="500" fill="#44494D" text-anchor="end">Brand B (Emerging Challenger)</text>
-        <rect x="300" y="215" width="702" height="36" rx="4" fill="#12436D"/>
+        <rect x="300" y="215" width="702" height="36" rx="4" fill="#EE0033"/>
         <text x="1012" y="239"
               font-size="16" font-weight="700" fill="#000000">78%</text>
         <!-- Bar 3: Brand C - 65% (Rank 3, Blue) -->
         <text x="290" y="298"
               font-size="15" font-weight="500" fill="#44494D" text-anchor="end">Brand C (Legacy Brand)</text>
-        <rect x="300" y="275" width="585" height="36" rx="4" fill="#12436D"/>
+        <rect x="300" y="275" width="585" height="36" rx="4" fill="#EE0033"/>
         <text x="895" y="299"
               font-size="16" font-weight="700" fill="#000000">65%</text>
         <!-- Bar 4: Brand D - 52% (Rank 4, Green) -->
@@ -96,7 +96,7 @@
     </g>
     <!-- Legend -->
     <g id="legend" data-viettel-blue-scope="chart">
-        <rect x="60" y="660" width="16" height="16" rx="2" fill="#12436D"/>
+        <rect x="60" y="660" width="16" height="16" rx="2" fill="#EE0033"/>
         <text x="85" y="673"
               font-size="14" fill="#44494D">High Awareness (≥50%)</text>
         <rect x="270" y="660" width="16" height="16" rx="2" fill="#059669"/>

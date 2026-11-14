@@ -43,7 +43,7 @@
         <!-- Bar Data (Bar width 50px, gap 130px, total gap 180px) -->
         <!-- Bar 1: East - 185M (370px height, 100M=200px) -->
         <g id="bar-1">
-            <rect x="220" y="180" width="50" height="370" rx="4" fill="#12436D"/>
+            <rect x="220" y="180" width="50" height="370" rx="4" fill="#EE0033"/>
             <text x="245" y="165"
                   font-size="16" font-weight="600" fill="#000000" text-anchor="middle">185</text>
             <text x="245" y="580"
@@ -51,7 +51,7 @@
         </g>
         <!-- Bar 2: South - 142M -->
         <g id="bar-2">
-            <rect x="400" y="266" width="50" height="284" rx="4" fill="#12436D"/>
+            <rect x="400" y="266" width="50" height="284" rx="4" fill="#EE0033"/>
             <text x="425" y="251"
                   font-size="16" font-weight="600" fill="#000000" text-anchor="middle">142</text>
             <text x="425" y="580"
@@ -59,7 +59,7 @@
         </g>
         <!-- Bar 3: North - 128M -->
         <g id="bar-3">
-            <rect x="580" y="294" width="50" height="256" rx="4" fill="#12436D"/>
+            <rect x="580" y="294" width="50" height="256" rx="4" fill="#EE0033"/>
             <text x="605" y="279"
                   font-size="16" font-weight="600" fill="#000000" text-anchor="middle">128</text>
             <text x="605" y="580"
@@ -94,7 +94,7 @@
     <!-- Legend -->
     <g id="legend" data-viettel-blue-scope="chart">
         <g id="legend-high">
-            <rect x="920" y="620" width="16" height="16" rx="2" fill="#12436D"/>
+            <rect x="920" y="620" width="16" height="16" rx="2" fill="#EE0033"/>
             <text x="945" y="632"
                   font-size="14" fill="#44494D">High Growth Region (&gt;100M)</text>
         </g>

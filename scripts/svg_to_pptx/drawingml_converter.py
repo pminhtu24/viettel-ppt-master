@@ -559,7 +559,9 @@ def convert_svg_to_slide_shapes(
         )
 
     defs = collect_defs(root)
-    ctx = ConvertContext(defs=defs, slide_num=slide_num, svg_dir=Path(svg_path).parent)
+    # The root <svg> carries inheritable attributes too (font-family on the root is common).
+    ctx = ConvertContext(defs=defs, slide_num=slide_num, svg_dir=Path(svg_path).parent,
+                         inherited_styles=_extract_inheritable_styles(root))
 
     shapes: list[str] = []
     converted = 0

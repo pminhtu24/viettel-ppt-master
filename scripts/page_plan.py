@@ -32,18 +32,21 @@ from update_spec import parse_lock  # noqa: E402
 SKILL_DIR = Path(__file__).resolve().parents[1]
 RULES_FILE = SKILL_DIR / "templates" / "page_brief_rules.md"
 STYLES_FILE = SKILL_DIR / "templates" / "page_brief_styles.md"
-_SERIES = "series red → deep blue → teal → orange → purple #7C3AED, then #6B7280 for 'Khác'; label marks directly"
+_SERIES = ("series red → deep blue → teal → orange → purple #7C3AED, then #6B7280 for 'Khác'; label marks directly; "
+           "growth the source states (tăng, vượt, +x%) teal, a decline or shortfall orange")
 _TIMELINE = ("past milestones #999999, those the source calls done/hoàn thành teal, a red line at the report date, "
              "upcoming ones white with a deep-blue outline")
 COLOR_RECIPES = {   # one line per chart family, in each page brief (rule 10 has the shared system)
     "progress": "actual solid over its plan/target in the same color at fill-opacity 0.25; a dashed #6B7280 line at "
-                "100% or the target; the bar the title names red, the others deep blue; teal only where the source "
-                "says done/100%",
+                "100% or the target; thin bars (≤ 24px) — the bar the title names red, the others deep blue; teal where "
+                "the source says done/vượt/≥100% or growth, orange where it says chậm/cảnh báo/giảm",
     "kpi": "identical white cards (#E6E6E6 stroke); only the focal card gets a red top stripe and a red number, every "
            "other number black",
-    "comparison": "one measure, one hue: bars deep blue (style C: #999999), the item the title names red; value "
-                  "labels at the bar ends, no legend",
-    "time": "current period red, 5–6px; earlier or comparison period #999999, 2–3px; label each line at its end "
+    "comparison": "red leads: context columns red at fill-opacity 0.4, the item the title names solid red; periods "
+                  "side by side: the current one solid red, the earlier one or the plan deep blue at fill-opacity "
+                  "0.45; a second measure deep blue; a growth label the source states (tăng, +x%) teal, a decline "
+                  "orange; no gray columns; value labels at the bar ends, no legend for one series",
+    "time": "current period red, 5–6px; earlier or comparison period deep blue at stroke-opacity 0.5, 2–3px; growth markers teal; label each line at its end "
             "instead of a legend; gridlines #E6E6E6",
     "milestones": _TIMELINE,
     "schedule": _TIMELINE,
@@ -51,8 +54,9 @@ COLOR_RECIPES = {   # one line per chart family, in each page brief (rule 10 has
     "matrix": "one hue (teal) whose fill-opacity grows with the value (0.08 → 0.9), black text on every cell; orange "
               "only on rows the source calls chậm/cảnh báo",
     "waterfall": "increase teal, decrease orange, totals deep blue; red only for the figure the title names",
-    "pareto": "bars deep blue, the cumulative line red; label the cut-off item",
-    "funnel": "one hue stepping down in fill-opacity (1 → 0.25) stage by stage; the stage the title names red",
+    "pareto": "bars of the vital few red, the rest red at fill-opacity 0.4, the cumulative line deep blue; label the cut-off item",
+    "funnel": "red stepping down in fill-opacity (1 → 0.3) stage by stage; the stage the title names keeps full red "
+              "and a bold label",
     "structure": "tables: header #44494D with white bold text, zebra #F2F2F2, a percentage column may use the one-hue "
                  "teal scale; cards and steps per rule 10",
 }

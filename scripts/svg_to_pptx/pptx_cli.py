@@ -281,4 +281,25 @@ Per-element entrance animation:
             font_report and font_report.get("brand_profile") == "viettel_default"
         ),
     )
+    if success and font_report and font_report.get("brand_profile") == "viettel_default":
+        stray = _off_brand_typefaces(output_path)
+        if stray:
+            print(f"[ERROR] {output_path.name}: text runs outside FS Magistral — {', '.join(stray)}. "
+                  "PowerPoint would show these in another font; fix the SVG font-family, then export again.")
+            success = False
     raise SystemExit(0 if success else 1)
+
+
+def _off_brand_typefaces(pptx_path: Path) -> list[str]:
+    """Latin typefaces on slides that are not an FS Magistral face, as 'slideN: Face ×count'."""
+    import zipfile
+    from collections import Counter
+
+    found: Counter = Counter()
+    with zipfile.ZipFile(pptx_path) as archive:
+        for name in archive.namelist():
+            if re.fullmatch(r"ppt/slides/slide\d+\.xml", name):
+                for face in re.findall(r'<a:latin typeface="([^"]+)"', archive.read(name).decode("utf-8")):
+                    if not face.startswith("FS Magistral"):
+                        found[f"{Path(name).stem}: {face}"] += 1
+    return [f"{key} ×{count}" for key, count in sorted(found.items())][:8]

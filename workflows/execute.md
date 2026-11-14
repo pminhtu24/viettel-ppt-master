@@ -112,6 +112,8 @@ Chrome normalization also removes marked background groups and near-full-height 
 5. `python3 ${SKILL_DIR}/scripts/fact_check.py draft-review <project_path> --reviewer <your real model id> --charts <project_path>/reviews/charts.json` writes `reviews/draft.json`; it exits non-zero and names the pages that still have an error or a chart without a note — fix them, then draft again.
 6. `content_check.py <project_path> --record-review reviews/draft.json`, then `--stage export`.
 
+**No screenshot review.** Do not screenshot slides, open them in a browser for review, `vision_analyze` them, or delegate image-review sub-agents. The checker already measures overflow, collisions and covered labels with the real FS Magistral metrics, and a browser screenshot misleads: it does not wrap `data-wrap` text, which the PPTX does wrap, so it shows overflow that the exported deck does not have. In a test run this step added ~30 min and half of its "fixes" were for such false overflow. Once step 6 passes, export.
+
 **✅ Checkpoint — Confirm all SVGs are fully generated and quality-checked. Proceed directly to export**:
 
 ```markdown
