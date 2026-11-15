@@ -10,6 +10,7 @@ These are the rules the checks cannot catch, plus the content bindings that `pag
     - keep "nguy cơ", "dự kiến", "chưa" with their status word and never add a status (chậm, vượt, đạt…) your bound source does not say;
     - a place/project/unit named in a card heading must be the section of every number in that card;
     - keep the noun after a ratio (`9/9 nhiệm vụ`, not `9/9`);
+    - a chain of three or more numbers (`21/75/160 trạm ~46,88%`) is read by the source's own legend, never by position: show the chain whole with its legend, or only the pair your lock gives (`value`/`target`), and put a percentage only beside the ratio it is computed from (`[ratio-sliced]`, `[ratio-percent]`);
     - a count in a title must equal the items listed.
     - Never invent a name or abbreviation: a code such as `VTNT`, `QLVB` or `TTDL` that the source never writes is an error — use the source's own wording.
     - Every `required` ID must be visibly represented.

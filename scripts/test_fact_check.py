@@ -33,6 +33,11 @@ SOURCE = """# Báo cáo định kỳ
 * QHĐC: 6/9 thị trường đang hoàn thiện dữ liệu đầu vào.
 * Bồn dầu: lắp đặt đang chậm so với KH, 7/1.000 bình.
 
+## Phủ lõm
+* Phát sóng (TH tuần/lũy kế/KH tháng): 21/75/160 trạm ~46,88% KH tháng.
+* Tắt 2G: lũy kế 2.618/3.231 (79%) xã, xếp thứ 9/34 toàn quốc (tuần trước: 0.104%).
+* Kiên cố (TH/KH/tổng): 5/40/90 cột.
+
 # Nhiệm vụ tuần sau
 ## Hợp đồng OS
 ## Nền tảng Cloud
@@ -171,6 +176,25 @@ class FactCheckTests(unittest.TestCase):
             t("Vô tuyến 7.480 trạm", "f1", y=140)]))})
         self.assertIn("number-unsourced", self.rules(found["P01"]))            # 2.000 is nowhere
         self.assertIn("number-unbound", self.rules(found["P01"], "warn"))      # 7.480 is in another block
+
+    def test_pair_cut_from_a_chain_and_percent_next_to_a_ratio(self):
+        row = lambda ratio, pct: f'<g data-claims="f1">{t(ratio, "f1")}{t(pct, "f1", x=900)}</g>'
+        found = self.audit({
+            "P01": ({"f1": "Phát sóng (TH"}, row("TH tuần: 21/75 trạm", "46,88%")),          # the % is 75/160
+            "P02": ({"f1": "Phát sóng (TH"}, row("Lũy kế 75/160 trạm · KH tháng", "46,88%")),
+            "P03": ({"f1": "Phát sóng (TH"}, t("TH tuần/lũy kế/KH tháng: 21/75/160 trạm ~46,88% KH tháng", "f1")),
+            "P04": ({"f1": "Tắt 2G"}, row("Lũy kế 2.618/3.231 xã", "79%")),                 # the source's own slip
+            "P05": ({"f1": "Tắt 2G"}, row("Xếp thứ 9/34 toàn quốc", "0.104%")),              # a rank
+            "P06": ({"f1": "Phát sóng trạm"}, row("Phát sóng 1.406/2.191 trạm", "46%")),
+            "P07": ({"f1": "Kiên cố"}, t("Kiên cố 5/40 cột", "f1")),                         # nothing to arbitrate
+        })
+        self.assertEqual(self.rules(found["P01"]), ["ratio-sliced"])
+        self.assertIn("75/160", found["P01"][0]["detail"])
+        for pid in ("P02", "P03", "P05"):
+            self.assertEqual([f["rule"] for f in found[pid]], [], pid)
+        self.assertEqual([(f["rule"], f["level"]) for f in found["P04"]], [("ratio-percent", "review")])
+        self.assertIn("ratio-percent", self.rules(found["P06"]))
+        self.assertEqual(self.rules(found["P07"], "warn"), ["ratio-sliced"])
 
     def test_review_table_lists_flagged_rows_only_and_draft_fails_on_errors(self):
         self.audit({"P01": ({"f1": "Phát sóng"}, t("Phát sóng 1.406/2.191 trạm theo tuần", "f1")),

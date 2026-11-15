@@ -90,7 +90,7 @@ Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no b
 ## Content rules (checked by `build`, then by `fact_check` on the drawn slides)
 
 1. **One slide, one source section per list item.** A card, row or column shows blocks of one section; never put a sibling section's figures under another section's heading (a place, project or unit in a heading must be the section of every number under it).
-2. **Numbers as printed.** `data` and `calc` take numbers exactly as `spec_build.py source` prints them (`7.480`, `37%`, `271.7K`); the block must contain them. Period and scope labels (tháng, quý, lũy kế, năm, tuần) stay with their own number, from the same clause.
+2. **Numbers as printed.** `data` and `calc` take numbers exactly as `spec_build.py source` prints them (`7.480`, `37%`, `271.7K`); the block must contain them. Period and scope labels (tháng, quý, lũy kế, năm, tuần) stay with their own number, from the same clause. In a chain of three or more numbers (`21/75/160 trạm ~46,88%` under a legend such as "TH tuần/lũy kế/KH tháng") the legend, not the position, says which two numbers pair: write `value=`/`target=` from the pair the percentage is computed from (`value=75 target=160`), never a pair cut by position (`21/75`).
 3. **Statuses as the source says them.** "Chậm", "vượt", "đạt", "hoàn thành" appear only where the source says them, with their hedge ("nguy cơ chậm", "dự kiến hoàn thành", "chưa đạt").
 4. **Counts are counts.** "7 nhiệm vụ" in a title equals the blocks listed; ratios keep their noun ("9/9 nhiệm vụ").
 5. **Charts first where the data allows.** Choose by the data's shape (catalog family), then by message:

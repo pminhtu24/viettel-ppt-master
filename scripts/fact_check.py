@@ -104,6 +104,34 @@ def _date_like(token: str) -> bool:
         and 1 <= int(parts[1]) <= 12
 
 
+def _count(part: str) -> int | None:
+    """`1.406` → 1406; None for decimals (`0,9`, `9.7`), which are not counts."""
+    return int(part.replace(".", "")) if re.fullmatch(r"\d{1,3}(\.\d{3})+|\d+", part) else None
+
+
+def ratio_percents(text: str) -> list[tuple[list[int], float, int]]:
+    """Every `a/b[/c…]` of whole numbers that is directly followed by its percentage:
+    `21/75/160 trạm ~46,88%` → ([21, 75, 160], 46.88, 2). Dates, decimals and ranks are skipped."""
+    text = re.sub(r"(?<=[^\W\d_])/(?=\d)", " ", text)
+    tokens = list(NUM_RE.finditer(text))
+    out = []
+    for m, nxt in zip(tokens, tokens[1:]):
+        parts = [_count(part) for part in m.group().split("/")]
+        pct = re.fullmatch(r"\d+(?:[.,]\d+)?", nxt.group())
+        if (len(parts) < 2 or None in parts or _date_like(m.group()) or not pct or nxt.start() - m.end() > 25
+                or not re.match(r"\s*%", text[nxt.end():])
+                or re.search(r"(thứ|hạng|top)\s*$", text[:m.start()].lower())):      # a rank (thứ 9/34), not a share
+            continue
+        value = nxt.group().replace(",", ".")
+        out.append((parts, float(value), len(value.partition(".")[2])))
+    return out
+
+
+def pct_matches(a: int, b: int, pct: float, decimals: int) -> bool:
+    """Rounded or truncated to the decimals shown (65,74 → ~66%, 65,9 → 65%)."""
+    return b > 0 and abs(a / b * 100 - pct) <= 10 ** -decimals + 1e-9
+
+
 def is_measure(text: str) -> bool:
     """A measured fact (percentage, count, ratio) — not a date or a single-digit name like 5G."""
     return "%" in text or any(("/" in t and not _date_like(t)) or ("/" not in t and len(re.sub(r"\D", "", t)) >= 2)
@@ -433,6 +461,18 @@ def audit_page(page: str, items: list[SlideText], pc: PageContext) -> list[dict]
     page_numbers = number_set(blocks_ctx) | pc.derived
     head_numbers = number_set(pc.doc_head)
     title_text = norm(" ".join(i.text for i in items if i.heading)[:400])
+    # ratios this page's source prints whole, and the chains (a/b/c) a slide might cut a pair out of
+    source_pairs = {k for b in page_list for _, k in numbers(b.context) if k.count("/") == 1}
+    source_rp = [rp for b in page_list for rp in ratio_percents(b.text)]
+    printed = {(f"{p[0]}/{p[1]}", pct) for p, pct, _ in source_rp if len(p) == 2}     # the source's own a/b ~x%
+    chains: dict[str, tuple[list[int], float | None, int]] = {}
+    for b in page_list:
+        for _, k in numbers(b.text):
+            if k.count("/") >= 2 and not _date_like(k):
+                parts = [int(x) for x in k.split("/")]
+                rp = next(((pct, d) for p, pct, d in source_rp if p == parts), (None, 0))
+                for a_, b_ in zip(parts, parts[1:]):
+                    chains.setdefault(f"{a_}/{b_}", (parts, *rp))
 
     for item in items:
         if META_RE.match(item.text):
@@ -588,6 +628,21 @@ def audit_page(page: str, items: list[SlideText], pc: PageContext) -> list[dict]
         counts = {str(n) for n in pc.children.values()}
         for pos, key in nums:
             prefix = norm(item.text[:pos])
+            if key in chains and key not in source_pairs and key not in pc.derived:
+                # 8a. a pair cut out of a longer chain: the source's legend, not the position, says what pairs
+                parts, pct, dec = chains[key]
+                a_, b_ = (int(x) for x in key.split("/"))
+                chain = "/".join(map(str, parts))
+                if pct is None:
+                    found.append(finding(page, "ratio-sliced", "warn", item,
+                                         f"{key} is cut from {chain} in the source — its legend says which two "
+                                         f"numbers pair; show the chain whole or the pair the legend gives"))
+                elif not pct_matches(a_, b_, pct, dec):
+                    right = [f"{x}/{y}" for i, x in enumerate(parts) for y in parts[i + 1:] if pct_matches(x, y, pct, dec)]
+                    found.append(finding(page, "ratio-sliced", "error", item,
+                                         f"{key} is cut from {chain} in the source, whose {pct:g}% is "
+                                         f"{right[0] if right else 'not this pair'} — show that pair or the chain whole"))
+                continue
             if key in page_numbers or (not bound and key in head_numbers) or ORDINAL_RE.search(prefix):
                 continue
             if re.fullmatch(r"\d{1,2}", key) and (re.fullmatch(r"\s*0?\d{1,2}[.)]?\s*", item.text) or not bound):
@@ -607,6 +662,26 @@ def audit_page(page: str, items: list[SlideText], pc: PageContext) -> list[dict]
             else:
                 found.append(finding(page, "number-unsourced", "error" if bound else "review", item,
                                      f"{key} is not anywhere in the source text"))
+        # 8b. a percentage shown next to a ratio must be that ratio's (same text, or the only pair of its group)
+        pairs = [rp for rp in ratio_percents(item.text) if len(rp[0]) == 2]
+        lone = [k for _, k in nums if k.count("/") == 1 and not _date_like(k)]
+        if not pairs and len(lone) == 1 and "%" not in item.text:
+            others = [s.text for s in item.siblings if "%" in s.text or any("/" in k for _, k in numbers(s.text))]
+            if len(others) == 1 and re.fullmatch(r"[~≈(\s]*\d+(?:[.,]\d+)?\s*%\)?", others[0]):
+                pairs = [rp for rp in ratio_percents(f"{item.text} {others[0]}") if len(rp[0]) == 2]
+        for (a_, b_), pct, dec in pairs:
+            key = f"{a_}/{b_}"
+            if pct_matches(a_, b_, pct, dec) or key in chains:        # a cut chain is rule 8a's
+                continue
+            real = f"{a_ / b_ * 100:.{dec}f}".replace(".", ",") if b_ else "?"
+            if (key, pct) in printed:
+                found.append(finding(page, "ratio-percent", "review", item,
+                                     f"the source itself prints {key} with {pct:g}%, but {key} = {real}% — "
+                                     f"copied faithfully; tell the user the source disagrees with itself"))
+            else:
+                found.append(finding(page, "ratio-percent", "error", item,
+                                     f"{pct:g}% is shown next to {key}, but {key} = {real}% — "
+                                     f"pair the percentage with the ratio the source gives it"))
         # 9. "N items" must count what the source lists
         for m in COUNT_RE.finditer(text_n) if item.heading else ():
             n, noun = m.group(1), m.group(2)
@@ -693,7 +768,8 @@ SEVERITY = {"error": 0, "warn": 1, "review": 2}
 REVIEW_FIELDS = {   # content_check review booleans and the rules that put each in doubt
     "source_meaning": ("low-overlap", "foreign-section", "name-unbound", "name-invented", "status-unsourced",
                        "status-unbound"),
-    "numbers_units": ("number-unsourced", "number-unbound", "number-recomposed", "ratio-noun", "editorial-number"),
+    "numbers_units": ("number-unsourced", "number-unbound", "number-recomposed", "ratio-noun", "editorial-number",
+                      "ratio-sliced", "ratio-percent"),
     "scope_period_status": ("period-invented", "period-other-clause", "period-dropped", "hedge-dropped", "heading-scope"),
     "titles_conclusions": ("count-mismatch",),
 }
