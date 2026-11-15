@@ -5,12 +5,12 @@ The Strategist writes one short file that says, per slide, **which source blocks
 ## Workflow
 
 ```bash
-python3 ${SKILL_DIR}/scripts/source_index.py <project_path>          # once, if sources/source_index.json is missing
+python3 ${SKILL_DIR}/scripts/source_index.py <project_path>          # once, if sources/source_index.json is missing — check for it right after import-sources: a missing index makes `spec_build.py source` fail with FileNotFoundError
 python3 ${SKILL_DIR}/scripts/spec_build.py source <project_path>     # read once: every block as `ID · text` under its section
 Read ${SKILL_DIR}/templates/charts/catalog.md                        # every chart/structure template, one line each
 # write <project_path>/plan.md (format below)
 python3 ${SKILL_DIR}/scripts/spec_build.py build <project_path> --check   # every mistake in one list; nothing written
-python3 ${SKILL_DIR}/scripts/spec_build.py build <project_path>           # writes the spec + lock and runs the plan gate
+python3 ${SKILL_DIR}/scripts/spec_build.py build <project_path>           # writes the spec + lock and runs the plan gate — require `"plan_gate": "pass"`: a failed gate still writes spec files, so after fixing plan.md re-run build to overwrite the stale lock
 ```
 
 Fix every error `build --check` lists in `plan.md` (one edit per error, never a rewrite of the file), re-run until it prints `"ok": true`, then `build`. Act on every warning too: change the template it names, move detail blocks to `optional`, or leave it with a reason you can state. `uncovered_sections_with_numbers` lists source sections with figures that no slide shows — leave them out on purpose or give them a slide in place of a lower-priority one (the slide count is fixed); never cram them into an existing slide.
@@ -81,6 +81,9 @@ Fix every error `build --check` lists in `plan.md` (one edit per error, never a 
 - Count a table slide's `- data:` lines from the source's row and column counts before writing the plan. A 12-row × 5-column table will not fit under the ~900-character drawn-slide cap; decide before drawing — split it across two slides, or trim low-value columns (row numbers, priority marks) as a deliberate trade-off with a stated reason — never discover the density violation after the page is drawn.
 - Every number on a slide stays bound to the block it comes from, including labels that ride along a row's value ("tăng 3,2%", "73,8% KH năm") — bind them to that row's block, never leave a number decorative; an unbound number escapes the fact check.
 - Give every warning/observation block ("Cảnh báo", "Nhận xét") a home in the `blocks:` of the slide about its subject — a warning parked in `optional:` or left unlisted is flagged as a risk item no slide shows. Put a source disclaimer block ("SỐ LIỆU GIẢ LẬP …", "dữ liệu mẫu") in the cover slide's `blocks:` so it stays visible instead of being dropped.
+- A wide monthly sheet (a column per month plus quarter, cumulative and comparison columns — 15+ columns) never fits a drawn table: trim it to the decision columns (Lũy kế, KH năm, % KH, Cùng kỳ, Tăng trưởng) and move the month/quarter detail to `optional` at plan time — the reader needs the cumulative picture, not every month.
+- For a row-series chart (one row = one entity across months), reference one range block per row (`B0053-B0060` spans the month cells) instead of listing a separate block per cell.
+- Block IDs jump over merged and empty cells (a 12-row table can span ~16 IDs); never compute an ID from a row position — take every ID from the `spec_build.py source` output.
 
 Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no block. Title chapter slides `Chương N — <name>`; title the ending slide with its closing phrase (`Trân trọng cảm ơn!`), never "Trang kết".
 
@@ -91,7 +94,7 @@ Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no b
 3. **Statuses as the source says them.** "Chậm", "vượt", "đạt", "hoàn thành" appear only where the source says them, with their hedge ("nguy cơ chậm", "dự kiến hoàn thành", "chưa đạt").
 4. **Counts are counts.** "7 nhiệm vụ" in a title equals the blocks listed; ratios keep their noun ("9/9 nhiệm vụ").
 5. **Charts first where the data allows.** Choose by the data's shape (catalog family), then by message:
-   - completion against a plan (`a/b ~x%`, `x% KH`) → `progress_bar_chart` (percentages) or `bullet_chart` (`value=a/b`); one headline ratio → `gauge_chart`; 2–8 headline figures → `kpi_cards`; one unit across categories → `bar_chart` / `horizontal_bar_chart`; dated milestones → `timeline` (blocks only); stages with drop-off → `funnel_chart`.
+   - completion against a plan (`a/b ~x%`, `x% KH`) → `progress_bar_chart` (percentages) or `bullet_chart` (`value=a/b`); one headline ratio → `gauge_chart`; 2–8 headline figures → `kpi_cards` (the drawn page holds 4–6 cards — trim to the 6 the title names, split the rest onto their subject slides); one unit across categories → `bar_chart` / `horizontal_bar_chart`; dated milestones → `timeline` (blocks only); stages with drop-off → `funnel_chart`.
    - Tables are for data a chart cannot show — a source table, or rows with several columns of different measures. At most 2 slides may turn prose numbers into a table (`metric_table`, `consulting_table`, …); `build` stops at the third.
    - A deck whose slides carry numbers needs a data chart on at least one in three of them; `build` names candidate slides and the chart that fits.
    - Lists, steps and frameworks (`vertical_list`, `numbered_steps`, `quadrant_text_bullets` …) are for text items; vary them — no template on more than 4 slides.
@@ -118,3 +121,4 @@ Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no b
 | `needs a - why: line` | One line on why the source supports the chart |
 | `icon 'x' is not in <library>: use one of …` | Take a suggested name or drop the icon |
 | `slides must be numbered P01…` | Renumber in order |
+| plan gate `Waterfall anchors missing` | The waterfall template needs anchor columns the plan format cannot express — chart the chain differently: a revenue → cost → profit sequence draws as `kpi_cards` (one card per step), or hand-write that page's lock per [content-grounding](content-grounding.md) §2–3 |

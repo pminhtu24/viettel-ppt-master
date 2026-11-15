@@ -22,7 +22,7 @@ description: >
 > 3. **ONE CONFIRMATION** — The Eight Confirmations (Step 4) are the only ⛔ gate of a normal run. After the reply, planning, SVG generation, quality gates and export proceed without asking again; the generation mode (💡 line, parallel by default) is settled in that same reply.
 > 4. **GATE BEFORE ENTRY** — Verify each step's 🚧 GATE before starting it.
 > 5. **NO SPECULATIVE EXECUTION** — Never prepare a later step's artifacts early (e.g. SVG during the Strategist phase).
-> 6. **GENERATION MODE FOLLOWS `spec_lock.execution.generation_mode`** — `parallel`: the main agent draws one anchor page, sub-agents draw grouped pages from script-written briefs through the host's parallel sub-agent tool (NetMind: `delegate_task`), the main agent owns every whole-deck gate. `sequential` (or no `execution` section): the main agent draws every page. No sub-agent tool, or a refused delegation → `sequential`, said in one line.
+> 6. **GENERATION MODE FOLLOWS `spec_lock.execution.generation_mode`** — `parallel`: the main agent draws one anchor page, sub-agents draw grouped pages from script-written briefs through the host's parallel sub-agent tool (NetMind: `delegate_task` — put each group's `context` from `briefs/plan.json` into the sub-agent's `context` field, never its `goal`; if every dispatch of the turn fails with the same host-side error (approval gate, model overload, child limit), stop dispatching for that turn, report, and re-send only the missing groups next turn), the main agent owns every whole-deck gate. `sequential` (or no `execution` section): the main agent draws every page. No sub-agent tool, or a refused delegation → `sequential`, said in one line.
 > 7. **ONE PAGE AT A TIME PER AGENT** — Every agent writes its pages one by one, in page order; never several pages in one tool call or one templated pass.
 > 8. **LOCK RE-READ PER PAGE** — Before each page re-read its brief (parallel) or `spec_lock.md` and the page's `page_rhythm` / `page_backgrounds` / `page_layouts` / `page_charts` (sequential). Colors, fonts, icons and images come only from the lock; an absent entry is an intentional signal (executor-base.md §2.1).
 > 9. **SVG IS HAND-WRITTEN** — Every SVG page is written directly by an agent. Scripts may prepare text inputs and bookkeeping (`spec_build.py`, `page_plan.py`, `fact_check.py`) but never emit SVG; generating pages with a script — loops, data templating, generators — is forbidden under any pretext ("save tokens", "quick draft", "user is in a hurry").
@@ -174,7 +174,9 @@ A reply of "sequential" / "tuần tự" / "làm lần lượt" (or equivalent) r
 
 If `<project_path>/images` contains any existing images, including assets extracted
 from source documents, run analysis **before outputting the design spec**, unless the
-user explicitly confirmed `No images`:
+user explicitly confirmed `No images`. A spreadsheet or text-only source typically
+extracts no images — when `images/` is empty, skip `analyze_images.py` (it fails on
+an empty directory) and confirm `images: none` in the Eight Confirmations:
 
 ```bash
 python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
