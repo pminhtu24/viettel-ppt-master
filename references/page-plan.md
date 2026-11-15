@@ -70,7 +70,7 @@ Fix every error `build --check` lists in `plan.md` (one edit per error, never a 
 | `template` | A key from `catalog.md`, or `none` |
 | `blocks` | Source blocks the slide shows (`B0024-B0027, B0031`); each must appear on the slide |
 | `optional` | Blocks shown only if there is room |
-| `data` | One line per chart mark: `<block> value=<number as printed> [category="…"] [period="…"] [series="…"]`. Numbers are taken as printed: `43,90%`, `7.480`, `271.7K`, and ratios — `value=45/50` gives value 45 and, on progress/kpi templates, target 50 (`target=` may also be written). `category=` is the mark's label on every chart |
+| `data` | One line per chart mark: `<block> value=<number as printed> [category="…"] [period="…"] [series="…"]`. Numbers are taken as printed — percent tokens (`43,90%`), dot-thousand tokens (`7.480`), plain integers, decimals and `a/b` ratios (`value=45/50` gives value 45 and, on progress/kpi templates, target 50; `target=` may also be written); a quantity token with a K/M suffix standing in prose (`593K TB`, `271.7K PAKH`) is NOT accepted — `build` rejects it, so write the bare number (`value=593`, `value=271.7`) and put the unit in the `category=` label. `category=` is the mark's label on every chart |
 | `calc` | A number the source does not state, computed from source numbers: `<id> percent|ratio|sum|difference <block>:<n> <block>:<n>` |
 | `why` | Required with every `template`: why the source supports it (same unit and period, parts of one whole, ordered stages; for a table, why a chart cannot show it) |
 
@@ -90,7 +90,7 @@ Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no b
 ## Content rules (checked by `build`, then by `fact_check` on the drawn slides)
 
 1. **One slide, one source section per list item.** A card, row or column shows blocks of one section; never put a sibling section's figures under another section's heading (a place, project or unit in a heading must be the section of every number under it).
-2. **Numbers as printed.** `data` and `calc` take numbers exactly as `spec_build.py source` prints them (`7.480`, `37%`, `271.7K`); the block must contain them. Period and scope labels (tháng, quý, lũy kế, năm, tuần) stay with their own number, from the same clause. In a chain of three or more numbers (`21/75/160 trạm ~46,88%` under a legend such as "TH tuần/lũy kế/KH tháng") the legend, not the position, says which two numbers pair: write `value=`/`target=` from the pair the percentage is computed from (`value=75 target=160`), never a pair cut by position (`21/75`).
+2. **Numbers as printed.** `data` and `calc` take numbers exactly as `spec_build.py source` prints them (`7.480`, `37%`) — except prose K/M-suffixed quantities (`593K`, `271.7K`), which `data=` rejects: write the bare number and carry the unit in `category=`. The block must contain the number. Period and scope labels (tháng, quý, lũy kế, năm, tuần) stay with their own number, from the same clause. In a chain of three or more numbers (`21/75/160 trạm ~46,88%` under a legend such as "TH tuần/lũy kế/KH tháng") the legend, not the position, says which two numbers pair: write `value=`/`target=` from the pair the percentage is computed from (`value=75 target=160`), never a pair cut by position (`21/75`).
 3. **Statuses as the source says them.** "Chậm", "vượt", "đạt", "hoàn thành" appear only where the source says them, with their hedge ("nguy cơ chậm", "dự kiến hoàn thành", "chưa đạt").
 4. **Counts are counts.** "7 nhiệm vụ" in a title equals the blocks listed; ratios keep their noun ("9/9 nhiệm vụ").
 5. **Charts first where the data allows.** Choose by the data's shape (catalog family), then by message:
@@ -122,3 +122,9 @@ Cover, chapter and ending slides (`rhythm: anchor` or `breathing`) may list no b
 | `icon 'x' is not in <library>: use one of …` | Take a suggested name or drop the icon |
 | `slides must be numbered P01…` | Renumber in order |
 | plan gate `Waterfall anchors missing` | The waterfall template needs anchor columns the plan format cannot express — chart the chain differently: a revenue → cost → profit sequence draws as `kpi_cards` (one card per step), or hand-write that page's lock per [content-grounding](content-grounding.md) §2–3 |
+| `<value>K` (e.g. `593K`, `271.7K`) is not a number of that block | The K/M quantity suffix parses only inside prose, never in `value=` — write the bare number (`value=593`) and keep the unit in `category=` ("Nghìn thuê bao cài VCall") |
+| `<table> has roles ['value']; 'target' is not one of them` | That table template takes one number per cell — drop `target=` and either put only the actual in `value=` (the plan number rides in the row text) or switch the slide to a progress/bullet chart |
+
+### Word/`.doc` sources (`doc_to_md`)
+
+- A table in a legacy `.doc` linearizes into one block per row plus a `cột:` companion block holding the header row; a two-line header becomes two blocks. List every row block you print in `blocks:` and take every number from its own row block — the `cột:` block is a label block, not a data source. Row blocks can carry IDs far above the prose around them (a 10-row table may consume 12 consecutive IDs); never compute an ID from a row position — read them off the `spec_build.py source` output.
