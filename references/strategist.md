@@ -4,7 +4,7 @@ Read the source once, agree the deck with the user, and plan every slide in `pla
 
 > **Viettel brand gate (HARD rule)**: every normal run is `brand.profile: viettel_default` on PPT 16:9 — Viettel logo/chrome, FS Magistral, Viettel red `#EE0033`, white/approved-gray surfaces, dark-neutral text; deep blue `#12436D` only for chart, diagram/infographic and icon marks and cataloged backgrounds marked `deep_blue_background: true`. `custom_override` only when the user explicitly refuses Viettel, names another brand or supplies a non-Viettel template path — a color, font, mood or style request alone does not qualify (then read [strategist-options.md](strategist-options.md) §e §g).
 
-## 1. Eight Confirmations — compact form
+## 1. Confirmations — compact form
 
 ⛔ **BLOCKING**: one message, then wait. The fixed Viettel items take one line; only the five open items are recommendations. Template (render in the user's language):
 

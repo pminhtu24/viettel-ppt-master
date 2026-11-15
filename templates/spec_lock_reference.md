@@ -187,7 +187,7 @@
 - max_pages_per_subagent: 6
 - anchor: main
 
-> Records the generation mode chosen in the Eight Confirmations 💡 line (SKILL.md Step 4). Resume sessions read it from disk.
+> Records the generation mode chosen in the Confirmations 💡 line (SKILL.md Step 4). Resume sessions read it from disk.
 >
 > - `generation_mode`: `parallel` (default when the host has a parallel sub-agent tool such as NetMind `delegate_task` and the deck has ≥ 6 pages) or `sequential` (user chose sequential, host has no sub-agent tool, or deck < 6 pages). A missing section means `sequential` (pre-1.0.7 projects).
 > - `max_subagents`: sub-agents per wave, ≤ the host limit (NetMind: `delegation.max_concurrent_children`). Default 6 to limit shared-provider load; lower it when the provider throttles.

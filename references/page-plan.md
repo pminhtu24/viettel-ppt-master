@@ -56,7 +56,7 @@ Fix every error `build --check` lists in `plan.md` (one edit per error, never a 
 
 | Key | Meaning |
 |---|---|
-| `title`, `audience`, `purpose`, `style` | §I of the Design Spec (from the confirmed Eight Confirmations) |
+| `title`, `audience`, `purpose`, `style` | §I of the Design Spec (from the confirmed Confirmations) |
 | `density` | Typography profile: `dense` for data reports and multi-block pages, `standard` otherwise |
 | `mode` | `parallel` or `sequential`, as confirmed in the 💡 generation-mode line |
 | `icons` | `<library>: names` — one stylistic library (`chunk-filled`, `tabler-filled`, `tabler-outline`, `phosphor-duotone`); names are drawable objects (`bulb`, `target`, `trending-up`, `alert-triangle`), not concepts (`idea`, `growth`). The bundled icon sets are name subsets, not stock Tabler — common stock names (`target`, `trending-up`, `users`, `cpu`, `rocket`, `chart-bar`) can be absent from `tabler-filled`. Never guess: take names from the suggestion list a `build` error prints, or `ls templates/icons/<library>/` before writing the `icons:` line |

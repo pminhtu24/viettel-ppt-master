@@ -19,7 +19,7 @@ description: >
 >
 > 1. **SERIAL EXECUTION** — Steps run in order; each step's output is the next step's input. Non-blocking steps follow each other without waiting for "continue".
 > 2. **BLOCKING = HARD STOP** — At a ⛔ BLOCKING step, stop and wait for the user's explicit reply; never decide for the user.
-> 3. **ONE CONFIRMATION** — The Eight Confirmations (Step 4) are the only ⛔ gate of a normal run. After the reply, planning, SVG generation, quality gates and export proceed without asking again; the generation mode (💡 line, parallel by default) is settled in that same reply.
+> 3. **ONE CONFIRMATION** — The Confirmations message (Step 4) is the only ⛔ gate of a normal run. After the reply, planning, SVG generation, quality gates and export proceed without asking again; the generation mode (💡 line, parallel by default) is settled in that same reply.
 > 4. **GATE BEFORE ENTRY** — Verify each step's 🚧 GATE before starting it.
 > 5. **NO SPECULATIVE EXECUTION** — Never prepare a later step's artifacts early (e.g. SVG during the Strategist phase).
 > 6. **GENERATION MODE FOLLOWS `spec_lock.execution.generation_mode`** — `parallel`: the main agent draws one anchor page, sub-agents draw grouped pages from script-written briefs through the host's parallel sub-agent tool (NetMind: `delegate_task` — put each group's `context` from `briefs/plan.json` into the sub-agent's `context` field, never its `goal`; if every dispatch of the turn fails with the same host-side error (approval gate, model overload, child limit), stop dispatching for that turn, report, and re-send only the missing groups next turn), the main agent owns every whole-deck gate. `sequential` (or no `execution` section): the main agent draws every page. No sub-agent tool, or a refused delegation → `sequential`, said in one line.
@@ -28,7 +28,7 @@ description: >
 > 9. **SVG IS HAND-WRITTEN** — Every SVG page is written directly by an agent. Scripts may prepare text inputs and bookkeeping (`spec_build.py`, `page_plan.py`, `fact_check.py`) but never emit SVG; generating pages with a script — loops, data templating, generators — is forbidden under any pretext ("save tokens", "quick draft", "user is in a hurry").
 > 10. **CHECK AFTER FULL-DECK GENERATION** — After every page exists, the main agent runs the project checker and repair pass, chart verification, Viettel chrome normalization and the final scan; export requires `0 errors`.
 > 11. **SCRIPTS ARE TOOLS, NOT DOCUMENTATION** — Never open, `cat`, `sed`, `grep` or import the source of the skill's `scripts/*.py` to learn a format or decode an error. The references define every format and every check prints what to fix. If an error stays unclear, write it to `<project_path>/skill_feedback.md` and apply the closest documented rule.
-> 12. **NO IDLE TURN END** — From the Eight Confirmations reply until export, never end a turn to report progress or to ask whether to continue. End it only while waiting for sub-agents (Step 6), at a ⛔ gate, on a recorded blocker, or when the quota is exhausted.
+> 12. **NO IDLE TURN END** — From the Confirmations reply until export, never end a turn to report progress or to ask whether to continue. End it only while waiting for sub-agents (Step 6), at a ⛔ gate, on a recorded blocker, or when the quota is exhausted.
 
 > [!IMPORTANT]
 >
@@ -148,12 +148,12 @@ Read ${SKILL_DIR}/references/page-plan.md
 
 **Read the source once** — `python3 ${SKILL_DIR}/scripts/source_index.py <project_path>` (only if `sources/source_index.json` is missing), then `python3 ${SKILL_DIR}/scripts/spec_build.py source <project_path>`: every block as `ID · text` under its section. Never read the Markdown source or dump blocks another way; every later step uses these IDs.
 
-**Eight Confirmations** ⛔ **BLOCKING** — one bundled message, then wait for the user's confirmation or changes ([strategist.md](references/strategist.md) §1 gives the compact form):
+**Confirmations** ⛔ **BLOCKING** — one bundled message with five open items, then wait for the user's confirmation or changes ([strategist.md](references/strategist.md) §1 gives the compact form):
 
 - **Fixed by the Viettel brand (one line, not a choice)**: PPT 16:9; Viettel red `#EE0033` with white/approved-gray surfaces and dark-neutral text, deep blue `#12436D` only for chart/diagram/icon marks; FS Magistral Book/Medium/Bold; logo top-right, footer and page number. Only an explicit hard non-Viettel request may record `brand.profile: custom_override`.
 - **To confirm**: page count, audience and purpose, style mode, icon library, image approach.
 
-**Mandatory — split-mode note** (not a ninth confirmation): after listing the eight confirmation details, you MUST append exactly one short line (rendered in the user's language, prefixed with 💡) about generation mode. Pick the variant by qualitative read of Phase A signals — recommended page count, source-material bulk, whether `topic-research` ran with substantial web-fetch accumulation:
+**Mandatory — split-mode note** (not a sixth item): after the five items, you MUST append exactly one short line (rendered in the user's language, prefixed with 💡) about generation mode. Pick the variant by qualitative read of Phase A signals — recommended page count, source-material bulk, whether `topic-research` ran with substantial web-fetch accumulation:
 
 | Signal read | Line content |
 |---|---|
@@ -162,7 +162,7 @@ Read ${SKILL_DIR}/references/page-plan.md
 
 This line is required output every run — the user must always see the mode choice exists. Whether to act on it is the user's call.
 
-**Mandatory — generation-mode note** (not a ninth confirmation): directly after the split-mode line, append exactly one more 💡 line (user's language):
+**Mandatory — generation-mode note** (not a sixth item): directly after the split-mode line, append exactly one more 💡 line (user's language):
 
 | Condition | Line content | `plan.md` value |
 |---|---|---|
@@ -176,7 +176,7 @@ If `<project_path>/images` contains any existing images, including assets extrac
 from source documents, run analysis **before outputting the design spec**, unless the
 user explicitly confirmed `No images`. A spreadsheet or text-only source typically
 extracts no images — when `images/` is empty, skip `analyze_images.py` (it fails on
-an empty directory) and confirm `images: none` in the Eight Confirmations:
+an empty directory) and confirm `images: none` in the Confirmations:
 
 ```bash
 python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
@@ -203,7 +203,7 @@ python3 ${SKILL_DIR}/scripts/analyze_images.py <project_path>/images
 ```markdown
 ## ✅ Strategist Phase Complete
 
-- [x] Eight Confirmations completed (user confirmed), split-mode and generation-mode 💡 lines shown
+- [x] Confirmations completed (user confirmed), split-mode and generation-mode 💡 lines shown
 - [x] plan.md written; `spec_build.py build` passed the plan gate
 - [ ] **Next**: Auto-proceed to [Web Image Acquisition / Executor] phase
 ```

@@ -17,7 +17,7 @@ echo "<marker> $(date +%s)" >> <project_path>/timing.log
 
 | Pipeline point | Markers |
 | --- | --- |
-| Phase A | `phaseA_start`, `confirm_shown` (Eight Confirmations displayed), `confirm_received`, `plan_written` (plan.md saved), `build_pass` (`spec_build.py build` plan gate pass) |
+| Phase A | `phaseA_start`, `confirm_shown` (Confirmations displayed), `confirm_received`, `plan_written` (plan.md saved), `build_pass` (`spec_build.py build` plan gate pass) |
 | Draw waves | `briefs_done`, `anchor_done` (anchor drawn + recorded); per draw wave N: `wave<N>_dispatch`, `wave<N>_collected` |
 | Quality gates | `gate_start`, `chart_verify_done`, `chrome_done`, `final_scan_done` |
 | Review | `fact_audit_done` (`fact_check.py audit` without errors), `review_recorded` (`content_check --record-review`) |
