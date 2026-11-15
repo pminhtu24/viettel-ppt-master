@@ -589,7 +589,7 @@ pages omit `page_backgrounds` and keep the clean Viettel shell.
 
 | Asset | Purpose | Runtime Path |
 | --- | --- | --- |
-| `backgrounds/backgrounds_index.json` | Lookup table for allowed page role, rhythm, intensity, and safe text zone | `templates/backgrounds/backgrounds_index.json` |
+| `backgrounds/backgrounds_index.json` | Lookup table for allowed page role, rhythm, intensity, and safe text zone | `<project_path>/templates/backgrounds/backgrounds_index.json` |
 | `backgrounds/bg_*.svg` | Optional cover/chapter/ending full-canvas background layers | `templates/backgrounds/<id>.svg` |
 
 **Selection guide**:
@@ -612,7 +612,7 @@ pages omit `page_backgrounds` and keep the clean Viettel shell.
 
 **Usage rules**:
 
-1. Read `templates/backgrounds/backgrounds_index.json` before selecting a background.
+1. Read `<project_path>/templates/backgrounds/backgrounds_index.json` before selecting a background.
 2. XML order is mandatory: one page base `<rect>` first, then the selected background's decorative elements, then shell chrome/content. Do not copy the background SVG's full-canvas white/base `<rect>`, and do not paste a layout/template white base rect after the background layer.
 3. Keep Viettel logo, footer, page number, title safe area, and text-fit rules from the shell page.
 4. Use backgrounds and full-height red rails only on cover, chapter, and ending pages.
@@ -707,7 +707,7 @@ pages omit `page_backgrounds` and keep the clean Viettel shell.
 
 1. **Copy template files** to project `templates/` directory before starting generation
 2. **Copy `viettel-logo.png`** to project `images/` directory
-3. Use `templates/backgrounds/backgrounds_index.json` to assign background layers only to cover, chapter, and ending pages in `spec_lock.md ## page_backgrounds`
+3. Use `<project_path>/templates/backgrounds/backgrounds_index.json` to assign background layers only to cover, chapter, and ending pages in `spec_lock.md ## page_backgrounds`
 4. **Select page types** based on content structure:
    - Use `01_cover.svg` for opening slide
    - Use `02_toc.svg` for table of contents (supports 5 items)

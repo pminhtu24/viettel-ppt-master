@@ -280,4 +280,4 @@ Before switching roles, **MUST first read** the corresponding reference file. Ou
 ## Notes
 
 - Local preview: `python3 -m http.server -d <project_path> 8000` then open `/svg_output/`
-- **Troubleshooting**: on generation issues (layout overflow, export errors, blank images, etc.), check `docs/faq.md` for known solutions
+- **Troubleshooting**: on generation issues (layout overflow, export errors, blank images, etc.), check `scripts/docs/troubleshooting.md`; for `spec_build.py build` errors see `references/page-plan.md` (Common `build` errors)

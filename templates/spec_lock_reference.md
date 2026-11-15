@@ -131,7 +131,7 @@
 
 - P<NN>: <background_id_from_backgrounds_index>
 
-> Optional cover/chapter/ending entries for `brand.profile: viettel_default`. Key: `P<NN>` matching §IX. Value: a background id from `templates/backgrounds/backgrounds_index.json`, without `.svg`.
+> Optional cover/chapter/ending entries for `brand.profile: viettel_default`. Key: `P<NN>` matching §IX. Value: a background id from `<project_path>/templates/backgrounds/backgrounds_index.json`, without `.svg`.
 >
 > Choose rows from the actual project's topic, page role, `page_rhythm`, and `safe_text_zone`. Do not copy a P01/P03/P07 mapping from this reference. Omit the section or omit a page when the clean shell is the better fit.
 >
@@ -141,7 +141,7 @@
 >
 > **Softening rule**: background details should be visually softened with pale fills, low opacity, wide shapes, and gradient-like fades. Do not use SVG `<filter>` / blur effects; they are not PPTX-safe. Keep sharp detail away from the main content/chart area.
 >
-> **Selection source**: read `templates/backgrounds/backgrounds_index.json`. Match by section/page role, `page_rhythm`, content topic, and `safe_text_zone`. Avoid repeating the same background on adjacent section pages when another suitable option exists.
+> **Selection source**: read `<project_path>/templates/backgrounds/backgrounds_index.json`. Match by section/page role, `page_rhythm`, content topic, and `safe_text_zone`. Avoid repeating the same background on adjacent section pages when another suitable option exists.
 >
 > **Background marker**: wrap every copied background in `<g data-viettel-background-id="<id>">`. When its index row sets `deep_blue_background: true`, also add `data-viettel-blue-scope="background"`. The deep-blue exception never permits deep-blue text or ad-hoc background decoration.
 >

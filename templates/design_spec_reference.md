@@ -277,7 +277,7 @@ Catalog read: 78 templates
 
 ### Viettel Section Background Assignment (viettel_default)
 
-> For `brand.profile: viettel_default`, Strategist MUST read `templates/backgrounds/backgrounds_index.json` and assign background ids only to cover, chapter, and ending pages. Content, TOC, chart, KPI, table, section-divider, and breathing pages MUST omit `page_backgrounds` so the standard clean shell stays behind content.
+> For `brand.profile: viettel_default`, Strategist MUST read `<project_path>/templates/backgrounds/backgrounds_index.json` and assign background ids only to cover, chapter, and ending pages. Content, TOC, chart, KPI, table, section-divider, and breathing pages MUST omit `page_backgrounds` so the standard clean shell stays behind content.
 >
 > Softness rule: choose backgrounds that are already visually softened by pale fills, low opacity, wide geometry, and calm safe zones. Do not request SVG filters or blur effects.
 >

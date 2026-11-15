@@ -19,7 +19,7 @@
 |---|---|
 | Chosen template's `design_spec.md` (read frontmatter to detect `replication_mode`) | `templates/<chosen_template>/design_spec.md` |
 | Every distinct `<basename>` in `spec_lock.md page_layouts` | `templates/<chosen_template>/<basename>.svg` |
-| `page_backgrounds` exists | `templates/backgrounds/backgrounds_index.json` |
+| `page_backgrounds` exists | `<project_path>/templates/backgrounds/backgrounds_index.json` |
 | Every distinct background id in `spec_lock.md page_backgrounds` | `templates/backgrounds/<background_id>.svg` |
 | Every distinct chart name in `spec_lock.md page_charts` | `templates/charts/<chart_name>.svg` |
 | Chart types in `design_spec.md §VII` not covered above | `templates/charts/<chart_name>.svg` |
@@ -96,7 +96,7 @@ and may be used only for cover, chapter, and ending pages through
 
 Rules:
 
-- Read `templates/backgrounds/backgrounds_index.json` once during the pre-generation batch read.
+- Read `<project_path>/templates/backgrounds/backgrounds_index.json` once during the pre-generation batch read.
 - Read only the `templates/backgrounds/<id>.svg` files listed in `spec_lock.md page_backgrounds`; if the section is absent, read no background SVGs.
 - Copy the selected background SVG's decorative body elements near the top of the output SVG, immediately after the single base page `<rect>` and before shell chrome/content. Always wrap them in `<g data-viettel-background-id="<id>">`; also add `data-viettel-blue-scope="background"` when the selected index item has `deep_blue_background: true`. Do not copy the background SVG as the entire page, and do not copy any full-canvas opaque white/base `<rect>` from the background file.
 - When inheriting a layout SVG and applying `page_backgrounds`, the final XML order MUST be: `<defs>` if needed → one base page `<rect>` → optional decorative background layer (without its white/base rect) → template chrome/content/page elements. Never paste a layout/template full-canvas white rect after the decorative background layer.
@@ -158,7 +158,7 @@ apply a background layer only when an entry exists:
 - Entry present on any other page type → emit `error: page_backgrounds <P<NN>> is allowed only for cover/chapter/ending` and do not copy it.
 - Missing entry on `viettel_default` → apply no decorative background. This is required for content, TOC, chart, KPI, table, section-divider, and `breathing` pages.
 - Whole section absent on `viettel_default` → apply no decorative backgrounds. This is valid for decks whose cover/chapter/ending pages use only their layout shells.
-- Entry missing from `templates/backgrounds/backgrounds_index.json` or missing file → emit `warning: page_backgrounds <P<NN>> references missing background <id> — skipping decorative background`.
+- Entry missing from `<project_path>/templates/backgrounds/backgrounds_index.json` or missing file → emit `warning: page_backgrounds <P<NN>> references missing background <id> — skipping decorative background`.
 - Under `custom_override`, ignore `page_backgrounds` unless the custom template explicitly defines its own background library.
 
 Do not allow the background to own page number, logo, title text, chart marks,

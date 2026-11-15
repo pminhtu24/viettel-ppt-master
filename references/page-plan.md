@@ -66,7 +66,7 @@ Fix every error `build --check` lists in `plan.md` (one edit per error, never a 
 | `job` | What the slide must make the reader understand (one line) |
 | `rhythm` | `anchor` (cover, chapter, agenda, ending), `dense` (default), `breathing` (a single emphasis) |
 | `layout` | Inherited Viettel shell: `01_cover`, `02_chapter`, `02_toc`, `03_content`, `03a_content_two_col`, `03b_content_image`, `03c_content_chart`, `04_ending` |
-| `background` | Cover, chapter and ending pages only; an id from `templates/layouts/viettel_default/backgrounds/backgrounds_index.json` |
+| `background` | Cover, chapter and ending pages only; an id from `${SKILL_DIR}/templates/layouts/viettel_default/backgrounds/backgrounds_index.json` (the skill copy; `init` copies the same file to `<project_path>/templates/backgrounds/`) |
 | `template` | A key from `catalog.md`, or `none` |
 | `blocks` | Source blocks the slide shows (`B0024-B0027, B0031`); each must appear on the slide |
 | `optional` | Blocks shown only if there is room |
