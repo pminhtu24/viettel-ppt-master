@@ -66,15 +66,6 @@ python3 scripts/batch_validate.py examples --export
 
 Use this for repository-wide health checks before release or cleanup.
 
-## `generate_examples_index.py`
-
-Rebuild `examples/README.md` automatically.
-
-```bash
-python3 scripts/generate_examples_index.py
-python3 scripts/generate_examples_index.py examples
-```
-
 ## `pptx_template_import.py`
 
 Unified PPTX preparation entry point for `/create-template`.

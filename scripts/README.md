@@ -10,7 +10,6 @@ This directory contains user-facing scripts for conversion, project setup, SVG p
 - `scripts/template_import/`: internal PPTX reference-preparation helpers used by `pptx_template_import.py`
 - `scripts/svg_finalize/`: internal helpers reused by the native PPTX converter
 - `scripts/docs/`: topic-focused script documentation
-- `scripts/assets/`: static assets consumed by scripts
 
 ## Quick Start
 
@@ -30,22 +29,15 @@ python3 scripts/svg_quality_checker.py <project_path>  # final scan
 python3 scripts/svg_to_pptx.py <project_path>
 ```
 
-Repository update:
-
-```bash
-python3 scripts/update_repo.py
-```
-
 ## Script Index
 
 | Area | Primary scripts | Documentation |
 |------|-----------------|---------------|
 | Conversion | `source_to_md/pdf_to_md.py`, `source_to_md/doc_to_md.py`, `source_to_md/excel_to_md.py`, `source_to_md/ppt_to_md.py`, `source_to_md/web_to_md.py` | [docs/conversion.md](./docs/conversion.md) |
-| Project management | `project_manager.py`, `batch_validate.py`, `generate_examples_index.py`, `error_helper.py`, `pptx_template_import.py` | [docs/project.md](./docs/project.md) |
+| Project management | `project_manager.py`, `batch_validate.py`, `error_helper.py`, `pptx_template_import.py` | [docs/project.md](./docs/project.md) |
 | SVG pipeline | `svg_to_pptx.py`, `svg_quality_checker.py`, `animation_config.py` | [docs/svg-pipeline.md](./docs/svg-pipeline.md) |
 | Spec maintenance | `update_spec.py`, `check_fonts.py` | [docs/update_spec.md](./docs/update_spec.md) |
-| Image tools | `image_search.py`, `analyze_images.py`, `gemini_watermark_remover.py` | [docs/image.md](./docs/image.md) |
-| Repo maintenance | `update_repo.py` | README install/update section |
+| Image tools | `image_search.py`, `analyze_images.py` | [docs/image.md](./docs/image.md) |
 | Troubleshooting | validation, preview, export, dependency issues | [docs/troubleshooting.md](./docs/troubleshooting.md) |
 
 ## High-Frequency Commands
@@ -93,13 +85,6 @@ Image acquisition and analysis:
 ```bash
 python3 scripts/image_search.py "modern workspace" --filename workspace.jpg -o projects/demo/images
 python3 scripts/analyze_images.py <project_path>/images
-```
-
-Repository update:
-
-```bash
-python3 scripts/update_repo.py
-python3 scripts/update_repo.py --skip-pip
 ```
 
 ## Recommendations

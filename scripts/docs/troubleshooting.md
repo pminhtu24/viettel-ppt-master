@@ -43,5 +43,4 @@ pip install -r requirements.txt
 Important optional packages:
 - `python-pptx` for PPTX export
 - `Pillow` for image utilities
-- `numpy` for watermark removal
 - `PyMuPDF` for PDF conversion
