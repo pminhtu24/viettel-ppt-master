@@ -518,7 +518,7 @@ def spec_lock_text(plan: dict, maps: dict[str, dict[str, str]], icons: tuple[str
         if rows:
             out += [f"## {section}", "", *rows, ""]
     mode = h.get("mode", "parallel")
-    out += ["## execution", "", f"- generation_mode: {mode}", "- max_subagents: 6", "- max_pages_per_subagent: 6",
+    out += ["## execution", "", f"- generation_mode: {mode}", "- max_subagents: 6", "- max_pages_per_subagent: 8",
             "- anchor: main", "", "## forbidden", "", "- Mixing icon libraries", "- rgba()",
             "- `<style>`, `class`, `<foreignObject>`, `textPath`, `@font-face`, `<animate*>`, `<script>`, `<iframe>`, `<symbol>`+`<use>`",
             "- `<g opacity>` (set opacity on each child element individually)",

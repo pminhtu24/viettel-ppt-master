@@ -80,7 +80,7 @@ LOCK_RE = re.compile(r"^```content-lock\s*\n(.*?)^```\s*$", re.M | re.S)
 COMMON_SECTIONS = ("canvas", "brand", "colors", "typography", "text_fit", "icons", "images", "forbidden")
 PAGE_MAPS = ("page_rhythm", "page_backgrounds", "page_layouts", "page_charts")
 EXECUTION_DEFAULTS = {"generation_mode": "sequential", "max_subagents": "6",
-                      "max_pages_per_subagent": "6", "anchor": "main"}
+                      "max_pages_per_subagent": "8", "anchor": "main"}
 
 
 # ---------------------------------------------------------------- parsing
@@ -550,7 +550,7 @@ def cmd_briefs(project: Project, args) -> int:
                            "lock_sha": project.lock_sha(page)}
     rest = [project.by_id[pid] for pid in targets if pid != anchor["id"]]
     rest.sort(key=lambda p: p["num"])
-    # One contiguous partition: frame pages ride along with their neighbours, so a ≤ 36-page deck is one wave.
+    # One contiguous partition: frame pages ride along with their neighbours, so a ≤ 49-page deck is one wave.
     groups = partition(rest, weights, project.max_pages, project.max_subagents)
     waves, lang = [], args.lang
     for index, group in enumerate(groups):
